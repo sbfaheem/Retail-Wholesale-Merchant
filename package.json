@@ -1,0 +1,25 @@
+{
+  "name": "roznamcha-cashbook",
+  "version": "1.0.0",
+  "description": "Retail & Wholesale Daily Cash Book & Financial Management System (Khata/Roznamcha) with 1AM Database Backup",
+  "main": "api/records.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "khata",
+    "roznamcha",
+    "cashbook",
+    "ledger",
+    "vercel",
+    "backup"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/postgres": "^0.10.0",
+    "pg": "^8.13.1"
+  }
+}
