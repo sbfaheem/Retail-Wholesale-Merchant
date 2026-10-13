@@ -157,24 +157,10 @@
           <!-- Controls: Month Selector, Language, Export, Print, Admin Gateway -->
           <div class="flex items-center space-x-2.5 rtl:space-x-reverse shrink-0">
             
-            <!-- Date / Period Navigator Pill (◀ Prev | Current (Today) | Next ▶) -->
-            <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold shadow-sm">
-              <button type="button" onclick="navigateDate(-1)" title="Previous Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
-                <span>◀</span> <span data-i18n="btnPrevDay">Prev</span>
-              </button>
-              <button type="button" onclick="goToToday()" title="Jump to Today" class="px-3 py-1.5 rounded-lg text-emerald-700 hover:text-emerald-800 hover:bg-white transition-colors cursor-pointer font-bold">
-                <span data-i18n="btnCurrentToday">Current (Today)</span>
-              </button>
-              <button type="button" onclick="navigateDate(1)" title="Next Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
-                <span data-i18n="btnNextDay">Next</span> <span>▶</span>
-              </button>
-            </div>
-
-            <!-- Month & Period Selector Dropdown -->
-            <div class="hidden lg:flex items-center">
-              <select id="publicMonthSelector" onchange="onPublicMonthSelectorChange(this.value)" title="Select Month" class="bg-white border border-slate-300 rounded-xl font-bold text-slate-800 px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none cursor-pointer shadow-sm">
-                <!-- Dynamically populated months -->
-              </select>
+            <!-- Calendar Date Picker (Exact Match to Reference Design) -->
+            <div class="flex items-center">
+              <input type="date" id="publicHeaderDatePicker" onchange="onPublicHeaderDateChange(this.value)" onclick="this.showPicker && this.showPicker()" title="Select Date"
+                class="bg-white border border-slate-300 rounded-2xl px-3 py-1.5 text-xs sm:text-sm font-mono font-bold text-slate-800 shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-all">
             </div>
 
             <!-- Bilingual English & Urdu Toggle -->
@@ -2725,16 +2711,32 @@
      * UI SYNC & INITIALIZATION
      */
     function initDatePickers() {
+      const headerDate = document.getElementById('publicHeaderDatePicker');
+      if (headerDate) {
+        headerDate.value = appState.selectedDate || getTodayString();
+      }
       const dateInp = document.getElementById('entryDate');
       if (dateInp) {
-        dateInp.value = appState.selectedDate;
+        dateInp.value = appState.selectedDate || getTodayString();
         updateDateDayDisplay();
       }
+    }
+
+    function onPublicHeaderDateChange(val) {
+      if (!val) return;
+      onDateChanged(val);
     }
 
     function onDateChanged(newDate) {
       if (!newDate) return;
       appState.selectedDate = newDate;
+
+      const headerDate = document.getElementById('publicHeaderDatePicker');
+      if (headerDate) headerDate.value = newDate;
+
+      const dateInp = document.getElementById('entryDate');
+      if (dateInp) dateInp.value = newDate;
+
       updateDateDayDisplay();
       renderDailyRoznamchaOverview(newDate);
     }
@@ -2745,31 +2747,25 @@
       d.setDate(d.getDate() + offset);
       const newIso = formatISODate(d);
       appState.selectedDate = newIso;
+      const headerDate = document.getElementById('publicHeaderDatePicker');
+      if (headerDate) headerDate.value = newIso;
       const dateInp = document.getElementById('entryDate');
       if (dateInp) dateInp.value = newIso;
       updateDateDayDisplay();
       renderDailyRoznamchaOverview(newIso);
       loadDayIntoTerminal(newIso);
-
-      const sel = document.getElementById('publicMonthSelector');
-      if (sel) {
-        sel.value = newIso.substring(0, 7);
-      }
     }
 
     function goToToday() {
       const today = getTodayString();
       appState.selectedDate = today;
+      const headerDate = document.getElementById('publicHeaderDatePicker');
+      if (headerDate) headerDate.value = today;
       const dateInp = document.getElementById('entryDate');
       if (dateInp) dateInp.value = today;
       updateDateDayDisplay();
       renderDailyRoznamchaOverview(today);
       loadDayIntoTerminal(today);
-
-      const sel = document.getElementById('publicMonthSelector');
-      if (sel) {
-        sel.value = today.substring(0, 7);
-      }
     }
 
     function updateDateDayDisplay() {
