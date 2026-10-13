@@ -162,12 +162,7 @@
             <span>PKR (Rs.)</span>
           </div>
 
-          <!-- Load Demo Data Button -->
-          <button onclick="loadDemoNotebookData()" title="Preload merchant notebook sample entries (Sat to Thu)" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold rounded-lg text-emerald-700 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-all shadow-sm">
-            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i>
-            <span class="hidden md:inline" data-i18n="btnLoadDemo">Load Demo Data</span>
-            <span class="md:hidden" data-i18n="btnDemoShort">Demo</span>
-          </button>
+
 
           <!-- Export CSV -->
           <button onclick="exportToCSV()" title="Export Cash Register to CSV" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-all shadow-sm">
@@ -233,7 +228,7 @@
         <!-- Metric 1: Opening Cash -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:p-4 relative overflow-hidden shadow-sm hover:border-slate-300 transition-all">
           <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
-            <span class="font-bold" data-i18n="kpiOpeningCashLabel">Opening Cash</span>
+            <div class="flex items-center gap-1.5"><span class="font-bold" data-i18n="kpiOpeningCashLabel">Opening Cash</span><button type="button" onclick="openKpiOverrideModal('openingCash')" class="admin-only-btn hidden text-slate-400 hover:text-purple-600 transition-colors" title="Admin Override Metric"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button></div>
             <i class="fa-solid fa-vault text-slate-400"></i>
           </div>
           <div class="text-base sm:text-xl font-extrabold font-mono tracking-tight text-slate-800 tabular-nums" id="kpiOpeningCash">
@@ -250,7 +245,7 @@
           <div class="flex items-center justify-between text-xs text-emerald-800 mb-1">
             <span class="font-bold flex items-center gap-1">
               <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block animate-ping"></span>
-              <span data-i18n="kpiTodaySalesLabel">Today's Sales</span>
+              <span data-i18n="kpiTodaySalesLabel">Today's Sales</span><button type="button" onclick="openKpiOverrideModal('todaySales')" class="admin-only-btn hidden text-emerald-600 hover:text-purple-600 ml-1 transition-colors" title="Admin Override Metric"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button>
             </span>
             <i class="fa-solid fa-cash-register text-emerald-600"></i>
           </div>
@@ -266,7 +261,7 @@
         <!-- Metric 3: Today's Outflows / Purchases -->
         <div class="bg-rose-50/70 border border-rose-200 rounded-xl p-3 sm:p-4 relative overflow-hidden shadow-sm hover:border-rose-300 transition-all">
           <div class="flex items-center justify-between text-xs text-rose-800 mb-1">
-            <span class="font-bold" data-i18n="kpiTodayOutflowsLabel">Total Outflows</span>
+            <div class="flex items-center gap-1.5"><span class="font-bold" data-i18n="kpiTodayOutflowsLabel">Total Outflows</span><button type="button" onclick="openKpiOverrideModal('todayOutflows')" class="admin-only-btn hidden text-rose-500 hover:text-purple-600 transition-colors" title="Admin Override Metric"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button></div>
             <i class="fa-solid fa-receipt text-rose-600"></i>
           </div>
           <div class="text-base sm:text-xl font-black font-mono tracking-tight text-rose-800 tabular-nums" id="kpiTodayOutflows">
@@ -281,7 +276,7 @@
         <!-- Metric 4: Closing Cash-in-Hand -->
         <div class="bg-sky-50/70 border border-sky-200 rounded-xl p-3 sm:p-4 relative overflow-hidden shadow-sm hover:border-sky-300 transition-all">
           <div class="flex items-center justify-between text-xs text-sky-800 mb-1">
-            <span class="font-bold" data-i18n="kpiClosingCashLabel">Closing Cash</span>
+            <div class="flex items-center gap-1.5"><span class="font-bold" data-i18n="kpiClosingCashLabel">Closing Cash</span><button type="button" onclick="openKpiOverrideModal('closingCash')" class="admin-only-btn hidden text-sky-500 hover:text-purple-600 transition-colors" title="Admin Override Metric"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button></div>
             <i class="fa-solid fa-money-bill-wave text-sky-600"></i>
           </div>
           <div class="text-base sm:text-xl font-black font-mono tracking-tight text-sky-900 tabular-nums" id="kpiClosingCash">
@@ -296,7 +291,7 @@
         <!-- Metric 5: Total Market Credit (Udhaar) -->
         <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-3 sm:p-4 relative overflow-hidden shadow-sm hover:border-amber-300 transition-all">
           <div class="flex items-center justify-between text-xs text-amber-800 mb-1">
-            <span class="font-bold" data-i18n="kpiMarketCreditLabel">Market Credit (Udhaar)</span>
+            <div class="flex items-center gap-1.5"><span class="font-bold" data-i18n="kpiMarketCreditLabel">Market Credit (Udhaar)</span><button type="button" onclick="openKpiOverrideModal('marketCredit')" class="admin-only-btn hidden text-amber-500 hover:text-purple-600 transition-colors" title="Admin Override Metric"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button></div>
             <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i>
           </div>
           <div class="text-base sm:text-xl font-black font-mono tracking-tight text-amber-900 tabular-nums" id="kpiMarketCredit">
@@ -312,7 +307,7 @@
           <div class="flex items-center justify-between text-xs text-teal-800 mb-1">
             <span class="font-bold flex items-center gap-1">
               <span class="w-2 h-2 rounded-full bg-teal-500 inline-block"></span>
-              <span data-i18n="kpiCurrentMonthSalesLabel">Current Month Sales</span>
+              <span data-i18n="kpiCurrentMonthSalesLabel">Current Month Sales</span><button type="button" onclick="openKpiOverrideModal('currentMonthSales')" class="admin-only-btn hidden text-teal-600 hover:text-purple-600 ml-1 transition-colors" title="Admin Override Metric"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button>
             </span>
             <i class="fa-solid fa-calendar-day text-teal-600"></i>
           </div>
@@ -330,7 +325,7 @@
         <div id="kpiLastMonthCard" class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 sm:p-4 relative overflow-hidden shadow-sm hover:border-emerald-300 transition-all col-span-2 sm:col-span-1">
           <div class="flex items-center justify-between text-xs text-slate-800 mb-1">
             <span class="font-bold flex items-center gap-1">
-              <span data-i18n="kpiLastMonthSalesLabel">Last Month Sales</span>
+              <span data-i18n="kpiLastMonthSalesLabel">Last Month Sales</span><button type="button" onclick="openKpiOverrideModal('lastMonthSales')" class="admin-only-btn hidden text-slate-500 hover:text-purple-600 ml-1 transition-colors" title="Admin Override Metric"><i class="fa-solid fa-pen-to-square text-[10px]"></i></button>
             </span>
             <span id="kpiMonthlyStatusPill" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-sm flex items-center gap-1">
               <i class="fa-solid fa-arrow-trend-up text-[9px]"></i>
@@ -1253,9 +1248,14 @@
           <span data-i18n="adminSubModCms">Module B: Dynamic CMS & Label Customizer</span>
         </button>
 
+        <button type="button" id="adminSubNavBtn-kpi" onclick="switchAdminSubModule('kpi')" class="px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-chart-line text-amber-500"></i>
+          <span>Module C: 7 Top Summary KPI Card Overrides</span>
+        </button>
+
         <button type="button" id="adminSubNavBtn-db" onclick="switchAdminSubModule('db')" class="px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all">
           <i class="fa-solid fa-database"></i>
-          <span data-i18n="adminSubModDb">Module C: Database & Snapshots</span>
+          <span>Module D: Database & Snapshots</span>
         </button>
       </div>
 
@@ -1447,7 +1447,167 @@
       </div>
 
       <!-- =================================================================== -->
-      <!-- MODULE C: DATABASE SNAPSHOTS & BACKUP MANAGEMENT                    -->
+      
+      <!-- =================================================================== -->
+      <!-- MODULE C: ALL 7 TOP KPI SUMMARY CARDS OVERRIDE AUTHORITY             -->
+      <!-- =================================================================== -->
+      <div id="adminModuleContainer-kpi" class="hidden space-y-5">
+        <div class="bg-white border-2 border-purple-200 rounded-3xl p-6 shadow-sm space-y-6">
+          
+          <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-mono text-[10px] font-bold border border-amber-300">
+                  Full Administrator Authority
+                </span>
+                <h3 class="text-base font-black text-slate-900">7 Top KPI Summary Cards Control Center</h3>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">
+                Toggle any of the 7 top dashboard summary cards between <strong>Auto-Calculate Mode</strong> (derived from active ledger entries) and <strong>Manual Override Mode</strong> (custom administrator values). Updates sync instantly to public read-only viewers.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="resetAllKpiOverridesToAuto()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-colors">
+                Reset All to Auto-Calculate
+              </button>
+              <button type="button" onclick="saveAllKpiOverridesFromForm()" class="px-5 py-2 rounded-xl text-xs font-black text-white bg-purple-700 hover:bg-purple-800 shadow-md shadow-purple-700/20 flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Save All Overrides</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 7 KPI Grid Configuration Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <!-- Card 1: Opening Cash -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-slate-800">1. Opening Cash</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                  <input type="checkbox" id="kpiOvrToggle-openingCash" onchange="toggleKpiFieldState('openingCash')" class="rounded text-purple-600 focus:ring-purple-500">
+                  <span class="text-purple-900">Manual Override</span>
+                </label>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[11px] text-slate-500 block font-medium">Custom Figure (PKR):</label>
+                <input type="number" id="kpiOvrVal-openingCash" step="any" placeholder="0" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
+              </div>
+              <p class="text-[10px] text-slate-400 font-mono" id="kpiOvrStatus-openingCash">Mode: Auto-derived from prior closing</p>
+            </div>
+
+            <!-- Card 2: Today's Sales -->
+            <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-emerald-900">2. Today's Sales (Inflow)</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                  <input type="checkbox" id="kpiOvrToggle-todaySales" onchange="toggleKpiFieldState('todaySales')" class="rounded text-purple-600 focus:ring-purple-500">
+                  <span class="text-purple-900">Manual Override</span>
+                </label>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[11px] text-emerald-800 block font-medium">Custom Figure (PKR):</label>
+                <input type="number" id="kpiOvrVal-todaySales" step="any" placeholder="0" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-emerald-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+              </div>
+              <p class="text-[10px] text-emerald-700 font-mono" id="kpiOvrStatus-todaySales">Mode: Auto-calculated from day entry</p>
+            </div>
+
+            <!-- Card 3: Total Outflows -->
+            <div class="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-rose-900">3. Total Outflows</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                  <input type="checkbox" id="kpiOvrToggle-todayOutflows" onchange="toggleKpiFieldState('todayOutflows')" class="rounded text-purple-600 focus:ring-purple-500">
+                  <span class="text-purple-900">Manual Override</span>
+                </label>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[11px] text-rose-800 block font-medium">Custom Figure (PKR):</label>
+                <input type="number" id="kpiOvrVal-todayOutflows" step="any" placeholder="0" class="w-full bg-white border border-rose-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-rose-900 focus:ring-1 focus:ring-rose-500 focus:outline-none">
+              </div>
+              <p class="text-[10px] text-rose-700 font-mono" id="kpiOvrStatus-todayOutflows">Mode: Auto-summed from payment lines</p>
+            </div>
+
+            <!-- Card 4: Closing Cash -->
+            <div class="p-4 rounded-2xl bg-sky-50/60 border border-sky-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-sky-900">4. Closing Cash-in-Hand</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                  <input type="checkbox" id="kpiOvrToggle-closingCash" onchange="toggleKpiFieldState('closingCash')" class="rounded text-purple-600 focus:ring-purple-500">
+                  <span class="text-purple-900">Manual Override</span>
+                </label>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[11px] text-sky-800 block font-medium">Custom Figure (PKR):</label>
+                <input type="number" id="kpiOvrVal-closingCash" step="any" placeholder="0" class="w-full bg-white border border-sky-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-sky-900 focus:ring-1 focus:ring-sky-500 focus:outline-none">
+              </div>
+              <p class="text-[10px] text-sky-700 font-mono" id="kpiOvrStatus-closingCash">Mode: Auto-derived (Available - Outflows)</p>
+            </div>
+
+            <!-- Card 5: Market Credit -->
+            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-amber-900">5. Market Credit (Udhaar)</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                  <input type="checkbox" id="kpiOvrToggle-marketCredit" onchange="toggleKpiFieldState('marketCredit')" class="rounded text-purple-600 focus:ring-purple-500">
+                  <span class="text-purple-900">Manual Override</span>
+                </label>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[11px] text-amber-800 block font-medium">Custom Figure (PKR):</label>
+                <input type="number" id="kpiOvrVal-marketCredit" step="any" placeholder="0" class="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-900 focus:ring-1 focus:ring-amber-500 focus:outline-none">
+              </div>
+              <p class="text-[10px] text-amber-700 font-mono" id="kpiOvrStatus-marketCredit">Mode: Auto-derived from customer accounts</p>
+            </div>
+
+            <!-- Card 6: Current Month Sales -->
+            <div class="p-4 rounded-2xl bg-teal-50/60 border border-teal-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-teal-900">6. Current Month Sales</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                  <input type="checkbox" id="kpiOvrToggle-currentMonthSales" onchange="toggleKpiFieldState('currentMonthSales')" class="rounded text-purple-600 focus:ring-purple-500">
+                  <span class="text-purple-900">Manual Override</span>
+                </label>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[11px] text-teal-800 block font-medium">Custom Figure (PKR):</label>
+                <input type="number" id="kpiOvrVal-currentMonthSales" step="any" placeholder="0" class="w-full bg-white border border-teal-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-teal-900 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+              </div>
+              <p class="text-[10px] text-teal-700 font-mono" id="kpiOvrStatus-currentMonthSales">Mode: Auto-aggregated from active month</p>
+            </div>
+
+            <!-- Card 7: Last Month Sales & Status -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 md:col-span-2 lg:col-span-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-slate-800">7. Last Month Sales & Commercial Status</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                  <input type="checkbox" id="kpiOvrToggle-lastMonthSales" onchange="toggleKpiFieldState('lastMonthSales')" class="rounded text-purple-600 focus:ring-purple-500">
+                  <span class="text-purple-900">Manual Override</span>
+                </label>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <label class="text-[11px] text-slate-500 block font-medium">Benchmark Figure (PKR):</label>
+                  <input type="number" id="kpiOvrVal-lastMonthSales" step="any" placeholder="0" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[11px] text-slate-500 block font-medium">Override Commercial Status:</label>
+                  <select id="kpiOvrStatus-lastMonthSalesSelect" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
+                    <option value="AUTO">Auto-Compare (Based on Difference)</option>
+                    <option value="PROFIT">Force PROFIT Status (Emerald)</option>
+                    <option value="LOSS">Force LOSS Status (Rose)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MODULE D: DATABASE SNAPSHOTS & BACKUP MANAGEMENT                    -->
       <!-- =================================================================== -->
       <div id="adminModuleContainer-db" class="hidden space-y-4">
         
@@ -1579,6 +1739,59 @@
   </main>
 
   <!-- ========================================================================= -->
+  
+  <!-- ========================================================================= -->
+  <!-- MODAL: QUICK ADMIN KPI OVERRIDE                                           -->
+  <!-- ========================================================================= -->
+  <div id="quickKpiOverrideModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-300 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-purple-50/70">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-black text-slate-900" id="quickKpiModalTitle">Adjust Summary KPI Metric</h4>
+            <p class="text-[10px] text-slate-500">Toggle calculation mode or set custom override</p>
+          </div>
+        </div>
+        <button onclick="closeQuickKpiModal()" class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <div class="space-y-2">
+          <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-purple-300">
+            <input type="radio" name="quickKpiMode" value="auto" checked onchange="onQuickKpiModeChange(this.value)" class="text-purple-600 focus:ring-0">
+            <div>
+              <span class="text-xs font-bold text-slate-800 block">Auto-Calculate Mode</span>
+              <span class="text-[10px] text-slate-500">Derived automatically from real ledger entries</span>
+            </div>
+          </label>
+
+          <label class="flex items-center gap-2 p-3 rounded-xl bg-purple-50/60 border border-purple-200 cursor-pointer hover:border-purple-400">
+            <input type="radio" name="quickKpiMode" value="manual" onchange="onQuickKpiModeChange(this.value)" class="text-purple-600 focus:ring-0">
+            <div>
+              <span class="text-xs font-bold text-purple-950 block">Manual Override Mode</span>
+              <span class="text-[10px] text-purple-700">Display fixed administrator value on public URL</span>
+            </div>
+          </label>
+        </div>
+
+        <div id="quickKpiManualInputs" class="space-y-1.5 hidden">
+          <label class="text-xs font-bold text-slate-700">Custom Metric Value (PKR):</label>
+          <input type="number" id="quickKpiValueInput" step="any" placeholder="0" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm font-mono font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeQuickKpiModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:text-slate-900">Cancel</button>
+          <button type="button" onclick="saveQuickKpiModal()" class="px-5 py-2 rounded-xl text-xs font-black bg-purple-700 hover:bg-purple-800 text-white shadow-md">Apply & Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: ADMIN ADD / UPDATE ENTRY FORM (WITH IDENTICAL FIELD NAMES)         -->
   <!-- ========================================================================= -->
   <div id="adminEditModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1969,8 +2182,7 @@
         <span data-i18n="footerPersistent">Persistent Local Storage</span>
         <span>&bull;</span>
         <span data-i18n="footerBilingual">English & اردو Support</span>
-        <span>&bull;</span>
-        <button onclick="loadDemoNotebookData()" class="text-emerald-700 hover:underline font-bold" data-i18n="footerReloadDemo">Reload Sample Notebook</button>
+
       </div>
     </div>
   </footer>
@@ -2359,13 +2571,7 @@
     };
 
     // Default Customer Udhaar Accounts matching sample register credit
-    const DEFAULT_CUSTOMER_ACCOUNTS = [
-      { id: 'cust-1', name: 'M/S Khan Cloth Store', phone: '0300-4829102', totalGiven: 95000, totalRecovered: 55000, balance: 40000, status: 'Active Debtor', lastDate: '2026-10-10' },
-      { id: 'cust-2', name: 'Rahim Garments', phone: '0321-9584731', totalGiven: 120000, totalRecovered: 70000, balance: 50000, status: 'Active Debtor', lastDate: '2026-10-11' },
-      { id: 'cust-3', name: 'Bismillah Boutique', phone: '0333-1245678', totalGiven: 80000, totalRecovered: 50000, balance: 30000, status: 'Regular Customer', lastDate: '2026-10-08' },
-      { id: 'cust-4', name: 'Master Tailors & Drapers', phone: '0345-7766554', totalGiven: 65000, totalRecovered: 20000, balance: 45000, status: 'Due Follow-up', lastDate: '2026-10-06' },
-      { id: 'cust-5', name: 'Star Wholesale Fabrics', phone: '0312-3344556', totalGiven: 110000, totalRecovered: 34000, balance: 76000, status: 'High Volume Buyer', lastDate: '2026-10-12' }
-    ];
+    const DEFAULT_CUSTOMER_ACCOUNTS = [];
 
     // Master Application State
     // DEFAULT CMS & SYSTEM SETTINGS CONFIGURATION
@@ -2394,14 +2600,24 @@
       manualOpeningOverride: false,
       doughnutMode: 'vendor',
       ledgerSubtab: 'vendors',
-      customerAccounts: JSON.parse(JSON.stringify(DEFAULT_CUSTOMER_ACCOUNTS)),
+      customerAccounts: [],
       records: {},
-      // SECURE ADMIN STATE & CMS
+      // STRICT RBAC & ADMIN STATE
       isAdminLoggedIn: false,
       adminUser: null,
       adminToken: null,
-      adminSubModule: 'crud', // 'crud', 'cms', 'db'
-      systemSettings: { ...DEFAULT_CMS_SETTINGS }
+      adminSubModule: 'crud', // 'crud', 'cms', 'kpi', 'db'
+      systemSettings: { ...DEFAULT_CMS_SETTINGS },
+      // ADMIN MANUAL OVERRIDES OVER ALL 7 SUMMARY KPI CARDS
+      kpiOverrides: {
+        openingCash: { enabled: false, value: 0 },
+        todaySales: { enabled: false, value: 0 },
+        todayOutflows: { enabled: false, value: 0 },
+        closingCash: { enabled: false, value: 0 },
+        marketCredit: { enabled: false, value: 0 },
+        currentMonthSales: { enabled: false, value: 0 },
+        lastMonthSales: { enabled: false, value: 0, status: 'PROFIT' }
+      }
     };
 
     // Chart instances
@@ -2442,12 +2658,10 @@
       loadSettings();
       loadStoredRecords();
       loadCmsSettings();
+      loadKpiOverrides();
       checkExistingAdminSession();
 
-      // Preload notebook sample entries if fresh
-      if (Object.keys(appState.records).length === 0) {
-        preloadSampleNotebook(false);
-      }
+      // Clean zero-state initialized from database/storage
 
       initDatePickers();
       renderQuickVendorChips();
@@ -2614,7 +2828,7 @@
         }
         const rawCust = localStorage.getItem(STORAGE_KEY + '_customers');
         if (rawCust) {
-          appState.customerAccounts = JSON.parse(rawCust) || JSON.parse(JSON.stringify(DEFAULT_CUSTOMER_ACCOUNTS));
+          appState.customerAccounts = JSON.parse(rawCust) || [];
         }
       } catch (e) {
         console.error('Failed to parse stored records', e);
@@ -2686,7 +2900,7 @@
         const latestPrior = priorDates[priorDates.length - 1];
         return appState.records[latestPrior].closingCash || 0;
       }
-      return 50000;
+      return 0;
     }
 
     function getDerivedPriorCredit(targetDate) {
@@ -2696,136 +2910,21 @@
         const latestPrior = priorDates[priorDates.length - 1];
         return appState.records[latestPrior].closingMarketCredit || 0;
       }
-      return 240000;
+      return 0;
     }
 
     /**
      * PRELOAD DEMO REGISTER DATA MATCHING SAMPLE NOTEBOOK
      */
     function preloadSampleNotebook(showToast = true) {
-      const demoRecords = {
-        '2026-10-03': {
-          date: '2026-10-03',
-          dayName: 'Saturday',
-          manualOpening: 50000,
-          isManualOpeningOverride: true,
-          baseMarketCredit: 240000,
-          dailySale: 150000,
-          creditGiven: 12000,
-          creditRecovered: 8000,
-          notes: 'Saturday Counter Opened by Aslam. Initial float PKR 50,000',
-          outflows: [
-            { party: 'Cashier', amount: 14500, category: 'Staff', note: 'Weekly counter settlement' }
-          ]
-        },
-        '2026-10-04': {
-          date: '2026-10-04',
-          dayName: 'Sunday',
-          dailySale: 170000,
-          creditGiven: 15000,
-          creditRecovered: 10000,
-          notes: 'Busy Sunday market counter. Fabric stock received from Momin.',
-          outflows: [
-            { party: 'Cover', amount: 1000, category: 'Maintenance', note: 'Counter covers' },
-            { party: 'Momin', amount: 30000, category: 'Vendor', note: 'Cloth roll purchase' },
-            { party: 'Ali', amount: 7000, category: 'Vendor', note: 'Delivery charges & raw lot' }
-          ]
-        },
-        '2026-10-05': {
-          date: '2026-10-05',
-          dayName: 'Monday',
-          dailySale: 150000,
-          creditGiven: 20000,
-          creditRecovered: 15000,
-          notes: 'Wholesale deliveries to city center.',
-          outflows: [
-            { party: 'Tariq', amount: 10500, category: 'Vendor', note: 'Packaging boxes' },
-            { party: 'Amir', amount: 20000, category: 'Vendor', note: 'Yarn advance' },
-            { party: 'Petrol', amount: 5000, category: 'Logistics', note: 'Van fuel tank' },
-            { party: 'Ali', amount: 23200, category: 'Vendor', note: 'Bill #349 settlement' }
-          ]
-        },
-        '2026-10-06': {
-          date: '2026-10-06',
-          dayName: 'Tuesday',
-          dailySale: 110000,
-          creditGiven: 8000,
-          creditRecovered: 22000,
-          notes: 'Major vendor clearing day (Basit consignment clearance).',
-          outflows: [
-            { party: 'Leo', amount: 9000, category: 'Vendor', note: 'Imported trims' },
-            { party: 'D.R', amount: 2000, category: 'Misc', note: 'Tea & store refreshments' },
-            { party: 'Petrol', amount: 20000, category: 'Logistics', note: 'Heavy cargo truck' },
-            { party: 'Basit', amount: 86000, category: 'Vendor', note: 'Main wholesale consignment clearance' },
-            { party: 'Dogar', amount: 1500, category: 'Maintenance', note: 'Shutter lock repair' },
-            { party: 'Ali', amount: 1000, category: 'Vendor', note: 'Dispatch tip & fare' }
-          ]
-        },
-        '2026-10-07': {
-          date: '2026-10-07',
-          dayName: 'Wednesday',
-          dailySale: 130000,
-          creditGiven: 18000,
-          creditRecovered: 12000,
-          notes: 'Mid-week inventory replenishment.',
-          outflows: [
-            { party: 'Prince', amount: 5000, category: 'Vendor', note: 'Special button inventory' },
-            { party: 'Mohsin', amount: 27500, category: 'Vendor', note: 'Dyeing & processing charges' },
-            { party: 'Chacha', amount: 10000, category: 'Vendor', note: 'Warehouse rent advance' },
-            { party: 'Petrol', amount: 39000, category: 'Logistics', note: 'Weekly logistics fleet fuel' }
-          ]
-        },
-        '2026-10-08': {
-          date: '2026-10-08',
-          dayName: 'Thursday',
-          dailySale: 175000,
-          creditGiven: 25000,
-          creditRecovered: 30000,
-          notes: 'Peak Thursday wholesale bulk billing & supplier payouts.',
-          outflows: [
-            { party: 'Table', amount: 14500, category: 'Maintenance', note: 'Cutting table fabrication' },
-            { party: 'Raw', amount: 15500, category: 'Vendor', note: 'Cotton raw yarn' },
-            { party: 'Mian', amount: 21000, category: 'Vendor', note: 'Textile prints consignment' },
-            { party: 'Next', amount: 31500, category: 'Vendor', note: 'Fashion catalog stock' },
-            { party: 'Royal', amount: 36000, category: 'Vendor', note: 'Silk lace materials' },
-            { party: 'Riasat', amount: 10000, category: 'Vendor', note: 'Master cutting fees' }
-          ]
-        },
-        '2026-10-12': {
-          date: '2026-10-12',
-          dayName: 'Monday',
-          dailySale: 165000,
-          creditGiven: 14000,
-          creditRecovered: 16000,
-          notes: 'Current active terminal session.',
-          outflows: [
-            { party: 'Petrol', amount: 8000, category: 'Logistics', note: 'Delivery van routine fuel' },
-            { party: 'Momin', amount: 25000, category: 'Vendor', note: 'Weekly invoice settlement' },
-            { party: 'Cashier', amount: 15000, category: 'Staff', note: 'Staff counter wages' }
-          ]
-        }
-      };
-
-      appState.records = demoRecords;
+      // Clean zero-state initialization
+      appState.records = {};
       recalculateLedgerCascade();
-
-      if (showToast) {
-        showToastNotification(
-          appState.language === 'ur' ? 'سیمپل روزنامچہ لوڈ ہو گیا' : 'Demo Register Loaded',
-          appState.language === 'ur' ? 'ہفتہ تا جمعرات مرچنٹ کھاتہ کی تمام ادائیگیاں کامیابی سے لوڈ کر دی گئیں۔' : 'Loaded Sat to Thu handwritten notebook register with real merchant payouts!'
-        );
-        confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-      }
-
-      appState.selectedDate = '2026-10-12';
-      const dateInp = document.getElementById('entryDate');
-      if (dateInp) dateInp.value = appState.selectedDate;
-
       refreshAllViews();
     }
 
     function loadDemoNotebookData() {
-      preloadSampleNotebook(true);
+      // Purged demo injector
     }
 
     function confirmResetData() {
@@ -3092,6 +3191,15 @@
       }
       // Re-render register table to show or hide admin action buttons
       renderRegisterTable();
+
+      // Strict RBAC: Toggle visibility of admin override pencil triggers
+      document.querySelectorAll('.admin-only-btn').forEach(b => {
+        if (appState.isAdminLoggedIn) b.classList.remove('hidden');
+        else b.classList.add('hidden');
+      });
+
+      // Strict RBAC on Tab 1 Entry Terminal (Lock terminal for public viewers)
+      applyRbacOnEntryTerminal();
     }
 
     // 3. ADMIN PORTAL ROUTE MANAGEMENT
@@ -3130,7 +3238,7 @@
 
     function switchAdminSubModule(subMod) {
       appState.adminSubModule = subMod;
-      const mods = ['crud', 'cms', 'db'];
+      const mods = ['crud', 'cms', 'kpi', 'db'];
 
       mods.forEach(m => {
         const c = document.getElementById(`adminModuleContainer-${m}`);
@@ -3152,6 +3260,8 @@
         renderAdminTable();
       } else if (subMod === 'cms') {
         loadCmsFormFields();
+      } else if (subMod === 'kpi') {
+        populateKpiOverrideForm();
       } else if (subMod === 'db') {
         loadBackupsList();
       }
@@ -3416,7 +3526,8 @@
       try {
         const payload = {
           records: appState.records,
-          customerAccounts: appState.customerAccounts
+          customerAccounts: appState.customerAccounts,
+          kpiOverrides: appState.kpiOverrides
         };
         await fetch('/api/records', {
           method: 'POST',
@@ -3440,6 +3551,8 @@
           if (json.success && json.data) {
             const serverRecords = json.data.records;
             const serverCust = json.data.customerAccounts;
+            const serverKpis = json.data.kpiOverrides;
+            if (serverKpis) appState.kpiOverrides = serverKpis;
 
             // Update local memory if server has data
             if (serverRecords && Object.keys(serverRecords).length > 0) {
@@ -3764,6 +3877,10 @@
     }
 
     function addOutflowRow(itemData = null) {
+      if (!appState.isAdminLoggedIn && !itemData) {
+        // Public visitors cannot add lines
+        return;
+      }
       const container = document.getElementById('outflowRowsContainer');
       const rowDiv = document.createElement('div');
       rowDiv.className = 'outflow-row grid grid-cols-1 sm:grid-cols-12 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all items-center shadow-sm';
@@ -3873,6 +3990,11 @@
      * SAVE & LOCK DAY INTO ROZNAMCHA
      */
     function saveAndLockDay() {
+      if (!appState.isAdminLoggedIn) {
+        showToastNotification(appState.language === 'ur' ? 'رسائی ممنوع ہے' : 'Access Restricted', appState.language === 'ur' ? 'اندراج محفوظ کرنے کے لیے ایڈمن لاگ ان درکار ہے۔' : 'Admin authentication is required to save entries.');
+        openAdminLoginModal();
+        return;
+      }
       const dateIso = appState.selectedDate;
       const opening = parseFloat(document.getElementById('inputOpeningBalance').value) || 0;
       const sale = parseFloat(document.getElementById('inputDailySale').value) || 0;
@@ -3922,6 +4044,10 @@
     }
 
     function resetCurrentDayForm() {
+      if (!appState.isAdminLoggedIn) {
+        openAdminLoginModal();
+        return;
+      }
       const msg = appState.language === 'ur' ? 'کیا آپ اس ٹرمینل کے فیلڈز خالی کرنا چاہتے ہیں؟' : 'Clear fields on this terminal?';
       if (confirm(msg)) {
         loadDayIntoTerminal(appState.selectedDate);
@@ -3953,6 +4079,206 @@
     /**
      * TOP KPI HEADER STRIP UPDATE
      */
+    
+    /**
+     * =========================================================================
+     * KPI OVERRIDE MANAGEMENT & RBAC UI SYNCHRONIZATION
+     * =========================================================================
+     */
+    const KPI_OVERRIDES_STORAGE_KEY = 'roznamcha_kpi_overrides_v1';
+    let currentQuickKpiKey = null;
+
+    function loadKpiOverrides() {
+      try {
+        const raw = localStorage.getItem(KPI_OVERRIDES_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState.kpiOverrides = { ...appState.kpiOverrides, ...parsed };
+        }
+      } catch (e) {}
+    }
+
+    async function saveKpiOverridesToStorage() {
+      try {
+        localStorage.setItem(KPI_OVERRIDES_STORAGE_KEY, JSON.stringify(appState.kpiOverrides));
+        // Persist to backend
+        await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (appState.adminToken || '')
+          },
+          body: JSON.stringify({ action: 'save_kpi_overrides', overrides: appState.kpiOverrides })
+        });
+      } catch (e) {}
+    }
+
+    function openKpiOverrideModal(kpiKey) {
+      if (!appState.isAdminLoggedIn) {
+        openAdminLoginModal();
+        return;
+      }
+      currentQuickKpiKey = kpiKey;
+      const modal = document.getElementById('quickKpiOverrideModal');
+      const title = document.getElementById('quickKpiModalTitle');
+      const valInput = document.getElementById('quickKpiValueInput');
+      const manualInputs = document.getElementById('quickKpiManualInputs');
+      const autoRadio = document.querySelector('input[name="quickKpiMode"][value="auto"]');
+      const manualRadio = document.querySelector('input[name="quickKpiMode"][value="manual"]');
+
+      const kpiNames = {
+        openingCash: "1. Opening Cash",
+        todaySales: "2. Today's Sales",
+        todayOutflows: "3. Total Outflows",
+        closingCash: "4. Closing Cash",
+        marketCredit: "5. Market Credit (Udhaar)",
+        currentMonthSales: "6. Current Month Sales",
+        lastMonthSales: "7. Last Month Sales & Status"
+      };
+
+      if (title) title.textContent = `Adjust Metric: ${kpiNames[kpiKey] || kpiKey}`;
+      const curConfig = appState.kpiOverrides[kpiKey] || { enabled: false, value: 0 };
+
+      if (curConfig.enabled) {
+        if (manualRadio) manualRadio.checked = true;
+        if (manualInputs) manualInputs.classList.remove('hidden');
+        if (valInput) valInput.value = curConfig.value || 0;
+      } else {
+        if (autoRadio) autoRadio.checked = true;
+        if (manualInputs) manualInputs.classList.add('hidden');
+        if (valInput) valInput.value = '';
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeQuickKpiModal() {
+      const modal = document.getElementById('quickKpiOverrideModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function onQuickKpiModeChange(mode) {
+      const manualInputs = document.getElementById('quickKpiManualInputs');
+      if (manualInputs) {
+        if (mode === 'manual') manualInputs.classList.remove('hidden');
+        else manualInputs.classList.add('hidden');
+      }
+    }
+
+    async function saveQuickKpiModal() {
+      if (!currentQuickKpiKey) return;
+      const mode = document.querySelector('input[name="quickKpiMode"]:checked')?.value;
+      const val = parseFloat(document.getElementById('quickKpiValueInput')?.value) || 0;
+
+      if (!appState.kpiOverrides[currentQuickKpiKey]) {
+        appState.kpiOverrides[currentQuickKpiKey] = { enabled: false, value: 0 };
+      }
+
+      if (mode === 'manual') {
+        appState.kpiOverrides[currentQuickKpiKey].enabled = true;
+        appState.kpiOverrides[currentQuickKpiKey].value = val;
+      } else {
+        appState.kpiOverrides[currentQuickKpiKey].enabled = false;
+      }
+
+      await saveKpiOverridesToStorage();
+      closeQuickKpiModal();
+      populateKpiOverrideForm();
+      refreshAllViews();
+
+      showToastNotification('Metric Updated', 'KPI card value updated and synchronized live.');
+    }
+
+    function populateKpiOverrideForm() {
+      const keys = ['openingCash', 'todaySales', 'todayOutflows', 'closingCash', 'marketCredit', 'currentMonthSales', 'lastMonthSales'];
+      keys.forEach(k => {
+        const conf = appState.kpiOverrides[k] || { enabled: false, value: 0 };
+        const chk = document.getElementById(`kpiOvrToggle-${k}`);
+        const valInp = document.getElementById(`kpiOvrVal-${k}`);
+        const statusP = document.getElementById(`kpiOvrStatus-${k}`);
+
+        if (chk) chk.checked = !!conf.enabled;
+        if (valInp) {
+          valInp.value = conf.value || '';
+          valInp.disabled = !conf.enabled;
+          if (conf.enabled) {
+            valInp.classList.remove('bg-slate-100', 'cursor-not-allowed');
+          } else {
+            valInp.classList.add('bg-slate-100', 'cursor-not-allowed');
+          }
+        }
+        if (statusP) {
+          statusP.textContent = conf.enabled ? 'Mode: ACTIVE MANUAL OVERRIDE' : 'Mode: Auto-Calculate';
+          statusP.className = conf.enabled ? 'text-[10px] text-purple-700 font-mono font-bold' : 'text-[10px] text-slate-400 font-mono';
+        }
+      });
+
+      const selStatus = document.getElementById('kpiOvrStatus-lastMonthSalesSelect');
+      if (selStatus && appState.kpiOverrides.lastMonthSales) {
+        selStatus.value = appState.kpiOverrides.lastMonthSales.status || 'AUTO';
+      }
+    }
+
+    function toggleKpiFieldState(kpiKey) {
+      const chk = document.getElementById(`kpiOvrToggle-${kpiKey}`);
+      const valInp = document.getElementById(`kpiOvrVal-${kpiKey}`);
+      const statusP = document.getElementById(`kpiOvrStatus-${kpiKey}`);
+
+      if (chk && valInp) {
+        valInp.disabled = !chk.checked;
+        if (chk.checked) {
+          valInp.classList.remove('bg-slate-100', 'cursor-not-allowed');
+          valInp.focus();
+          if (statusP) {
+            statusP.textContent = 'Mode: ACTIVE MANUAL OVERRIDE';
+            statusP.className = 'text-[10px] text-purple-700 font-mono font-bold';
+          }
+        } else {
+          valInp.classList.add('bg-slate-100', 'cursor-not-allowed');
+          if (statusP) {
+            statusP.textContent = 'Mode: Auto-Calculate';
+            statusP.className = 'text-[10px] text-slate-400 font-mono';
+          }
+        }
+      }
+    }
+
+    async function saveAllKpiOverridesFromForm() {
+      const keys = ['openingCash', 'todaySales', 'todayOutflows', 'closingCash', 'marketCredit', 'currentMonthSales', 'lastMonthSales'];
+      keys.forEach(k => {
+        const chk = document.getElementById(`kpiOvrToggle-${k}`);
+        const valInp = document.getElementById(`kpiOvrVal-${k}`);
+        appState.kpiOverrides[k] = {
+          enabled: chk ? chk.checked : false,
+          value: parseFloat(valInp?.value) || 0
+        };
+      });
+
+      const selStatus = document.getElementById('kpiOvrStatus-lastMonthSalesSelect');
+      if (selStatus && appState.kpiOverrides.lastMonthSales) {
+        appState.kpiOverrides.lastMonthSales.status = selStatus.value;
+      }
+
+      await saveKpiOverridesToStorage();
+      populateKpiOverrideForm();
+      refreshAllViews();
+
+      showToastNotification('Overrides Saved', 'All 7 summary KPI card overrides applied live.');
+    }
+
+    async function resetAllKpiOverridesToAuto() {
+      if (confirm('Reset all 7 KPI cards back to automatic calculations derived from ledger records?')) {
+        const keys = ['openingCash', 'todaySales', 'todayOutflows', 'closingCash', 'marketCredit', 'currentMonthSales', 'lastMonthSales'];
+        keys.forEach(k => {
+          appState.kpiOverrides[k] = { enabled: false, value: 0 };
+        });
+        await saveKpiOverridesToStorage();
+        populateKpiOverrideForm();
+        refreshAllViews();
+        showToastNotification('Defaults Restored', 'All 7 KPI summary cards returned to auto-calculate mode.');
+      }
+    }
+
     function updateTopKPIBadges() {
       const dates = Object.keys(appState.records).sort();
       let targetRecord = appState.records[appState.selectedDate];
@@ -3961,12 +4287,54 @@
         targetRecord = appState.records[dates[dates.length - 1]];
       }
 
+      const ovr = appState.kpiOverrides || {};
+
+      // 1. Opening Cash (Auto vs Override)
+      const opElem = document.getElementById('kpiOpeningCash');
+      if (opElem) {
+        const val = (ovr.openingCash && ovr.openingCash.enabled) 
+          ? ovr.openingCash.value 
+          : (targetRecord ? targetRecord.openingBalance : 0);
+        opElem.textContent = formatCurrency(val);
+      }
+
+      // 2. Today's Sales (Auto vs Override)
+      const salesElem = document.getElementById('kpiTodaySales');
+      if (salesElem) {
+        const val = (ovr.todaySales && ovr.todaySales.enabled) 
+          ? ovr.todaySales.value 
+          : (targetRecord ? targetRecord.dailySale : 0);
+        salesElem.textContent = formatCurrency(val);
+      }
+
+      // 3. Total Outflows (Auto vs Override)
+      const outElem = document.getElementById('kpiTodayOutflows');
+      if (outElem) {
+        const val = (ovr.todayOutflows && ovr.todayOutflows.enabled) 
+          ? ovr.todayOutflows.value 
+          : (targetRecord ? targetRecord.totalOutflows : 0);
+        outElem.textContent = formatCurrency(val);
+      }
+
+      // 4. Closing Cash (Auto vs Override)
+      const closeElem = document.getElementById('kpiClosingCash');
+      if (closeElem) {
+        const val = (ovr.closingCash && ovr.closingCash.enabled) 
+          ? ovr.closingCash.value 
+          : (targetRecord ? targetRecord.closingCash : 0);
+        closeElem.textContent = formatCurrency(val);
+      }
+
+      // 5. Market Credit (Auto vs Override)
+      const credElem = document.getElementById('kpiMarketCredit');
+      if (credElem) {
+        const val = (ovr.marketCredit && ovr.marketCredit.enabled) 
+          ? ovr.marketCredit.value 
+          : (targetRecord ? targetRecord.closingMarketCredit : 0);
+        credElem.textContent = formatCurrency(val);
+      }
+
       if (targetRecord) {
-        document.getElementById('kpiOpeningCash').textContent = formatCurrency(targetRecord.openingBalance);
-        document.getElementById('kpiTodaySales').textContent = formatCurrency(targetRecord.dailySale);
-        document.getElementById('kpiTodayOutflows').textContent = formatCurrency(targetRecord.totalOutflows);
-        document.getElementById('kpiClosingCash').textContent = formatCurrency(targetRecord.closingCash);
-        document.getElementById('kpiMarketCredit').textContent = formatCurrency(targetRecord.closingMarketCredit);
 
         const isUr = appState.language === 'ur';
         document.getElementById('kpiSalesCount').textContent = `${formatDateDisplay(targetRecord.date)} (${getShortDayName(targetRecord.date)})`;
@@ -4105,8 +4473,14 @@
       const m = computeMonthlyFinancialMetrics();
       const isUr = appState.language === 'ur';
 
+      const ovr = appState.kpiOverrides || {};
       const curSalesElem = document.getElementById('kpiCurrentMonthSales');
-      if (curSalesElem) curSalesElem.textContent = formatCurrency(m.curMonthSales);
+      if (curSalesElem) {
+        const val = (ovr.currentMonthSales && ovr.currentMonthSales.enabled) 
+          ? ovr.currentMonthSales.value 
+          : m.curMonthSales;
+        curSalesElem.textContent = formatCurrency(val);
+      }
 
       const curMonthNameElem = document.getElementById('kpiCurrentMonthName');
       if (curMonthNameElem) curMonthNameElem.textContent = m.curMonthName;
@@ -4117,7 +4491,12 @@
       }
 
       const priorSalesElem = document.getElementById('kpiLastMonthSales');
-      if (priorSalesElem) priorSalesElem.textContent = formatCurrency(m.priorMonthSales);
+      if (priorSalesElem) {
+        const val = (ovr.lastMonthSales && ovr.lastMonthSales.enabled) 
+          ? ovr.lastMonthSales.value 
+          : m.priorMonthSales;
+        priorSalesElem.textContent = formatCurrency(val);
+      }
 
       const priorMonthNameElem = document.getElementById('kpiLastMonthName');
       if (priorMonthNameElem) priorMonthNameElem.textContent = m.priorMonthName;
@@ -4136,7 +4515,11 @@
       const cardElem = document.getElementById('kpiLastMonthCard');
 
       if (statusPillElem && statusTextElem) {
-        if (m.isProfit) {
+        const forceStatus = (ovr.lastMonthSales && ovr.lastMonthSales.enabled && ovr.lastMonthSales.status !== 'AUTO') 
+          ? (ovr.lastMonthSales.status === 'PROFIT') 
+          : m.isProfit;
+
+        if (forceStatus) {
           statusTextElem.textContent = isUr ? 'نفع (PROFIT)' : 'PROFIT';
           statusPillElem.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-sm flex items-center gap-1';
           statusPillElem.innerHTML = `<i class="fa-solid fa-arrow-trend-up text-[9px]"></i><span>${isUr ? 'نفع (پرافٹ)' : 'PROFIT'}</span>`;
@@ -4153,6 +4536,38 @@
     /**
      * MODULE 2: CASH REGISTER TABLE VIEW
      */
+    
+    function applyRbacOnEntryTerminal() {
+      const isAuth = appState.isAdminLoggedIn;
+      const saveBtn = document.querySelector('button[onclick="saveAndLockDay()"]');
+      const clearBtn = document.querySelector('button[onclick="resetCurrentDayForm()"]');
+      const addLineBtn = document.querySelector('button[onclick="addOutflowRow()"]');
+      const quickChips = document.getElementById('quickVendorChips');
+      const overrideToggle = document.getElementById('overrideToggleText')?.closest('button');
+
+      // Disable/enable inputs for non-authenticated users
+      ['inputOpeningBalance', 'inputDailySale', 'inputCreditGiven', 'inputCreditRecovered', 'inputDailyNotes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (!isAuth) {
+            el.setAttribute('readonly', 'true');
+            el.classList.add('bg-slate-100', 'cursor-not-allowed');
+          } else {
+            if (id !== 'inputOpeningBalance' || appState.manualOpeningOverride) {
+              el.removeAttribute('readonly');
+              el.classList.remove('bg-slate-100', 'cursor-not-allowed');
+            }
+          }
+        }
+      });
+
+      if (saveBtn) saveBtn.style.display = isAuth ? 'inline-flex' : 'none';
+      if (clearBtn) clearBtn.style.display = isAuth ? 'inline-flex' : 'none';
+      if (addLineBtn) addLineBtn.style.display = isAuth ? 'inline-flex' : 'none';
+      if (quickChips) quickChips.style.display = isAuth ? 'flex' : 'none';
+      if (overrideToggle) overrideToggle.style.display = isAuth ? 'inline-block' : 'none';
+    }
+
     function renderRegisterTable() {
       const tbody = document.getElementById('registerTableBody');
       const tfoot = document.getElementById('registerTableFooter');
@@ -4205,7 +4620,7 @@
           <tr>
             <td colspan="8" class="text-center py-10 text-slate-400">
               <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-300"></i>
-              ${isUr ? 'کوئی اندراج نہیں ملا۔ نیا اندراج کریں یا سیمپل ڈیٹا لوڈ کریں۔' : 'No entries found matching criteria. Click "+ New Daily Entry" or "Load Demo Data".'}
+              ${isUr ? 'کھاتہ میں کوئی اندراج موجود نہیں ہے۔' : 'No ledger records found for this period.'}
             </td>
           </tr>
         `;
@@ -4955,7 +5370,7 @@
         if (btnVendors) btnVendors.className = 'px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent flex items-center gap-2 transition-all';
         if (viewVendors) viewVendors.classList.add('hidden');
         if (viewUdhaar) viewUdhaar.classList.remove('hidden');
-        if (btnNewUdhaar) btnNewUdhaar.classList.remove('hidden');
+        if (btnNewUdhaar) { if (appState.isAdminLoggedIn) btnNewUdhaar.classList.remove('hidden'); else btnNewUdhaar.classList.add('hidden'); }
         renderCustomerUdhaarDirectory();
       } else {
         if (btnVendors) btnVendors.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-2 transition-all shadow-sm';

@@ -20,6 +20,7 @@ function ensureDataDir() {
 let memoryCache = {
   records: {},
   customerAccounts: {},
+  kpiOverrides: {},
   backups: [],
   lastUpdated: new Date().toISOString()
 };
@@ -103,6 +104,7 @@ async function getRoznamchaState() {
 async function saveRoznamchaState(data) {
   const payload = {
     records: data.records || {},
+    kpiOverrides: data.kpiOverrides || {},
     customerAccounts: data.customerAccounts || {},
     lastUpdated: new Date().toISOString()
   };

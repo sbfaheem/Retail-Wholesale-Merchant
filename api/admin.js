@@ -84,6 +84,13 @@ module.exports = async function handler(req, res) {
       }
 
       // Admin Save Settings
+      if (action === 'save_kpi_overrides') {
+        const state = await getRoznamchaState();
+        state.kpiOverrides = body.overrides || {};
+        await saveRoznamchaState(state);
+        return res.status(200).json({ success: true, kpiOverrides: state.kpiOverrides });
+      }
+
       if (action === 'save_settings') {
         const state = await getRoznamchaState();
         state.systemSettings = body.settings || {};
@@ -116,7 +123,8 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         success: true,
         authenticated: !!session,
-        settings: state.systemSettings || null
+        settings: state.systemSettings || null,
+        kpiOverrides: state.kpiOverrides || {}
       });
     }
 
