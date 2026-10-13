@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" class="h-full">
-<!DOCTYPE html>
-<html lang="en" dir="ltr" class="h-full">
-<!DOCTYPE html>
-<html lang="en" dir="ltr" class="h-full">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <title>Daily Cash Book & Financial Management</title>
   
   <!-- Tailwind CSS -->
@@ -117,6 +113,51 @@
     .tabular-nums {
       font-variant-numeric: tabular-nums;
     }
+
+    /* Mobile Accessibility & Near-Eyesight Calibration */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      touch-action: manipulation;
+    }
+
+    /* One-pixel bold weight calibration: elevate standard body text */
+    body {
+      font-weight: 500;
+      color: #0f172a; /* high contrast deep slate */
+    }
+
+    /* Prevent mobile auto-zoom on input focus by enforcing >= 16px font-size */
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+
+    /* Touch momentum scrolling */
+    .overflow-x-auto, .overflow-y-auto, .smooth-scroll {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    /* Sticky first column for Mobile Register Table (Date & Day pinned) */
+    .sticky-col-date {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+    }
+    body.lang-ur .sticky-col-date {
+      left: auto;
+      right: 0;
+    }
+
+    /* iOS safe-area utilities */
+    .safe-pb-bottom-nav {
+      padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    }
+    .safe-pt-top-nav {
+      padding-top: env(safe-area-inset-top, 0px);
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
@@ -131,7 +172,7 @@
     <!-- Top Executive App Header -->
     <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16 sm:h-20 gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between py-2 sm:py-0 min-h-[4rem] sm:h-20 gap-3">
           
           <!-- Logo & Dynamic Branding -->
           <div class="flex items-center space-x-3.5 rtl:space-x-reverse min-w-0">
@@ -143,51 +184,51 @@
                 <h1 id="headerAppTitle" class="text-base sm:text-lg font-black tracking-tight text-slate-900 truncate">
                   Daily Cash Book & Financial Management
                 </h1>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1 rtl:mr-0 rtl:ml-1 animate-pulse"></span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shrink-0">
+                  <span class="w-2 h-2 rounded-full bg-emerald-600 mr-1.5 rtl:mr-0 rtl:ml-1.5 animate-pulse"></span>
                   <span>PKR (Rs.)</span>
                 </span>
               </div>
-              <p id="headerAppSubtitle" class="text-xs text-slate-500 truncate hidden sm:block">
+              <p id="headerAppSubtitle" class="text-xs font-semibold text-slate-600 truncate hidden sm:block">
                 Retail & Wholesale 5-Column Daily Cash Ledger & Financial Management
               </p>
             </div>
           </div>
 
-          <!-- Controls: Month Selector, Language, Export, Print, Admin Gateway -->
-          <div class="flex items-center space-x-2.5 rtl:space-x-reverse shrink-0">
+          <!-- Controls: Date Picker, Language, Export, Print, Admin Gateway -->
+          <div class="flex flex-wrap items-center gap-2 rtl:space-x-reverse shrink-0">
             
-            <!-- Calendar Date Picker (Exact Match to Reference Design) -->
+            <!-- Calendar Date Picker -->
             <div class="flex items-center">
               <input type="date" id="publicHeaderDatePicker" onchange="onPublicHeaderDateChange(this.value)" onclick="this.showPicker && this.showPicker()" title="Select Date"
-                class="bg-white border border-slate-300 rounded-2xl px-3 py-1.5 text-xs sm:text-sm font-mono font-bold text-slate-800 shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-all">
+                class="min-h-[44px] bg-white border border-slate-300 rounded-2xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-mono font-bold text-slate-900 shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-all">
             </div>
 
             <!-- Bilingual English & Urdu Toggle -->
-            <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold">
-              <button type="button" onclick="setLanguage('en')" id="langBtnEn" class="px-2.5 py-1 rounded-lg transition-colors bg-white text-emerald-800 shadow-sm cursor-pointer">
+            <div class="min-h-[44px] flex items-center rounded-2xl bg-slate-100 border border-slate-300 p-1 text-xs sm:text-sm font-bold shadow-sm">
+              <button type="button" onclick="setLanguage('en')" id="langBtnEn" class="min-h-[36px] px-3.5 py-1.5 rounded-xl transition-colors bg-white text-emerald-800 shadow-sm cursor-pointer font-bold">
                 English
               </button>
-              <button type="button" onclick="setLanguage('ur')" id="langBtnUr" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition-colors cursor-pointer">
+              <button type="button" onclick="setLanguage('ur')" id="langBtnUr" class="min-h-[36px] px-3.5 py-1.5 rounded-xl text-slate-700 hover:text-slate-900 transition-colors cursor-pointer font-bold">
                 اردو
               </button>
             </div>
 
             <!-- Export CSV Button -->
-            <button type="button" onclick="exportDataToCSV()" title="Export Ledger as CSV" class="hidden sm:flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer">
+            <button type="button" onclick="exportDataToCSV()" title="Export Ledger as CSV" class="hidden sm:flex min-h-[44px] items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-2 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer">
               <i class="fa-solid fa-file-csv text-emerald-600"></i>
               <span class="hidden md:inline" data-i18n="btnExportCSV">Export CSV</span>
             </button>
 
             <!-- Print Statement Button -->
-            <button type="button" onclick="window.print()" title="Print Current View" class="hidden sm:flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer">
+            <button type="button" onclick="window.print()" title="Print Current View" class="hidden sm:flex min-h-[44px] items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-2 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer">
               <i class="fa-solid fa-print text-slate-600"></i>
               <span class="hidden md:inline" data-i18n="btnPrint">Print</span>
             </button>
 
             <!-- Discrete Admin Gateway Link -->
-            <button type="button" onclick="navigateToAdmin()" title="Access Administrative Control Panel" class="flex items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition-all shadow-sm cursor-pointer">
-              <i class="fa-solid fa-lock text-emerald-400 text-xs"></i>
+            <button type="button" onclick="navigateToAdmin()" title="Access Administrative Control Panel" class="min-h-[44px] flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-xs sm:text-sm font-black transition-all shadow-md cursor-pointer">
+              <i class="fa-solid fa-lock text-emerald-400 text-sm"></i>
               <span>Admin Login</span>
             </button>
 
@@ -202,99 +243,99 @@
         
         <!-- Card 1: Opening Cash -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
-          <div class="flex items-center justify-between text-slate-500 mb-2">
-            <span class="text-xs font-bold tracking-tight truncate" data-i18n="kpiOpeningCashLabel">Opening Cash</span>
-            <div class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-[11px] shrink-0">
+          <div class="flex items-center justify-between text-slate-600 mb-2">
+            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-slate-700" data-i18n="kpiOpeningCashLabel">Opening Cash</span>
+            <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs shrink-0">
               <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
           </div>
           <div>
-            <div id="kpiOpeningCash" class="text-lg sm:text-xl font-black font-mono text-slate-900 tracking-tight tabular-nums">PKR 0</div>
-            <div class="text-[10px] text-slate-400 font-bold truncate mt-1" data-i18n="kpiOpeningSubtext">Rolled from yesterday</div>
+            <div id="kpiOpeningCash" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-slate-900 tracking-tight tabular-nums">PKR 0</div>
+            <div class="text-xs text-slate-600 font-bold truncate mt-1" data-i18n="kpiOpeningSubtext">Rolled from yesterday</div>
           </div>
         </div>
 
         <!-- Card 2: Today's Sales -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
-          <div class="flex items-center justify-between text-emerald-700 mb-2">
-            <span class="text-xs font-bold tracking-tight truncate" data-i18n="kpiTodaySalesLabel">Today's Sales</span>
-            <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-[11px] shrink-0">
+          <div class="flex items-center justify-between text-emerald-800 mb-2">
+            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-emerald-800" data-i18n="kpiTodaySalesLabel">Today's Sales</span>
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs shrink-0">
               <i class="fa-solid fa-cash-register"></i>
             </div>
           </div>
           <div>
-            <div id="kpiTodaySales" class="text-lg sm:text-xl font-black font-mono text-emerald-700 tracking-tight tabular-nums">PKR 0</div>
-            <div id="kpiSalesCount" class="text-[10px] text-emerald-600/80 font-bold truncate mt-1">Cash Inflow</div>
+            <div id="kpiTodaySales" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-emerald-700 tracking-tight tabular-nums">PKR 0</div>
+            <div id="kpiSalesCount" class="text-xs text-emerald-700 font-bold truncate mt-1">Cash Inflow</div>
           </div>
         </div>
 
         <!-- Card 3: Total Outflows -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
-          <div class="flex items-center justify-between text-rose-600 mb-2">
-            <span class="text-xs font-bold tracking-tight truncate" data-i18n="kpiTodayOutflowsLabel">Total Outflows</span>
-            <div class="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-[11px] shrink-0">
+          <div class="flex items-center justify-between text-rose-700 mb-2">
+            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-rose-700" data-i18n="kpiTodayOutflowsLabel">Total Outflows</span>
+            <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center text-xs shrink-0">
               <i class="fa-solid fa-arrow-trend-down"></i>
             </div>
           </div>
           <div>
-            <div id="kpiTodayOutflows" class="text-lg sm:text-xl font-black font-mono text-rose-600 tracking-tight tabular-nums">PKR 0</div>
-            <div id="kpiOutflowCount" class="text-[10px] text-rose-500/80 font-bold truncate mt-1">0 items recorded</div>
+            <div id="kpiTodayOutflows" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-rose-600 tracking-tight tabular-nums">PKR 0</div>
+            <div id="kpiOutflowCount" class="text-xs text-rose-600 font-bold truncate mt-1">0 items recorded</div>
           </div>
         </div>
 
         <!-- Card 4: Closing Cash -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
           <div class="flex items-center justify-between text-sky-800 mb-2">
-            <span class="text-xs font-bold tracking-tight truncate" data-i18n="kpiClosingCashLabel">Closing Cash</span>
-            <div class="w-6 h-6 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center text-[11px] shrink-0">
+            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-sky-900" data-i18n="kpiClosingCashLabel">Closing Cash</span>
+            <div class="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center text-xs shrink-0">
               <i class="fa-solid fa-wallet"></i>
             </div>
           </div>
           <div>
-            <div id="kpiClosingCash" class="text-lg sm:text-xl font-black font-mono text-sky-900 tracking-tight tabular-nums">PKR 0</div>
-            <div class="text-[10px] text-sky-600/80 font-bold truncate mt-1" data-i18n="kpiClosingSubtext">(Avail - Outflows)</div>
+            <div id="kpiClosingCash" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-sky-900 tracking-tight tabular-nums">PKR 0</div>
+            <div class="text-xs text-sky-700 font-bold truncate mt-1" data-i18n="kpiClosingSubtext">(Avail - Outflows)</div>
           </div>
         </div>
 
         <!-- Card 5: Market Credit (Udhaar) -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
-          <div class="flex items-center justify-between text-amber-700 mb-2">
-            <span class="text-xs font-bold tracking-tight truncate" data-i18n="kpiMarketCreditLabel">Market Credit</span>
-            <div class="w-6 h-6 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center text-[11px] shrink-0">
+          <div class="flex items-center justify-between text-amber-800 mb-2">
+            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-amber-900" data-i18n="kpiMarketCreditLabel">Market Credit</span>
+            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center text-xs shrink-0">
               <i class="fa-solid fa-hand-holding-dollar"></i>
             </div>
           </div>
           <div>
-            <div id="kpiClosingMarketCredit" class="text-lg sm:text-xl font-black font-mono text-amber-800 tracking-tight tabular-nums">PKR 0</div>
-            <div id="kpiCreditSubtext" class="text-[10px] text-amber-600/80 font-bold truncate mt-1">Active Receivables</div>
+            <div id="kpiClosingMarketCredit" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-amber-800 tracking-tight tabular-nums">PKR 0</div>
+            <div id="kpiCreditSubtext" class="text-xs text-amber-700 font-bold truncate mt-1">Active Receivables</div>
           </div>
         </div>
 
         <!-- Card 6: Current Month Sales -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
-          <div class="flex items-center justify-between text-teal-700 mb-2">
-            <span class="text-xs font-bold tracking-tight truncate" data-i18n="kpiCurMonthLabel">This Month Sale</span>
-            <div class="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center text-[11px] shrink-0">
+          <div class="flex items-center justify-between text-teal-800 mb-2">
+            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-teal-900" data-i18n="kpiCurMonthLabel">This Month Sale</span>
+            <div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center text-xs shrink-0">
               <i class="fa-solid fa-chart-line"></i>
             </div>
           </div>
           <div>
-            <div id="kpiCurrentMonthSales" class="text-lg sm:text-xl font-black font-mono text-teal-800 tracking-tight tabular-nums">PKR 0</div>
-            <div id="kpiCurMonthProgressBadge" class="text-[10px] text-teal-600 font-bold truncate mt-1">Cumulative Total</div>
+            <div id="kpiCurrentMonthSales" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-teal-800 tracking-tight tabular-nums">PKR 0</div>
+            <div id="kpiCurMonthProgressBadge" class="text-xs text-teal-700 font-bold truncate mt-1">Cumulative Total</div>
           </div>
         </div>
 
-        <!-- Card 7: Last Month Sales / Performance -->
-        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
-          <div class="flex items-center justify-between text-slate-600 mb-2">
-            <span class="text-xs font-bold tracking-tight truncate" data-i18n="kpiPriorMonthLabel">Last Month Sale</span>
-            <div class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-[11px] shrink-0">
+        <!-- Card 7: Last Month Sales / Performance (Spans 2 cols on mobile for balanced layout) -->
+        <div class="col-span-2 sm:col-span-1 bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-700 mb-2">
+            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-slate-800" data-i18n="kpiPriorMonthLabel">Last Month Sale</span>
+            <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs shrink-0">
               <i class="fa-solid fa-scale-balanced"></i>
             </div>
           </div>
           <div>
-            <div id="kpiPriorMonthSales" class="text-lg sm:text-xl font-black font-mono text-slate-800 tracking-tight tabular-nums">PKR 0</div>
-            <div id="kpiMonthGrowthBadge" class="text-[10px] text-slate-500 font-bold truncate mt-1">0% Prior Baseline</div>
+            <div id="kpiPriorMonthSales" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-slate-800 tracking-tight tabular-nums">PKR 0</div>
+            <div id="kpiMonthGrowthBadge" class="text-xs text-slate-600 font-bold truncate mt-1">0% Prior Baseline</div>
           </div>
         </div>
 
@@ -341,26 +382,26 @@
           <div class="flex flex-wrap items-center gap-3">
             
             <!-- Date Picker -->
-            <div class="flex items-center space-x-2 rtl:space-x-reverse bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 shadow-inner">
+            <div class="min-h-[48px] flex items-center space-x-2 rtl:space-x-reverse bg-slate-50 border border-slate-300 rounded-2xl px-3.5 py-2 shadow-inner">
               <i class="fa-regular fa-calendar-days text-emerald-600 text-lg"></i>
-              <input type="date" id="entryDate" onchange="onDateChanged(this.value)" class="bg-transparent text-slate-900 font-mono font-bold text-sm focus:outline-none cursor-pointer">
+              <input type="date" id="entryDate" onchange="onDateChanged(this.value)" class="bg-transparent text-slate-900 font-mono font-bold text-base focus:outline-none cursor-pointer">
             </div>
 
             <!-- Day Name Badge -->
-            <div id="dayBadge" class="px-3.5 py-1.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shadow-sm">
-              <i class="fa-regular fa-sun text-emerald-600"></i>
+            <div id="dayBadge" class="min-h-[48px] px-4 py-2 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-2 shadow-sm">
+              <i class="fa-regular fa-sun text-emerald-700 text-sm"></i>
               <span id="dayNameDisplay">TODAY</span>
             </div>
 
             <!-- Quick Date Controls -->
-            <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold shadow-sm">
-              <button type="button" onclick="navigateDate(-1)" title="Previous Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
+            <div class="min-h-[48px] flex items-center rounded-2xl bg-slate-100 border border-slate-300 p-1 text-xs sm:text-sm font-bold shadow-sm">
+              <button type="button" onclick="navigateDate(-1)" title="Previous Day" class="min-h-[40px] px-3.5 py-2 rounded-xl text-slate-800 hover:text-slate-950 hover:bg-white active:bg-slate-200 transition-colors cursor-pointer flex items-center gap-1.5 font-bold">
                 <span>◀</span> <span data-i18n="btnPrevDay">Prev</span>
               </button>
-              <button type="button" onclick="goToToday()" title="Jump to Today" class="px-3 py-1.5 rounded-lg text-emerald-700 hover:text-emerald-800 hover:bg-white transition-colors cursor-pointer font-bold">
+              <button type="button" onclick="goToToday()" title="Jump to Today" class="min-h-[40px] px-4 py-2 rounded-xl text-emerald-800 hover:text-emerald-900 hover:bg-white active:bg-slate-200 transition-colors cursor-pointer font-black">
                 <span data-i18n="btnCurrentToday">Current (Today)</span>
               </button>
-              <button type="button" onclick="navigateDate(1)" title="Next Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
+              <button type="button" onclick="navigateDate(1)" title="Next Day" class="min-h-[40px] px-3.5 py-2 rounded-xl text-slate-800 hover:text-slate-950 hover:bg-white active:bg-slate-200 transition-colors cursor-pointer flex items-center gap-1.5 font-bold">
                 <span data-i18n="btnNextDay">Next</span> <span>▶</span>
               </button>
             </div>
@@ -368,11 +409,11 @@
 
           <!-- Status Indicator & Print Action -->
           <div class="flex items-center gap-3">
-            <div id="publicDayStatusBadge" class="text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            <div id="publicDayStatusBadge" class="min-h-[44px] text-xs sm:text-sm px-4 py-2 rounded-xl font-bold flex items-center gap-2 bg-emerald-50 text-emerald-900 border border-emerald-300">
+              <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
               <span id="publicDayStatusText">Balanced & Closed Register</span>
             </div>
-            <button type="button" onclick="viewDailySlipModal(appState.selectedDate)" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm">
+            <button type="button" onclick="viewDailySlipModal(appState.selectedDate)" class="min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer shadow-sm">
               <i class="fa-solid fa-receipt text-indigo-600"></i>
               <span>Print Day Slip</span>
             </button>
@@ -558,29 +599,46 @@
           <div class="flex flex-wrap items-center gap-3">
             <!-- Search input -->
             <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
-              <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center text-slate-400 text-xs">
+              <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pr-3.5 flex items-center text-slate-500 text-sm">
                 <i class="fa-solid fa-magnifying-glass"></i>
               </span>
-              <input type="text" id="registerSearch" oninput="renderRegisterTable()" placeholder="Search party, memo..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+              <input type="text" id="registerSearch" oninput="renderRegisterTable()" placeholder="Search party, memo..." class="min-h-[46px] w-full bg-slate-50 border border-slate-300 rounded-2xl pl-10 rtl:pl-3 rtl:pr-10 pr-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
             </div>
 
             <!-- Range Filter Dropdown -->
-            <select id="registerRangeFilter" onchange="renderRegisterTable()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+            <select id="registerRangeFilter" onchange="renderRegisterTable()" class="min-h-[46px] bg-slate-50 border border-slate-300 rounded-2xl px-3.5 py-2 text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
               <option value="all" data-i18n="filterAllTime">All Time (مکمل ریکارڈ)</option>
               <option value="thisMonth" selected data-i18n="filterThisMonth">This Month (موجودہ مہینہ)</option>
               <option value="30days" data-i18n="filter30Days">Past 30 Days (30 دن)</option>
               <option value="7days" data-i18n="filter7Days">Past 7 Days (7 دن)</option>
             </select>
+
+            <!-- Mode Switcher Pill: Cards vs Table -->
+            <div class="min-h-[46px] flex items-center rounded-2xl bg-slate-100 border border-slate-300 p-1 text-xs sm:text-sm font-bold shadow-sm">
+              <button type="button" id="regViewModeCardsBtn" onclick="setRegisterViewMode('cards')" class="min-h-[38px] px-3.5 py-1.5 rounded-xl transition-all font-bold cursor-pointer bg-white text-emerald-800 shadow-sm flex items-center gap-1.5">
+                <span>📇</span> <span data-i18n="btnPassbookCards">Passbook Cards</span>
+              </button>
+              <button type="button" id="regViewModeTableBtn" onclick="setRegisterViewMode('table')" class="min-h-[38px] px-3.5 py-1.5 rounded-xl transition-all font-bold cursor-pointer text-slate-700 hover:text-slate-900 flex items-center gap-1.5">
+                <span>📑</span> <span data-i18n="btnFullTable">Full 5-Column Table</span>
+              </button>
+            </div>
           </div>
 
           <div class="flex items-center gap-3 self-end md:self-auto">
-            <span class="text-xs text-slate-500 font-mono font-bold" id="registerRecordCountDisplay">0 days recorded</span>
+            <span class="text-xs sm:text-sm text-slate-700 font-mono font-bold" id="registerRecordCountDisplay">0 days recorded</span>
           </div>
 
         </div>
 
-        <!-- Master Register Table -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden print-shadow-none">
+        <!-- 1. Mobile Passbook View (Cards - Default on Mobile) -->
+        <div id="registerCardsView" class="space-y-4">
+          <div id="registerCardsContainer" class="space-y-3.5">
+            <!-- Dynamically populated daily ledger receipt cards -->
+          </div>
+        </div>
+
+        <!-- 2. Master Register Table (Horizontal Scrollable with Sticky First Column) -->
+        <div id="registerTableView" class="hidden bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden print-shadow-none">
           
           <!-- Table Header Banner -->
           <div class="bg-slate-100 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
@@ -588,23 +646,23 @@
               <i class="fa-solid fa-book-open text-emerald-700"></i>
               <h3 class="text-xs font-black uppercase tracking-wider text-slate-800" data-i18n="regTableHeader">Physical Notebook 5-Column Digital Ledger</h3>
             </div>
-            <span class="text-[10px] text-slate-500 font-mono" data-i18n="auditVerifiedBadge">Audited View-Only Cashbook</span>
+            <span class="text-[11px] text-slate-600 font-mono font-bold" data-i18n="auditVerifiedBadge">Audited View-Only Cashbook</span>
           </div>
 
-          <!-- Responsive Table Container -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-left rtl:text-right text-xs text-slate-700">
+          <!-- Responsive Table Container with pinned Date & Day column -->
+          <div class="overflow-x-auto smooth-scroll">
+            <table class="w-full text-left rtl:text-right text-xs sm:text-sm text-slate-800">
               
-              <thead class="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200 select-none">
+              <thead class="bg-slate-50 text-slate-800 font-bold uppercase tracking-wider border-b border-slate-200 select-none">
                 <tr>
-                  <th class="py-3 px-4 whitespace-nowrap" data-i18n="thDateDay">Date & Day</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap" data-i18n="thOpeningCash">Opening Cash</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-emerald-700" data-i18n="thCol1Sale">Col 1: Sale</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-700" data-i18n="thCol2TotalAvail">Col 2: Total Avail.</th>
-                  <th class="py-3 px-4 min-w-[260px] text-rose-700" data-i18n="thCol3Outflows">Col 3: Purchases & Outflows (Line Items)</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-800" data-i18n="thCol4ClosingCash">Col 4: Closing Cash</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-amber-800" data-i18n="thCol5MarketCredit">Col 5: Market Credit</th>
-                  <th class="py-3 px-3 text-center whitespace-nowrap no-print">Slip</th>
+                  <th class="py-3.5 px-4 whitespace-nowrap sticky-col-date bg-slate-50 border-r border-slate-200 shadow-sm" data-i18n="thDateDay">Date & Day</th>
+                  <th class="py-3.5 px-3 text-right rtl:text-left whitespace-nowrap" data-i18n="thOpeningCash">Opening Cash</th>
+                  <th class="py-3.5 px-3 text-right rtl:text-left whitespace-nowrap text-emerald-800 font-black" data-i18n="thCol1Sale">Col 1: Sale</th>
+                  <th class="py-3.5 px-3 text-right rtl:text-left whitespace-nowrap text-sky-800 font-bold" data-i18n="thCol2TotalAvail">Col 2: Total Avail.</th>
+                  <th class="py-3.5 px-4 min-w-[260px] text-rose-700 font-bold" data-i18n="thCol3Outflows">Col 3: Purchases & Outflows (Line Items)</th>
+                  <th class="py-3.5 px-3 text-right rtl:text-left whitespace-nowrap text-sky-950 font-black" data-i18n="thCol4ClosingCash">Col 4: Closing Cash</th>
+                  <th class="py-3.5 px-3 text-right rtl:text-left whitespace-nowrap text-amber-900 font-bold" data-i18n="thCol5MarketCredit">Col 5: Market Credit</th>
+                  <th class="py-3.5 px-3 text-center whitespace-nowrap no-print">Slip</th>
                 </tr>
               </thead>
 
@@ -928,8 +986,8 @@
   <!-- ========================================================================= -->
   <div id="adminApp" class="hidden min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans">
     
-    <!-- Left Navigation Sidebar -->
-    <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col justify-between shrink-0 border-r border-slate-800 shadow-2xl min-h-screen">
+    <!-- Left Navigation Sidebar (Hidden on mobile < md, replaced by sticky bottom navigation) -->
+    <aside class="hidden md:flex md:w-64 bg-slate-900 text-slate-200 flex-col justify-between shrink-0 border-r border-slate-800 shadow-2xl md:min-h-screen">
       <div>
         <!-- Sidebar Brand Header -->
         <div class="p-5 border-b border-slate-800 flex items-center gap-3">
@@ -1012,43 +1070,72 @@
       </div>
     </aside>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col min-w-0 bg-slate-50 min-h-screen">
+    <!-- Main Content Area (pb-28 on mobile clears floating bottom navigation) -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-50 min-h-screen pb-28 md:pb-8">
       
       <!-- Top Bar Controls -->
-      <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-30 shadow-sm">
-        <div>
-          <h1 id="adminTopBarTitle" class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Daily Cash Book Records</span>
-            <span id="adminTopBarDateBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">OCTOBER 2026</span>
-          </h1>
-          <p id="adminTopBarSubtitle" class="text-xs text-slate-500">Retail & Wholesale Merchant Roznamcha Ledger Management</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Date / Month Navigator -->
-          <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold">
-            <button type="button" onclick="adminNavigateDate(-1)" title="Previous Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer">
-              ◀ Prev
+      <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-col gap-3 sticky top-0 z-30 shadow-sm">
+        
+        <!-- Mobile Admin Header Bar (Only visible < md) -->
+        <div class="flex md:hidden items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-slate-900 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-sm">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                <span>Roznamcha Admin</span>
+                <span id="adminMobileRoleBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Admin</span>
+              </div>
+              <div id="adminMobileUsername" class="text-[11px] font-bold text-slate-500">admin</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="returnToPublicView()" title="Viewer Mode" class="min-h-[40px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-300 shadow-sm">
+              <i class="fa-solid fa-eye text-emerald-600"></i>
+              <span>Public</span>
             </button>
-            <button type="button" onclick="adminGoToToday()" class="px-3 py-1.5 rounded-lg text-emerald-700 hover:text-emerald-800 hover:bg-white transition-colors cursor-pointer">
-              Current (Today)
-            </button>
-            <button type="button" onclick="adminNavigateDate(1)" title="Next Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer">
-              Next ▶
+            <button type="button" onclick="handleAdminLogout()" title="Log Out" class="min-h-[40px] px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-rose-200 shadow-sm">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span>Exit</span>
             </button>
           </div>
+        </div>
 
-          <input type="date" id="adminDateSelector" onchange="onAdminSelectedDateChange(this.value)" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h1 id="adminTopBarTitle" class="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+              <span>Daily Cash Book Records</span>
+              <span id="adminTopBarDateBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">OCTOBER 2026</span>
+            </h1>
+            <p id="adminTopBarSubtitle" class="text-xs font-semibold text-slate-600 hidden sm:block">Retail & Wholesale Merchant Roznamcha Ledger Management</p>
+          </div>
 
-          <!-- Bilingual Switcher -->
-          <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold">
-            <button type="button" onclick="setLanguage('en')" id="adminLangBtnEn" class="px-2.5 py-1.5 rounded-lg transition-colors bg-white text-emerald-800 shadow-sm cursor-pointer">
-              English
-            </button>
-            <button type="button" onclick="setLanguage('ur')" id="adminLangBtnUr" class="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-colors cursor-pointer">
-              اردو
-            </button>
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <!-- Date / Month Navigator -->
+            <div class="min-h-[44px] flex items-center rounded-2xl bg-slate-100 border border-slate-300 p-1 text-xs sm:text-sm font-bold shadow-sm">
+              <button type="button" onclick="adminNavigateDate(-1)" title="Previous Day" class="min-h-[36px] px-3 py-1 rounded-xl text-slate-800 hover:text-slate-950 hover:bg-white active:bg-slate-200 transition-colors cursor-pointer font-bold">
+                ◀ Prev
+              </button>
+              <button type="button" onclick="adminGoToToday()" class="min-h-[36px] px-3.5 py-1 rounded-xl text-emerald-800 hover:text-emerald-900 hover:bg-white active:bg-slate-200 transition-colors cursor-pointer font-black">
+                Current (Today)
+              </button>
+              <button type="button" onclick="adminNavigateDate(1)" title="Next Day" class="min-h-[36px] px-3 py-1 rounded-xl text-slate-800 hover:text-slate-950 hover:bg-white active:bg-slate-200 transition-colors cursor-pointer font-bold">
+                Next ▶
+              </button>
+            </div>
+
+            <input type="date" id="adminDateSelector" onchange="onAdminSelectedDateChange(this.value)" class="min-h-[44px] bg-white border border-slate-300 rounded-2xl px-3 py-1.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer shadow-sm">
+
+            <!-- Bilingual Switcher -->
+            <div class="min-h-[44px] flex items-center rounded-2xl bg-slate-100 border border-slate-300 p-1 text-xs sm:text-sm font-bold shadow-sm">
+              <button type="button" onclick="setLanguage('en')" id="adminLangBtnEn" class="min-h-[36px] px-3 py-1 rounded-xl transition-colors bg-white text-emerald-800 shadow-sm cursor-pointer font-bold">
+                English
+              </button>
+              <button type="button" onclick="setLanguage('ur')" id="adminLangBtnUr" class="min-h-[36px] px-3 py-1 rounded-xl text-slate-700 hover:text-slate-950 transition-colors cursor-pointer font-bold">
+                اردو
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1156,35 +1243,35 @@
                 
                 <!-- Date -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Date</label>
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Date</label>
                   <input type="date" id="adminRecFormFieldDate" required onchange="onAdminRecordFormDateChange(this.value)"
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-slate-50 text-slate-900 text-sm sm:text-base font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
                 </div>
 
                 <!-- Opening Cash -->
                 <div>
-                  <div class="flex items-center justify-between mb-1">
-                    <label class="text-xs font-bold text-slate-700">Opening Cash (PKR)</label>
-                    <label class="text-[10px] text-purple-700 flex items-center gap-1 font-bold cursor-pointer">
-                      <input type="checkbox" id="adminRecFormFieldManualOpeningToggle" onchange="toggleAdminRecordManualOpening(this.checked)" class="rounded text-emerald-600">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-xs sm:text-sm font-bold text-slate-700">Opening Cash (PKR)</label>
+                    <label class="text-xs text-purple-700 flex items-center gap-1.5 font-bold cursor-pointer">
+                      <input type="checkbox" id="adminRecFormFieldManualOpeningToggle" onchange="toggleAdminRecordManualOpening(this.checked)" class="rounded text-emerald-600 w-4 h-4">
                       <span>Override</span>
                     </label>
                   </div>
-                  <input type="number" min="0" step="any" id="adminRecFormFieldOpening" oninput="onAdminRecordFormInputChange()" required
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-100 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  <input type="number" min="0" step="any" inputmode="decimal" id="adminRecFormFieldOpening" oninput="onAdminRecordFormInputChange()" required
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-slate-100 text-slate-900 text-sm sm:text-base font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
                 </div>
 
                 <!-- Today's Cash Sale -->
                 <div>
-                  <label class="block text-xs font-bold text-emerald-800 mb-1">Column 1: Today's Sale (PKR)</label>
-                  <input type="number" min="0" step="any" id="adminRecFormFieldSale" oninput="onAdminRecordFormInputChange()" required placeholder="0"
-                    class="w-full px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50/40 text-emerald-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  <label class="block text-xs sm:text-sm font-bold text-emerald-800 mb-1.5">Column 1: Today's Sale (PKR)</label>
+                  <input type="number" min="0" step="any" inputmode="decimal" id="adminRecFormFieldSale" oninput="onAdminRecordFormInputChange()" required placeholder="0"
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-emerald-300 bg-emerald-50/40 text-emerald-900 text-sm sm:text-base font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
                 </div>
 
                 <!-- Total Available Balance -->
                 <div>
-                  <label class="block text-xs font-bold text-sky-800 mb-1">Total Available (Opening + Sale)</label>
-                  <div class="w-full px-3 py-2 rounded-xl border border-sky-200 bg-sky-50 text-sky-900 text-xs font-mono font-black" id="adminRecFormFieldAvailableDisplay">
+                  <label class="block text-xs sm:text-sm font-bold text-sky-800 mb-1.5">Total Available (Opening + Sale)</label>
+                  <div class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-sky-200 bg-sky-50 text-sky-950 text-base sm:text-lg font-mono font-black flex items-center" id="adminRecFormFieldAvailableDisplay">
                     PKR 0
                   </div>
                 </div>
@@ -1193,21 +1280,21 @@
 
               <!-- Notes / Urdu Memo -->
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Daily Note / Memo (Urdu / Optional)</label>
+                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Daily Note / Memo (Urdu / Optional)</label>
                 <input type="text" id="adminRecFormFieldNotes" placeholder="e.g. کاؤنٹر علی نے سنبھالا / Special remarks..."
-                  class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
               </div>
 
               <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="submit" id="adminRecordSubmitBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/30 flex items-center gap-2 transition-all cursor-pointer">
-                  <i class="fa-solid fa-plus-circle"></i>
+                <button type="submit" id="adminRecordSubmitBtn" class="min-h-[52px] w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                  <i class="fa-solid fa-plus-circle text-base"></i>
                   <span id="adminRecordSubmitBtnText">+ Add Record</span>
                 </button>
               </div>
             </form>
           </div>
 
-          <!-- BOTTOM TABLE: Active Register Entries -->
+          <!-- BOTTOM TABLE & CARDS: Active Register Entries -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="flex items-center gap-2">
@@ -1217,11 +1304,17 @@
               </div>
               <div class="w-full sm:w-64">
                 <input type="text" id="adminRecordsSearchInput" oninput="renderAdminRecordsTable()" placeholder="Search date, memo, vendor..."
-                  class="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  class="min-h-[44px] w-full px-3.5 py-2 rounded-2xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
               </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <!-- Mobile Stacked Record Cards (< md) -->
+            <div id="adminRecordsMobileList" class="md:hidden space-y-3 p-3 sm:p-4">
+              <!-- Dynamically populated mobile cards -->
+            </div>
+
+            <!-- Desktop Wide Table (>= md) -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full text-left text-xs text-slate-700">
                 <thead class="bg-slate-100 text-slate-800 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                   <tr>
@@ -1270,22 +1363,22 @@
                 
                 <!-- Date -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Select Date</label>
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Select Date</label>
                   <input type="date" id="adminOutflowFormFieldDate" required
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-500">
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-slate-50 text-slate-900 text-sm sm:text-base font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm">
                 </div>
 
                 <!-- Party Name -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Party / Vendor Name</label>
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Party / Vendor Name</label>
                   <input type="text" id="adminOutflowFormFieldParty" required placeholder="e.g. Momin, Petrol, Ali"
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500">
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm">
                 </div>
 
                 <!-- Category -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
-                  <select id="adminOutflowFormFieldCategory" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500">
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Category</label>
+                  <select id="adminOutflowFormFieldCategory" class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white text-slate-900 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm cursor-pointer">
                     <option value="Vendor">Vendor Stock / Supplier</option>
                     <option value="Operating">Operating Expense / Fuel</option>
                     <option value="Staff">Staff / Personal Drawings</option>
@@ -1294,40 +1387,40 @@
 
                 <!-- Amount (PKR) -->
                 <div>
-                  <label class="block text-xs font-bold text-rose-800 mb-1">Amount (PKR)</label>
-                  <input type="number" min="0" step="any" id="adminOutflowFormFieldAmount" required placeholder="0"
-                    class="w-full px-3 py-2 rounded-xl border border-rose-300 bg-rose-50/40 text-rose-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-500">
+                  <label class="block text-xs sm:text-sm font-bold text-rose-800 mb-1.5">Amount (PKR)</label>
+                  <input type="number" min="0" step="any" inputmode="decimal" id="adminOutflowFormFieldAmount" required placeholder="0"
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-rose-300 bg-rose-50/40 text-rose-900 text-sm sm:text-base font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm">
                 </div>
 
               </div>
 
               <!-- Quick Select Party Chips -->
               <div class="flex flex-wrap items-center gap-2 pt-1">
-                <span class="text-[11px] font-bold text-slate-400">Quick Tags:</span>
-                <button type="button" onclick="selectOutflowTag('Petrol', 'Operating')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">⛽ Petrol</button>
-                <button type="button" onclick="selectOutflowTag('Ali', 'Staff')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">👤 Ali</button>
-                <button type="button" onclick="selectOutflowTag('Momin', 'Vendor')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">📦 Momin</button>
-                <button type="button" onclick="selectOutflowTag('Tariq', 'Vendor')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">📦 Tariq</button>
-                <button type="button" onclick="selectOutflowTag('Chacha', 'Staff')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">👤 Chacha</button>
-                <button type="button" onclick="selectOutflowTag('Basit', 'Vendor')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">📦 Basit</button>
+                <span class="text-xs font-bold text-slate-500">Quick Tags:</span>
+                <button type="button" onclick="selectOutflowTag('Petrol', 'Operating')" class="min-h-[46px] px-4 py-2.5 rounded-2xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 shadow-sm active:scale-95 transition-all">⛽ Petrol</button>
+                <button type="button" onclick="selectOutflowTag('Ali', 'Staff')" class="min-h-[46px] px-4 py-2.5 rounded-2xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 shadow-sm active:scale-95 transition-all">👤 Ali</button>
+                <button type="button" onclick="selectOutflowTag('Momin', 'Vendor')" class="min-h-[46px] px-4 py-2.5 rounded-2xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 shadow-sm active:scale-95 transition-all">📦 Momin</button>
+                <button type="button" onclick="selectOutflowTag('Tariq', 'Vendor')" class="min-h-[46px] px-4 py-2.5 rounded-2xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 shadow-sm active:scale-95 transition-all">📦 Tariq</button>
+                <button type="button" onclick="selectOutflowTag('Chacha', 'Staff')" class="min-h-[46px] px-4 py-2.5 rounded-2xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 shadow-sm active:scale-95 transition-all">👤 Chacha</button>
+                <button type="button" onclick="selectOutflowTag('Basit', 'Vendor')" class="min-h-[46px] px-4 py-2.5 rounded-2xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 shadow-sm active:scale-95 transition-all">📦 Basit</button>
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Memo / Line Note (Optional)</label>
+                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Memo / Line Note (Optional)</label>
                 <input type="text" id="adminOutflowFormFieldNote" placeholder="e.g. Invoice #4012 / Van fuel"
-                  class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500">
+                  class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm">
               </div>
 
               <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="submit" id="adminOutflowSubmitBtn" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-600/30 flex items-center gap-2 transition-all cursor-pointer">
-                  <i class="fa-solid fa-plus-circle"></i>
+                <button type="submit" id="adminOutflowSubmitBtn" class="min-h-[52px] w-full sm:w-auto px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-black text-sm sm:text-base shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                  <i class="fa-solid fa-plus-circle text-base"></i>
                   <span id="adminOutflowSubmitBtnText">+ Record Payment</span>
                 </button>
               </div>
             </form>
           </div>
 
-          <!-- BOTTOM TABLE: Disbursement Register -->
+          <!-- BOTTOM TABLE & CARDS: Disbursement Register -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="flex items-center gap-2">
@@ -1337,11 +1430,17 @@
               </div>
               <div class="w-full sm:w-64">
                 <input type="text" id="adminOutflowsSearchInput" oninput="renderAdminOutflowsTable()" placeholder="Search party, memo (e.g. Ali)..."
-                  class="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500">
+                  class="min-h-[44px] w-full px-3.5 py-2 rounded-2xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm">
               </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <!-- Mobile Stacked Outflows List (< md) -->
+            <div id="adminOutflowsMobileList" class="md:hidden space-y-3 p-3 sm:p-4">
+              <!-- Dynamically populated mobile outflow cards -->
+            </div>
+
+            <!-- Desktop Wide Table (>= md) -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full text-left text-xs text-slate-700">
                 <thead class="bg-slate-100 text-slate-800 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                   <tr>
@@ -1386,26 +1485,26 @@
                 
                 <!-- Party Name -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Customer / Party Name</label>
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Customer / Party Name</label>
                   <input type="text" id="adminUdhaarFormFieldName" required placeholder="e.g. Bashir Ahmed"
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500">
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
                 </div>
 
                 <!-- Phone -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Contact Phone</label>
-                  <input type="text" id="adminUdhaarFormFieldPhone" placeholder="0300-1234567"
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Contact Phone</label>
+                  <input type="text" id="adminUdhaarFormFieldPhone" placeholder="0300-1234567" inputmode="tel"
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white text-slate-900 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
                 </div>
 
                 <!-- Transaction Type Toggle -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Transaction Type</label>
-                  <div class="grid grid-cols-2 gap-1 p-0.5 bg-slate-100 rounded-xl border border-slate-300">
-                    <button type="button" id="adminUdhaarTypeGivenBtn" onclick="setAdminUdhaarType('given')" class="py-1.5 px-2 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition-all">
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Transaction Type</label>
+                  <div class="min-h-[48px] grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-2xl border border-slate-300 shadow-sm">
+                    <button type="button" id="adminUdhaarTypeGivenBtn" onclick="setAdminUdhaarType('given')" class="min-h-[38px] py-1.5 px-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-600 text-white shadow-sm transition-all cursor-pointer">
                       Credit Given
                     </button>
-                    <button type="button" id="adminUdhaarTypeRecBtn" onclick="setAdminUdhaarType('recovered')" class="py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">
+                    <button type="button" id="adminUdhaarTypeRecBtn" onclick="setAdminUdhaarType('recovered')" class="min-h-[38px] py-1.5 px-2 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-900 transition-all cursor-pointer">
                       Cash Recovered
                     </button>
                   </div>
@@ -1413,36 +1512,36 @@
 
                 <!-- Amount -->
                 <div>
-                  <label class="block text-xs font-bold text-amber-900 mb-1">Amount (PKR)</label>
-                  <input type="number" min="0" step="any" id="adminUdhaarFormFieldAmount" required placeholder="0"
-                    class="w-full px-3 py-2 rounded-xl border border-amber-300 bg-amber-50/40 text-amber-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  <label class="block text-xs sm:text-sm font-bold text-amber-900 mb-1.5">Amount (PKR)</label>
+                  <input type="number" min="0" step="any" inputmode="decimal" id="adminUdhaarFormFieldAmount" required placeholder="0"
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-amber-300 bg-amber-50/40 text-amber-950 text-sm sm:text-base font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
                 </div>
 
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Transaction Date</label>
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Transaction Date</label>
                   <input type="date" id="adminUdhaarFormFieldDate" required
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500">
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-slate-50 text-slate-900 text-sm sm:text-base font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Note / Reference (Optional)</label>
+                  <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">Note / Reference (Optional)</label>
                   <input type="text" id="adminUdhaarFormFieldNote" placeholder="e.g. Invoice #219 / Counter cash recovery"
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500">
+                    class="min-h-[48px] w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
                 </div>
               </div>
 
               <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md shadow-amber-600/30 flex items-center gap-2 transition-all cursor-pointer">
-                  <i class="fa-solid fa-plus-circle"></i>
+                <button type="submit" class="min-h-[52px] w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-black text-sm sm:text-base shadow-lg shadow-amber-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                  <i class="fa-solid fa-plus-circle text-base"></i>
                   <span>+ Record Udhaar Entry</span>
                 </button>
               </div>
             </form>
           </div>
 
-          <!-- BOTTOM TABLE: Debtor & Market Credit Accounts -->
+          <!-- BOTTOM TABLE & CARDS: Debtor & Market Credit Accounts -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="flex items-center gap-2">
@@ -1452,27 +1551,33 @@
               </div>
               <div class="w-full sm:w-64">
                 <input type="text" id="adminUdhaarSearchInput" oninput="renderAdminUdhaarTable()" placeholder="Search debtor by name, phone..."
-                  class="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  class="min-h-[44px] w-full px-3.5 py-2 rounded-2xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
               </div>
             </div>
 
             <!-- Summary Strip -->
             <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 border-b border-slate-200 bg-slate-50/50">
               <div class="p-3 text-center">
-                <span class="text-[11px] font-bold text-slate-500 block">Total Receivables (Active Udhaar)</span>
-                <span class="text-base font-black font-mono text-amber-800" id="adminUdhaarSumBalance">PKR 0</span>
+                <span class="text-xs font-bold text-slate-600 block">Total Receivables (Active Udhaar)</span>
+                <span class="text-lg font-black font-mono text-amber-800" id="adminUdhaarSumBalance">PKR 0</span>
               </div>
               <div class="p-3 text-center">
-                <span class="text-[11px] font-bold text-slate-500 block">Total Credit Given</span>
-                <span class="text-base font-black font-mono text-slate-700" id="adminUdhaarSumGiven">PKR 0</span>
+                <span class="text-xs font-bold text-slate-600 block">Total Credit Given</span>
+                <span class="text-lg font-black font-mono text-slate-800" id="adminUdhaarSumGiven">PKR 0</span>
               </div>
               <div class="p-3 text-center">
-                <span class="text-[11px] font-bold text-slate-500 block">Total Cash Recovered</span>
-                <span class="text-base font-black font-mono text-emerald-700" id="adminUdhaarSumRecovered">PKR 0</span>
+                <span class="text-xs font-bold text-slate-600 block">Total Cash Recovered</span>
+                <span class="text-lg font-black font-mono text-emerald-700" id="adminUdhaarSumRecovered">PKR 0</span>
               </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <!-- Mobile Stacked Udhaar List (< md) -->
+            <div id="adminUdhaarMobileList" class="md:hidden space-y-3 p-3 sm:p-4">
+              <!-- Dynamically populated mobile udhaar cards -->
+            </div>
+
+            <!-- Desktop Wide Table (>= md) -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full text-left text-xs text-slate-700">
                 <thead class="bg-slate-100 text-slate-800 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                   <tr>
@@ -1751,6 +1856,30 @@
       </div>
 
     </main>
+
+    <!-- Sticky Mobile Bottom Navigation Bar (< 768px) with iOS Safe-Area -->
+    <nav id="adminMobileBottomNav" class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 md:hidden px-2 pt-1.5 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around shadow-2xl safe-pb-bottom-nav">
+      <button type="button" onclick="switchAdminTab('dashboard')" id="adminMobileNavBtn-dashboard" class="flex flex-col items-center justify-center min-w-[56px] min-h-[52px] px-2 py-1 rounded-xl text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 font-bold transition-all cursor-pointer">
+        <span class="text-xl">📊</span>
+        <span class="text-[11px] font-black mt-0.5">Dashboard</span>
+      </button>
+      <button type="button" onclick="switchAdminTab('records')" id="adminMobileNavBtn-records" class="flex flex-col items-center justify-center min-w-[56px] min-h-[52px] px-2 py-1 rounded-xl text-slate-400 hover:text-white border border-transparent font-bold transition-all cursor-pointer">
+        <span class="text-xl">📝</span>
+        <span class="text-[11px] font-black mt-0.5">Records</span>
+      </button>
+      <button type="button" onclick="switchAdminTab('outflows')" id="adminMobileNavBtn-outflows" class="flex flex-col items-center justify-center min-w-[56px] min-h-[52px] px-2 py-1 rounded-xl text-slate-400 hover:text-white border border-transparent font-bold transition-all cursor-pointer">
+        <span class="text-xl">💸</span>
+        <span class="text-[11px] font-black mt-0.5">Outflows</span>
+      </button>
+      <button type="button" onclick="switchAdminTab('udhaar')" id="adminMobileNavBtn-udhaar" class="flex flex-col items-center justify-center min-w-[56px] min-h-[52px] px-2 py-1 rounded-xl text-slate-400 hover:text-white border border-transparent font-bold transition-all cursor-pointer">
+        <span class="text-xl">🤝</span>
+        <span class="text-[11px] font-black mt-0.5">Udhaar</span>
+      </button>
+      <button type="button" onclick="switchAdminTab('settings')" id="adminMobileNavBtn-settings" class="flex flex-col items-center justify-center min-w-[56px] min-h-[52px] px-2 py-1 rounded-xl text-slate-400 hover:text-white border border-transparent font-bold transition-all cursor-pointer">
+        <span class="text-xl">⚙️</span>
+        <span class="text-[11px] font-black mt-0.5">Settings</span>
+      </button>
+    </nav>
   </div>
 
 
@@ -1962,6 +2091,8 @@
         tabCashRegister: "2. Merchant 5-Column Register Book",
         tabAnalytics: "3. Weekly & Monthly Analytics",
         tabVendorLedger: "4. Vendor & Market Credit Directory",
+        btnPassbookCards: "Passbook Cards",
+        btnFullTable: "Full 5-Column Table",
         sheetInflowHeading: "1. Available Funds & Cash Inflow",
         sheetOutflowsHeading: "2. Purchases & Outflow Disbursements",
         sheetSettlementHeading: "3. Daily Closing Settlement & Net Cash-in-Hand",
@@ -2165,6 +2296,8 @@
         tabCashRegister: "۲. تاجر ۵-کالم رجسٹر کھاتہ",
         tabAnalytics: "۳. ہفتہ وار و ماہانہ تجزیات",
         tabVendorLedger: "۴. سپلائر و مارکیٹ ادھار ڈائریکٹری",
+        btnPassbookCards: "پاس بک کارڈز",
+        btnFullTable: "مکمل 5 کالم کھاتہ",
         sheetInflowHeading: "۱. دستیاب فنڈز اور یومیہ کیش آمدنی",
         sheetOutflowsHeading: "۲. خریداری و اخراجات کی تفصیلات",
         sheetSettlementHeading: "۳. یومیہ اختتامی حساب و خالص کیش ان ہینڈ",
@@ -4477,9 +4610,30 @@
       if (overrideToggle) overrideToggle.style.display = isAuth ? 'inline-block' : 'none';
     }
 
+    function setRegisterViewMode(mode) {
+      appState.registerViewMode = mode;
+      const cardsView = document.getElementById('registerCardsView');
+      const tableView = document.getElementById('registerTableView');
+      const cardsBtn = document.getElementById('regViewModeCardsBtn');
+      const tableBtn = document.getElementById('regViewModeTableBtn');
+
+      if (mode === 'cards') {
+        if (cardsView) cardsView.classList.remove('hidden');
+        if (tableView) tableView.classList.add('hidden');
+        if (cardsBtn) cardsBtn.className = 'min-h-[38px] px-3.5 py-1.5 rounded-xl transition-all font-bold cursor-pointer bg-white text-emerald-800 shadow-sm flex items-center gap-1.5';
+        if (tableBtn) tableBtn.className = 'min-h-[38px] px-3.5 py-1.5 rounded-xl transition-all font-bold cursor-pointer text-slate-700 hover:text-slate-900 flex items-center gap-1.5';
+      } else {
+        if (cardsView) cardsView.classList.add('hidden');
+        if (tableView) tableView.classList.remove('hidden');
+        if (cardsBtn) cardsBtn.className = 'min-h-[38px] px-3.5 py-1.5 rounded-xl transition-all font-bold cursor-pointer text-slate-700 hover:text-slate-900 flex items-center gap-1.5';
+        if (tableBtn) tableBtn.className = 'min-h-[38px] px-3.5 py-1.5 rounded-xl transition-all font-bold cursor-pointer bg-white text-emerald-800 shadow-sm flex items-center gap-1.5';
+      }
+    }
+
     function renderRegisterTable() {
       const tbody = document.getElementById('registerTableBody');
       const tfoot = document.getElementById('registerTableFooter');
+      const cardsContainer = document.getElementById('registerCardsContainer');
       const searchVal = (document.getElementById('registerSearch')?.value || '').toLowerCase();
       const rangeFilter = document.getElementById('registerRangeFilter')?.value || 'all';
       const isUr = appState.language === 'ur';
@@ -4524,16 +4678,30 @@
           : `${filteredDates.length} of ${dates.length} days shown`;
       }
 
+      // Default view mode: 'cards' on mobile, 'table' on desktop if not yet chosen
+      if (!appState.registerViewMode) {
+        appState.registerViewMode = (window.innerWidth < 768) ? 'cards' : 'table';
+      }
+      setRegisterViewMode(appState.registerViewMode);
+
       if (filteredDates.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" class="text-center py-10 text-slate-400">
-              <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-300"></i>
+            <td colspan="8" class="text-center py-10 text-slate-500 font-bold">
+              <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-400"></i>
               ${isUr ? 'کھاتہ میں کوئی اندراج موجود نہیں ہے۔' : 'No ledger records found for this period.'}
             </td>
           </tr>
         `;
         if (tfoot) tfoot.innerHTML = '';
+        if (cardsContainer) {
+          cardsContainer.innerHTML = `
+            <div class="text-center py-10 text-slate-500 bg-white border border-slate-200 rounded-2xl p-6 font-bold shadow-sm">
+              <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-400"></i>
+              ${isUr ? 'کھاتہ میں کوئی اندراج موجود نہیں ہے۔' : 'No ledger records found for this period.'}
+            </div>
+          `;
+        }
         return;
       }
 
@@ -4541,13 +4709,115 @@
       let sumOutflows = 0;
       let sumClosing = 0;
 
+      // Render 1: Mobile Passbook Cards View
+      if (cardsContainer) {
+        cardsContainer.innerHTML = filteredDates.map(dt => {
+          const r = appState.records[dt];
+          const creditGiven = r.creditGiven || 0;
+          const creditRecovered = r.creditRecovered || 0;
+          const hasOutflows = Array.isArray(r.outflows) && r.outflows.length > 0;
+
+          return `
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all space-y-3.5">
+              <!-- Top Row: Date, Day Badge & Quick Action -->
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 gap-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm shrink-0">
+                    <i class="fa-solid fa-calendar-day"></i>
+                  </div>
+                  <div>
+                    <div class="text-base font-black font-mono text-slate-900">${formatDateDisplay(r.date)}</div>
+                    <div class="text-xs font-bold text-emerald-700">${r.dayName || getDayName(r.date)}</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="viewDailySlipModal('${r.date}')" title="Print Slip" class="min-h-[44px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-200 shadow-sm">
+                    <i class="fa-solid fa-receipt text-indigo-600"></i>
+                    <span>Slip</span>
+                  </button>
+                  ${appState.isAdminLoggedIn ? `
+                    <button type="button" onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="min-h-[44px] px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer border border-emerald-200 shadow-sm">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                      <span>Edit</span>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+
+              <!-- Middle: Primary Sales & Opening Grid -->
+              <div class="grid grid-cols-2 gap-2.5">
+                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  <span class="text-xs font-bold text-slate-600 block">${isUr ? 'ابتدائی کیش' : 'Opening Cash'}</span>
+                  <span class="text-base font-black font-mono text-slate-800 tabular-nums">${formatCurrency(r.openingBalance)}</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+                  <span class="text-xs font-bold text-emerald-800 block">${isUr ? 'کالم ۱: یومیہ سیل' : 'Col 1: Sale'}</span>
+                  <span class="text-lg font-black font-mono text-emerald-700 tabular-nums">${formatCurrency(r.dailySale)}</span>
+                </div>
+              </div>
+
+              <!-- Available Funds Banner -->
+              <div class="p-3 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between">
+                <span class="text-xs font-bold text-sky-900">${isUr ? 'کالم ۲: کل دستیاب رقم' : 'Col 2: Total Available'}</span>
+                <span class="text-base font-black font-mono text-sky-900 tabular-nums">${formatCurrency(r.totalAvailable)}</span>
+              </div>
+
+              <!-- Outflows Breakdown -->
+              <div class="p-3 rounded-2xl bg-rose-50/70 border border-rose-200">
+                <div class="flex items-center justify-between text-xs font-bold text-rose-900 mb-1.5">
+                  <span>${isUr ? 'کالم ۳: خریداریاں و اخراجات' : 'Col 3: Purchases & Outflows'}</span>
+                  <span class="text-sm font-black font-mono text-rose-700">${formatCurrency(r.totalOutflows)}</span>
+                </div>
+                ${hasOutflows ? `
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    ${r.outflows.map(o => `
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-mono bg-white text-rose-900 border border-rose-200 shadow-sm">
+                        <span class="font-bold text-slate-900">${escapeHtml(o.party)}:</span>
+                        <span>${formatNumberOnly(o.amount)}</span>
+                      </span>
+                    `).join('')}
+                  </div>
+                ` : `<span class="text-xs text-slate-500 italic">${isUr ? 'کوئی اخراجات نہیں' : 'No outflows recorded'}</span>`}
+              </div>
+
+              <!-- Closing Cash (Receipt Bottom Banner) -->
+              <div class="p-3.5 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-md">
+                <div>
+                  <span class="text-xs font-bold text-sky-300 uppercase tracking-wider block">${isUr ? 'کالم ۴: اختتامی کیش (روکڑ)' : 'Col 4: Closing Cash'}</span>
+                  <span class="text-[11px] text-slate-400 font-mono">${isUr ? 'دستیاب رقم منفی اخراجات' : 'Available − Outflows'}</span>
+                </div>
+                <span class="text-2xl font-black font-mono text-emerald-400 tracking-tight tabular-nums">${formatCurrency(r.closingCash)}</span>
+              </div>
+
+              <!-- Col 5: Market Credit Activity (if any) -->
+              ${(creditGiven > 0 || creditRecovered > 0 || r.closingMarketCredit > 0) ? `
+                <div class="p-2.5 rounded-2xl bg-amber-50/60 border border-amber-200 text-xs flex items-center justify-between font-bold text-amber-900">
+                  <span>${isUr ? 'مارکیٹ ادھار' : 'Market Credit'}:</span>
+                  <div class="font-mono text-right">
+                    <span>${formatCurrency(r.closingMarketCredit)}</span>
+                    <span class="text-[10px] text-slate-500 font-normal ml-1">(+${formatNumberOnly(creditGiven)} / -${formatNumberOnly(creditRecovered)})</span>
+                  </div>
+                </div>
+              ` : ''}
+
+              ${r.notes ? `
+                <div class="text-xs text-slate-700 italic bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                  <span class="font-bold text-slate-900 not-italic">Memo:</span> ${escapeHtml(r.notes)}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render 2: Horizontal Scrollable Table with Sticky Date Column
       tbody.innerHTML = filteredDates.map(dt => {
         const r = appState.records[dt];
         sumSales += (r.dailySale || 0);
         sumOutflows += (r.totalOutflows || 0);
         sumClosing = r.closingCash || 0;
 
-        let outflowsHtml = `<span class="text-slate-400 italic text-[11px]">${isUr ? 'کوئی اخراجات نہیں' : 'No outflows'}</span>`;
+        let outflowsHtml = `<span class="text-slate-500 italic text-[11px]">${isUr ? 'کوئی اخراجات نہیں' : 'No outflows'}</span>`;
         if (Array.isArray(r.outflows) && r.outflows.length > 0) {
           outflowsHtml = `
             <div class="flex flex-wrap gap-1.5 py-1">
@@ -4558,7 +4828,7 @@
                 </span>
               `).join('')}
             </div>
-            <div class="text-[10px] text-slate-500 font-mono mt-0.5 flex items-center justify-between">
+            <div class="text-[10px] text-slate-600 font-mono mt-0.5 flex items-center justify-between">
               <span>${r.outflows.length} ${isUr ? 'لائنیں' : 'item(s)'}</span>
               <span class="text-rose-700 font-bold">${isUr ? 'کل' : 'Total'}: ${formatCurrency(r.totalOutflows)}</span>
             </div>
@@ -4571,13 +4841,13 @@
         return `
           <tr class="hover:bg-slate-50 transition-colors group">
             
-            <td class="py-3 px-4 font-mono whitespace-nowrap">
-              <div class="font-bold text-slate-900">${formatDateDisplay(r.date)}</div>
+            <td class="py-3 px-4 font-mono whitespace-nowrap sticky-col-date bg-white group-hover:bg-slate-50 border-r border-slate-200 shadow-sm">
+              <div class="font-black text-slate-900">${formatDateDisplay(r.date)}</div>
               <div class="text-[11px] text-emerald-700 font-sans font-bold">${r.dayName || getDayName(r.date)}</div>
-              ${r.notes ? `<div class="text-[10px] text-slate-500 italic truncate max-w-[140px]" title="${escapeHtml(r.notes)}">${escapeHtml(r.notes)}</div>` : ''}
+              ${r.notes ? `<div class="text-[10px] text-slate-600 italic truncate max-w-[140px]" title="${escapeHtml(r.notes)}">${escapeHtml(r.notes)}</div>` : ''}
             </td>
 
-            <td class="py-3 px-3 text-right rtl:text-left font-mono font-bold text-slate-700 tabular-nums whitespace-nowrap">
+            <td class="py-3 px-3 text-right rtl:text-left font-mono font-bold text-slate-800 tabular-nums whitespace-nowrap">
               ${formatCurrency(r.openingBalance)}
             </td>
 
@@ -4599,7 +4869,7 @@
 
             <td class="py-3 px-3 text-right rtl:text-left font-mono tabular-nums whitespace-nowrap">
               <div class="font-bold text-amber-800">${formatCurrency(r.closingMarketCredit)}</div>
-              <div class="text-[10px] text-slate-500 font-bold">
+              <div class="text-[10px] text-slate-600 font-bold">
                 +${formatNumberOnly(creditGiven)} / -${formatNumberOnly(creditRecovered)}
               </div>
             </td>
@@ -4607,20 +4877,20 @@
             <td class="py-3 px-3 text-center whitespace-nowrap no-print">
               <div class="flex items-center justify-center gap-1">
                 ${appState.isAdminLoggedIn ? `
-                  <button onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="p-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 transition-colors">
+                  <button onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="p-2 rounded-xl bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 transition-colors">
                     <i class="fa-solid fa-pen-to-square"></i>
                   </button>
-                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-800 transition-colors">
+                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-2 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 transition-colors">
                     <i class="fa-solid fa-receipt"></i>
                   </button>
-                  <button onclick="openAdminEditModalForDate('${r.date}')" title="Admin Full Edit" class="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
+                  <button onclick="openAdminEditModalForDate('${r.date}')" title="Admin Full Edit" class="p-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
                     <i class="fa-solid fa-sliders"></i>
                   </button>
-                  <button onclick="adminDeleteDayEntry('${r.date}')" title="Admin Delete Entry" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors">
+                  <button onclick="adminDeleteDayEntry('${r.date}')" title="Admin Delete Entry" class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors">
                     <i class="fa-solid fa-trash-can"></i>
                   </button>
                 ` : `
-                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-800 transition-colors">
+                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-2 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 transition-colors">
                     <i class="fa-solid fa-receipt"></i>
                   </button>
                 `}
@@ -4634,8 +4904,8 @@
       if (tfoot) {
         tfoot.innerHTML = `
           <tr>
-            <td class="py-3 px-4 font-bold uppercase text-slate-800">${isUr ? 'مجموعی ٹوٹل' : 'Period Totals'}</td>
-            <td class="py-3 px-3 text-right rtl:text-left text-slate-400">&mdash;</td>
+            <td class="py-3 px-4 font-black uppercase text-slate-900 sticky-col-date bg-slate-100 border-r border-slate-200">${isUr ? 'مجموعی ٹوٹل' : 'Period Totals'}</td>
+            <td class="py-3 px-3 text-right rtl:text-left text-slate-500">&mdash;</td>
             <td class="py-3 px-3 text-right rtl:text-left text-emerald-800 font-black">${formatCurrency(sumSales)}</td>
             <td class="py-3 px-3 text-right rtl:text-left text-sky-800">&mdash;</td>
             <td class="py-3 px-4 text-rose-800 font-black">${isUr ? 'کل اخراجات' : 'Total Outflow'}: ${formatCurrency(sumOutflows)}</td>
@@ -5396,7 +5666,7 @@
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
-              <button onclick="openPartyStatementModal('${escapeHtml(p.name)}')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-amber-100 border border-amber-300 hover:bg-amber-200 transition-colors flex items-center gap-1.5 shadow-sm">
+              <button onclick="openPartyStatementModal('${escapeHtml(p.name)}')" class="min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold text-amber-900 bg-amber-100 border border-amber-300 hover:bg-amber-200 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
                 <i class="fa-solid fa-list-check"></i>
                 <span>${isUr ? 'کھاتہ اسٹیٹمنٹ دیکھیں' : 'View Statement'}</span>
               </button>
@@ -5491,7 +5761,7 @@
 
           ${appState.isAdminLoggedIn ? `
           <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end gap-2">
-            <button onclick="openNewCustomerUdhaarModal('${escapeHtml(c.name)}')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 shadow-sm">
+            <button onclick="openNewCustomerUdhaarModal('${escapeHtml(c.name)}')" class="min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
               <i class="fa-solid fa-money-bill-transfer"></i>
               <span>${isUr ? 'وصولی / نیا ادھار درج کریں' : 'Record Payment / Credit'}</span>
             </button>
@@ -6305,6 +6575,7 @@
       tabs.forEach(t => {
         const panel = document.getElementById('adminSection-' + t);
         const btn = document.getElementById('adminNavBtn-' + t);
+        const mobBtn = document.getElementById('adminMobileNavBtn-' + t);
         if (panel) {
           if (t === tabName) panel.classList.remove('hidden');
           else panel.classList.add('hidden');
@@ -6316,7 +6587,18 @@
             btn.className = 'admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent cursor-pointer';
           }
         }
+        if (mobBtn) {
+          if (t === tabName) {
+            mobBtn.className = 'flex flex-col items-center justify-center min-w-[56px] min-h-[52px] px-2 py-1 rounded-xl text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 font-bold transition-all cursor-pointer';
+          } else {
+            mobBtn.className = 'flex flex-col items-center justify-center min-w-[56px] min-h-[52px] px-2 py-1 rounded-xl text-slate-400 hover:text-white border border-transparent font-bold transition-all cursor-pointer';
+          }
+        }
       });
+
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {}
 
       updateAdminTopBarInfo();
 
@@ -6439,40 +6721,40 @@
         const manualVal = ovr.manualValue || 0;
 
         return `
-          <div class="bg-white border ${isManual ? 'border-purple-300 ring-2 ring-purple-100' : 'border-slate-200'} rounded-2xl p-4 shadow-sm flex flex-col justify-between transition-all">
+          <div class="bg-white border ${isManual ? 'border-purple-300 ring-2 ring-purple-100' : 'border-slate-200'} rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between transition-all">
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-slate-800">${m.label}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isManual ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'}">
+                <span class="text-sm font-black text-slate-900">${m.label}</span>
+                <span class="text-xs px-2.5 py-1 rounded-full font-bold ${isManual ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
                   ${isManual ? 'Manual Override' : 'Auto-Calculated'}
                 </span>
               </div>
-              <p class="text-[11px] text-slate-400 mb-3">${m.desc}</p>
+              <p class="text-xs text-slate-500 mb-3">${m.desc}</p>
               
-              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 mb-3">
-                <div class="flex items-center justify-between text-xs mb-1">
-                  <span class="text-slate-500 font-medium">Mode:</span>
-                  <div class="flex items-center gap-1">
-                    <button type="button" onclick="setAdminKpiOverrideMode('${m.key}', false)" class="px-2 py-0.5 rounded text-[10px] font-bold ${!isManual ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}">
+              <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 mb-3">
+                <div class="flex items-center justify-between text-xs mb-2">
+                  <span class="text-slate-600 font-bold">Calculation Mode:</span>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="setAdminKpiOverrideMode('${m.key}', false)" class="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${!isManual ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}">
                       Auto
                     </button>
-                    <button type="button" onclick="setAdminKpiOverrideMode('${m.key}', true)" class="px-2 py-0.5 rounded text-[10px] font-bold ${isManual ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-600'}">
+                    <button type="button" onclick="setAdminKpiOverrideMode('${m.key}', true)" class="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${isManual ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}">
                       Override
                     </button>
                   </div>
                 </div>
 
                 ${isManual ? `
-                  <div class="mt-2 flex items-center gap-2">
-                    <input type="number" id="adminKpiInp-${m.key}" value="${manualVal}" placeholder="PKR Amount"
-                      class="w-full px-2.5 py-1.5 rounded-lg border border-purple-300 bg-white text-xs font-mono font-bold text-purple-900 focus:outline-none focus:ring-1 focus:ring-purple-500">
-                    <button type="button" onclick="saveAdminKpiOverrideValue('${m.key}')" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shrink-0 shadow-sm cursor-pointer">
+                  <div class="mt-2.5 flex items-center gap-2">
+                    <input type="number" id="adminKpiInp-${m.key}" value="${manualVal}" placeholder="PKR Amount" inputmode="decimal"
+                      class="w-full min-h-[46px] px-3 py-2 rounded-xl border border-purple-300 bg-white text-base font-mono font-bold text-purple-950 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <button type="button" onclick="saveAdminKpiOverrideValue('${m.key}')" class="min-h-[46px] px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold shrink-0 shadow-sm transition-all cursor-pointer">
                       Save
                     </button>
                   </div>
                 ` : `
-                  <div class="text-[11px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
-                    <i class="fa-solid fa-check text-[10px]"></i> Calculated from ledger records
+                  <div class="text-xs text-emerald-800 font-bold mt-1.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Calculated dynamically from ledger records
                   </div>
                 `}
               </div>
@@ -6672,8 +6954,9 @@
 
     function renderAdminRecordsTable() {
       const tbody = document.getElementById('adminRecordsTableBody');
+      const mobileList = document.getElementById('adminRecordsMobileList');
       const searchVal = (document.getElementById('adminRecordsSearchInput')?.value || '').toLowerCase();
-      if (!tbody) return;
+      if (!tbody && !mobileList) return;
 
       const dates = Object.keys(appState.records).sort().reverse();
       let filtered = [...dates];
@@ -6692,44 +6975,111 @@
       if (countBadge) countBadge.textContent = `${filtered.length} of ${dates.length} recorded`;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7" class="text-center py-8 text-slate-400 font-sans">
-              <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
-              No records found. Use the form above to add a new record.
-            </td>
-          </tr>
-        `;
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" class="text-center py-8 text-slate-400 font-sans">
+                <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
+                No records found. Use the form above to add a new record.
+              </td>
+            </tr>
+          `;
+        }
+        if (mobileList) {
+          mobileList.innerHTML = `
+            <div class="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 p-6">
+              <i class="fa-solid fa-folder-open text-3xl mb-3 text-slate-300 block"></i>
+              <p class="font-bold text-base text-slate-700">No records found</p>
+              <p class="text-xs text-slate-400 mt-1">Use the form above to add or modify daily roznamcha records.</p>
+            </div>
+          `;
+        }
         return;
       }
 
-      tbody.innerHTML = filtered.map(dt => {
-        const r = appState.records[dt];
-        return `
-          <tr class="hover:bg-slate-50 transition-colors">
-            <td class="py-3 px-4 whitespace-nowrap">
-              <div class="font-bold text-slate-900 font-mono">${formatDateDisplay(r.date)}</div>
-              <div class="text-[11px] text-emerald-700 font-sans font-bold">${r.dayName || getDayName(r.date)}</div>
-              ${r.notes ? `<div class="text-[10px] text-slate-500 italic font-sans truncate max-w-[140px]">${escapeHtml(r.notes)}</div>` : ''}
-            </td>
-            <td class="py-3 px-3 text-right font-bold text-slate-700 whitespace-nowrap">${formatCurrency(r.openingBalance)}</td>
-            <td class="py-3 px-3 text-right font-black text-emerald-800 bg-emerald-50/30 whitespace-nowrap">${formatCurrency(r.dailySale)}</td>
-            <td class="py-3 px-3 text-right font-bold text-sky-800 whitespace-nowrap">${formatCurrency(r.totalAvailable)}</td>
-            <td class="py-3 px-3 text-right font-bold text-rose-700 whitespace-nowrap">${formatCurrency(r.totalOutflows)}</td>
-            <td class="py-3 px-3 text-right font-black text-sky-900 bg-sky-50/30 whitespace-nowrap">${formatCurrency(r.closingCash)}</td>
-            <td class="py-3 px-4 text-center whitespace-nowrap">
-              <div class="flex items-center justify-center gap-1.5 font-sans">
-                <button type="button" onclick="editAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 transition-colors cursor-pointer">
-                  <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+      if (tbody) {
+        tbody.innerHTML = filtered.map(dt => {
+          const r = appState.records[dt];
+          return `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="py-3 px-4 whitespace-nowrap">
+                <div class="font-bold text-slate-900 font-mono">${formatDateDisplay(r.date)}</div>
+                <div class="text-[11px] text-emerald-700 font-sans font-bold">${r.dayName || getDayName(r.date)}</div>
+                ${r.notes ? `<div class="text-[10px] text-slate-500 italic font-sans truncate max-w-[140px]">${escapeHtml(r.notes)}</div>` : ''}
+              </td>
+              <td class="py-3 px-3 text-right font-bold text-slate-700 whitespace-nowrap">${formatCurrency(r.openingBalance)}</td>
+              <td class="py-3 px-3 text-right font-black text-emerald-800 bg-emerald-50/30 whitespace-nowrap">${formatCurrency(r.dailySale)}</td>
+              <td class="py-3 px-3 text-right font-bold text-sky-800 whitespace-nowrap">${formatCurrency(r.totalAvailable)}</td>
+              <td class="py-3 px-3 text-right font-bold text-rose-700 whitespace-nowrap">${formatCurrency(r.totalOutflows)}</td>
+              <td class="py-3 px-3 text-right font-black text-sky-900 bg-sky-50/30 whitespace-nowrap">${formatCurrency(r.closingCash)}</td>
+              <td class="py-3 px-4 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1.5 font-sans">
+                  <button type="button" onclick="editAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 transition-colors cursor-pointer">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                  </button>
+                  <button type="button" onclick="deleteAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      if (mobileList) {
+        mobileList.innerHTML = filtered.map(dt => {
+          const r = appState.records[dt];
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+              <div class="flex items-start justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono font-black text-slate-900 text-base">${formatDateDisplay(r.date)}</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">${r.dayName || getDayName(r.date)}</span>
+                  </div>
+                  ${r.notes ? `<p class="text-xs text-slate-500 italic mt-1 font-medium"><i class="fa-solid fa-note-sticky text-slate-400 mr-1"></i>${escapeHtml(r.notes)}</p>` : ''}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                  <span class="text-emerald-900 font-bold block text-[11px]">Col 1: Daily Sale</span>
+                  <span class="font-mono font-black text-emerald-800 text-lg tabular-nums">${formatCurrency(r.dailySale)}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-sky-50/70 border border-sky-200">
+                  <span class="text-sky-950 font-bold block text-[11px]">Col 4: Closing Cash</span>
+                  <span class="font-mono font-black text-sky-900 text-lg tabular-nums">${formatCurrency(r.closingCash)}</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                  <span class="text-slate-500 font-medium block text-[10px]">Opening Cash</span>
+                  <span class="font-mono font-bold text-slate-800 text-sm tabular-nums">${formatCurrency(r.openingBalance)}</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                  <span class="text-slate-500 font-medium block text-[10px]">Total Available</span>
+                  <span class="font-mono font-bold text-sky-800 text-sm tabular-nums">${formatCurrency(r.totalAvailable)}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-rose-50/60 border border-rose-200 text-xs">
+                <span class="text-rose-900 font-bold">Col 3: Outflow Expenses</span>
+                <span class="font-mono font-black text-rose-700 text-sm tabular-nums">${formatCurrency(r.totalOutflows)}</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="editAdminRecord('${r.date}')" class="min-h-[48px] px-3 py-2 rounded-xl text-sm font-bold bg-slate-100 hover:bg-emerald-100 text-slate-800 hover:text-emerald-900 border border-slate-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  <span>Edit Record</span>
                 </button>
-                <button type="button" onclick="deleteAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
-                  <i class="fa-solid fa-trash-can mr-1"></i> Delete
+                <button type="button" onclick="deleteAdminRecord('${r.date}')" class="min-h-[48px] px-3 py-2 rounded-xl text-sm font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-trash-can"></i>
+                  <span>Delete</span>
                 </button>
               </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            </div>
+          `;
+        }).join('');
+      }
     }
 
     /**
@@ -6866,8 +7216,9 @@
 
     function renderAdminOutflowsTable() {
       const tbody = document.getElementById('adminOutflowsTableBody');
+      const mobileList = document.getElementById('adminOutflowsMobileList');
       const searchVal = (document.getElementById('adminOutflowsSearchInput')?.value || '').toLowerCase();
-      if (!tbody) return;
+      if (!tbody && !mobileList) return;
 
       const items = [];
       Object.keys(appState.records).sort().reverse().forEach(dt => {
@@ -6900,38 +7251,87 @@
       if (badge) badge.textContent = `${filtered.length} of ${items.length} items`;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
-              <i class="fa-solid fa-receipt text-2xl mb-2 block text-slate-300"></i>
-              No payments recorded yet. Use the form above to add one.
-            </td>
-          </tr>
-        `;
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
+                <i class="fa-solid fa-receipt text-2xl mb-2 block text-slate-300"></i>
+                No payments recorded yet. Use the form above to add one.
+              </td>
+            </tr>
+          `;
+        }
+        if (mobileList) {
+          mobileList.innerHTML = `
+            <div class="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 p-6">
+              <i class="fa-solid fa-receipt text-3xl mb-3 text-slate-300 block"></i>
+              <p class="font-bold text-base text-slate-700">No payments found</p>
+              <p class="text-xs text-slate-400 mt-1">Record purchases, supplier payments, or shop expenses using the form above.</p>
+            </div>
+          `;
+        }
         return;
       }
 
-      tbody.innerHTML = filtered.map(i => `
-        <tr class="hover:bg-slate-50 transition-colors">
-          <td class="py-3 px-4 font-mono font-bold whitespace-nowrap text-slate-800">${formatDateDisplay(i.date)}</td>
-          <td class="py-3 px-3 font-sans font-bold text-slate-900">${escapeHtml(i.party)}</td>
-          <td class="py-3 px-3 font-sans">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">${i.category}</span>
-          </td>
-          <td class="py-3 px-3 text-right font-mono font-black text-rose-700 whitespace-nowrap">${formatCurrency(i.amount)}</td>
-          <td class="py-3 px-4 font-sans text-slate-500 italic truncate max-w-[180px]">${escapeHtml(i.note) || '-'}</td>
-          <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
-            <div class="flex items-center justify-center gap-1.5">
-              <button type="button" onclick="editAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-900 transition-colors cursor-pointer">
-                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+      if (tbody) {
+        tbody.innerHTML = filtered.map(i => `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-3 px-4 font-mono font-bold whitespace-nowrap text-slate-800">${formatDateDisplay(i.date)}</td>
+            <td class="py-3 px-3 font-sans font-bold text-slate-900">${escapeHtml(i.party)}</td>
+            <td class="py-3 px-3 font-sans">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">${i.category}</span>
+            </td>
+            <td class="py-3 px-3 text-right font-mono font-black text-rose-700 whitespace-nowrap">${formatCurrency(i.amount)}</td>
+            <td class="py-3 px-4 font-sans text-slate-500 italic truncate max-w-[180px]">${escapeHtml(i.note) || '-'}</td>
+            <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
+              <div class="flex items-center justify-center gap-1.5">
+                <button type="button" onclick="editAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-900 transition-colors cursor-pointer">
+                  <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                </button>
+                <button type="button" onclick="deleteAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+                  <i class="fa-solid fa-trash-can mr-1"></i> Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      if (mobileList) {
+        mobileList.innerHTML = filtered.map(i => `
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+            <div class="flex items-start justify-between">
+              <div>
+                <h4 class="font-black text-slate-900 text-base leading-tight">${escapeHtml(i.party)}</h4>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">${i.category}</span>
+                  <span class="font-mono text-xs font-bold text-slate-500">${formatDateDisplay(i.date)}</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="font-mono font-black text-rose-700 text-xl tabular-nums">${formatCurrency(i.amount)}</span>
+              </div>
+            </div>
+
+            ${i.note ? `
+              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 italic font-medium">
+                <i class="fa-solid fa-note-sticky text-slate-400 mr-1"></i> ${escapeHtml(i.note)}
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              <button type="button" onclick="editAdminOutflow('${i.date}', ${i.index})" class="min-h-[48px] px-3 py-2 rounded-xl text-sm font-bold bg-slate-100 hover:bg-rose-100 text-slate-800 hover:text-rose-900 border border-slate-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Edit Payment</span>
               </button>
-              <button type="button" onclick="deleteAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
-                <i class="fa-solid fa-trash-can mr-1"></i> Delete
+              <button type="button" onclick="deleteAdminOutflow('${i.date}', ${i.index})" class="min-h-[48px] px-3 py-2 rounded-xl text-sm font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Delete</span>
               </button>
             </div>
-          </td>
-        </tr>
-      `).join('');
+          </div>
+        `).join('');
+      }
     }
 
     /**
@@ -7046,8 +7446,9 @@
 
     function renderAdminUdhaarTable() {
       const tbody = document.getElementById('adminUdhaarTableBody');
+      const mobileList = document.getElementById('adminUdhaarMobileList');
       const searchVal = (document.getElementById('adminUdhaarSearchInput')?.value || '').toLowerCase();
-      if (!tbody) return;
+      if (!tbody && !mobileList) return;
 
       let customers = appState.customerAccounts || [];
       if (searchVal) {
@@ -7077,36 +7478,96 @@
       if (countBadge) countBadge.textContent = `${customers.length} accounts`;
 
       if (customers.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
-              <i class="fa-solid fa-hand-holding-dollar text-2xl mb-2 block text-slate-300"></i>
-              No debtor accounts recorded. Use the form above to add an account.
-            </td>
-          </tr>
-        `;
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
+                <i class="fa-solid fa-hand-holding-dollar text-2xl mb-2 block text-slate-300"></i>
+                No debtor accounts recorded. Use the form above to add an account.
+              </td>
+            </tr>
+          `;
+        }
+        if (mobileList) {
+          mobileList.innerHTML = `
+            <div class="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 p-6">
+              <i class="fa-solid fa-hand-holding-dollar text-3xl mb-3 text-slate-300 block"></i>
+              <p class="font-bold text-base text-slate-700">No debtor accounts found</p>
+              <p class="text-xs text-slate-400 mt-1">Record credit given or recoveries using the form above.</p>
+            </div>
+          `;
+        }
         return;
       }
 
-      tbody.innerHTML = customers.map(c => `
-        <tr class="hover:bg-slate-50 transition-colors">
-          <td class="py-3 px-4 font-sans font-bold text-slate-900">${escapeHtml(c.name)}</td>
-          <td class="py-3 px-3 font-mono text-slate-500">${c.phone || '-'}</td>
-          <td class="py-3 px-3 text-right font-mono text-slate-700">${formatCurrency(c.totalGiven)}</td>
-          <td class="py-3 px-3 text-right font-mono text-emerald-700 font-bold">${formatCurrency(c.totalRecovered)}</td>
-          <td class="py-3 px-3 text-right font-mono font-black text-amber-800 text-sm whitespace-nowrap bg-amber-50/30">${formatCurrency(c.balance)}</td>
-          <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
-            <div class="flex items-center justify-center gap-1.5">
-              <button type="button" onclick="quickFillUdhaarRecovery('${escapeHtml(c.name)}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors cursor-pointer">
-                <i class="fa-solid fa-money-bill-transfer mr-1"></i> Recovery
+      if (tbody) {
+        tbody.innerHTML = customers.map(c => `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-3 px-4 font-sans font-bold text-slate-900">${escapeHtml(c.name)}</td>
+            <td class="py-3 px-3 font-mono text-slate-500">${c.phone || '-'}</td>
+            <td class="py-3 px-3 text-right font-mono text-slate-700">${formatCurrency(c.totalGiven)}</td>
+            <td class="py-3 px-3 text-right font-mono text-emerald-700 font-bold">${formatCurrency(c.totalRecovered)}</td>
+            <td class="py-3 px-3 text-right font-mono font-black text-amber-800 text-sm whitespace-nowrap bg-amber-50/30">${formatCurrency(c.balance)}</td>
+            <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
+              <div class="flex items-center justify-center gap-1.5">
+                <button type="button" onclick="quickFillUdhaarRecovery('${escapeHtml(c.name)}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors cursor-pointer">
+                  <i class="fa-solid fa-money-bill-transfer mr-1"></i> Recovery
+                </button>
+                <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="px-2 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      if (mobileList) {
+        mobileList.innerHTML = customers.map(c => `
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+            <div class="flex items-start justify-between">
+              <div>
+                <h4 class="font-black text-slate-900 text-base leading-tight">${escapeHtml(c.name)}</h4>
+                <div class="mt-1">
+                  ${c.phone ? `
+                    <a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg min-h-[34px]">
+                      <i class="fa-solid fa-phone text-emerald-600 text-[10px]"></i> ${escapeHtml(c.phone)}
+                    </a>
+                  ` : `
+                    <span class="text-xs text-slate-400 italic">No phone recorded</span>
+                  `}
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-amber-900 uppercase font-black tracking-wider block">Net Balance</span>
+                <span class="font-mono font-black text-amber-800 text-xl tabular-nums">${formatCurrency(c.balance)}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="text-slate-500 font-medium block text-[10px]">Total Given (Udhaar)</span>
+                <span class="font-mono font-bold text-slate-800 text-sm tabular-nums">${formatCurrency(c.totalGiven)}</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                <span class="text-emerald-900 font-bold block text-[10px]">Recovered (Wasooli)</span>
+                <span class="font-mono font-black text-emerald-800 text-sm tabular-nums">${formatCurrency(c.totalRecovered)}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              <button type="button" onclick="quickFillUdhaarRecovery('${escapeHtml(c.name)}')" class="min-h-[48px] px-3 py-2 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+                <span>Recovery</span>
               </button>
-              <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="px-2 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+              <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="min-h-[48px] px-3 py-2 rounded-xl text-sm font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-trash-can"></i>
+                <span>Delete</span>
               </button>
             </div>
-          </td>
-        </tr>
-      `).join('');
+          </div>
+        `).join('');
+      }
     }
 
     function quickFillUdhaarRecovery(custName) {
