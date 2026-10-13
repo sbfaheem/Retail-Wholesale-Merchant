@@ -89,7 +89,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`\n======================================================`);
-  console.log(` Roznamcha Pro Local Server Running at http://localhost:${PORT}`);
+  console.log(` Daily Cash Book & Financial Management Local Server Running at http://localhost:${PORT}`);
   console.log(` API Endpoints:`);
   console.log(`  - Database Records: http://localhost:${PORT}/api/records`);
   console.log(`  - Nightly 1AM Backup: http://localhost:${PORT}/api/backup?auto=true`);

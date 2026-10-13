@@ -1,4 +1,4 @@
-# 🚀 Roznamcha Pro — Deployment on Vercel & 1:00 AM Database Backup
+# 🚀 Daily Cash Book & Financial Management — Deployment on Vercel & 1:00 AM Database Backup
 
 This project is fully configured for zero-configuration, 1-click deployment on [Vercel](https://vercel.com).
 
