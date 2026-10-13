@@ -24,6 +24,18 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const authHeader = req.headers.authorization || req.headers['authorization'] || '';
+      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+      const { verifySessionToken } = require('./_auth');
+      const session = verifySessionToken(token);
+
+      if (!session) {
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized: Administrator authentication required to create or modify records.'
+        });
+      }
+
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       if (!body) {
         return res.status(400).json({ error: 'Missing request payload' });

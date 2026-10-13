@@ -367,6 +367,25 @@
     <!-- TAB 1: DAILY ENTRY TERMINAL (INTERACTIVE CASHIER TERMINAL)              -->
     <!-- ======================================================================= -->
     <div id="tabContent-entry" class="tab-panel space-y-6">
+
+      <!-- Read-Only Mode Informational Banner for Public / Guest Visitors -->
+      <div id="terminalReadOnlyBanner" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-lock text-base"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-black uppercase tracking-wider text-amber-900" data-i18n="readOnlyBannerTitle">Viewing Mode: Read-Only</h4>
+            <p class="text-xs text-amber-800" data-i18n="readOnlyBannerText">
+              Viewing Mode: Read-Only. Please log in as Administrator to record new transactions or modify today's register.
+            </p>
+          </div>
+        </div>
+        <button type="button" onclick="openAdminLoginModal()" class="px-4 py-2 rounded-xl text-xs font-black bg-amber-600 hover:bg-amber-700 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span data-i18n="btnLoginAsAdmin">Admin Login</span>
+        </button>
+      </div>
       
       <!-- Date Control Header Bar -->
       <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
@@ -688,7 +707,7 @@
         <!-- Right Quick Actions -->
         <div class="flex items-center gap-2 justify-end">
           <span class="text-xs text-slate-500 font-mono font-bold" id="registerRecordCountDisplay">0 days recorded</span>
-          <button onclick="switchTab('entry')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 shadow-sm">
+          <button id="registerNewDailyEntryBtn" onclick="switchTab('entry')" class="admin-only-btn hidden px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-plus text-xs"></i>
             <span data-i18n="btnNewDailyEntry">New Daily Entry</span>
           </button>
@@ -3200,6 +3219,19 @@
 
       // Strict RBAC on Tab 1 Entry Terminal (Lock terminal for public viewers)
       applyRbacOnEntryTerminal();
+
+      // Strict RBAC on Tab 4 Customer & Vendor Directory
+      if (appState.ledgerSubtab === 'udhaar') {
+        renderCustomerUdhaarDirectory();
+      }
+      const btnNewUdhaar = document.getElementById('btnNewUdhaarAction');
+      if (btnNewUdhaar) {
+        if (appState.isAdminLoggedIn && appState.ledgerSubtab === 'udhaar') {
+          btnNewUdhaar.classList.remove('hidden');
+        } else {
+          btnNewUdhaar.classList.add('hidden');
+        }
+      }
     }
 
     // 3. ADMIN PORTAL ROUTE MANAGEMENT
@@ -3523,15 +3555,20 @@
     let isDbSyncing = false;
 
     async function pushStateToDatabase() {
+      if (!appState.isAdminLoggedIn) return; // Strict RBAC: No unauthenticated mutations
       try {
         const payload = {
           records: appState.records,
           customerAccounts: appState.customerAccounts,
           kpiOverrides: appState.kpiOverrides
         };
+        const headers = { 'Content-Type': 'application/json' };
+        if (appState.adminToken) {
+          headers['Authorization'] = 'Bearer ' + appState.adminToken;
+        }
         await fetch('/api/records', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(payload)
         });
         const syncTimeElem = document.getElementById('dbLastSyncTime');
@@ -3847,9 +3884,14 @@
       }
 
       recalcLiveBalances();
+      applyRbacOnEntryTerminal();
     }
 
     function toggleManualOpeningOverride() {
+      if (!appState.isAdminLoggedIn) {
+        openAdminLoginModal();
+        return;
+      }
       const openingInput = document.getElementById('inputOpeningBalance');
       const toggleText = document.getElementById('overrideToggleText');
       const note = document.getElementById('openingBalanceNote');
@@ -3991,6 +4033,14 @@
      */
     function saveAndLockDay() {
       if (!appState.isAdminLoggedIn) {
+        showToastNotification(
+          appState.language === 'ur' ? 'رسائی مسترد' : 'Access Denied',
+          appState.language === 'ur' ? 'روزنامچہ کو محفوظ کرنے کے لیے براہ کرم بطور ایڈمن لاگ ان کریں۔' : 'Please log in as Administrator to record or modify register.'
+        );
+        openAdminLoginModal();
+        return;
+      }
+      if (!appState.isAdminLoggedIn) {
         showToastNotification(appState.language === 'ur' ? 'رسائی ممنوع ہے' : 'Access Restricted', appState.language === 'ur' ? 'اندراج محفوظ کرنے کے لیے ایڈمن لاگ ان درکار ہے۔' : 'Admin authentication is required to save entries.');
         openAdminLoginModal();
         return;
@@ -4044,6 +4094,7 @@
     }
 
     function resetCurrentDayForm() {
+      if (!appState.isAdminLoggedIn) return;
       if (!appState.isAdminLoggedIn) {
         openAdminLoginModal();
         return;
@@ -4538,29 +4589,60 @@
      */
     
     function applyRbacOnEntryTerminal() {
-      const isAuth = appState.isAdminLoggedIn;
+      const isAuth = !!appState.isAdminLoggedIn;
       const saveBtn = document.querySelector('button[onclick="saveAndLockDay()"]');
       const clearBtn = document.querySelector('button[onclick="resetCurrentDayForm()"]');
       const addLineBtn = document.querySelector('button[onclick="addOutflowRow()"]');
       const quickChips = document.getElementById('quickVendorChips');
       const overrideToggle = document.getElementById('overrideToggleText')?.closest('button');
+      const banner = document.getElementById('terminalReadOnlyBanner');
 
-      // Disable/enable inputs for non-authenticated users
+      // Toggle top Informational Read-Only Banner
+      if (banner) {
+        if (isAuth) banner.classList.add('hidden');
+        else banner.classList.remove('hidden');
+      }
+
+      // Freeze / unlock primary terminal input fields
       ['inputOpeningBalance', 'inputDailySale', 'inputCreditGiven', 'inputCreditRecovered', 'inputDailyNotes'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           if (!isAuth) {
             el.setAttribute('readonly', 'true');
             el.classList.add('bg-slate-100', 'cursor-not-allowed');
+            el.classList.remove('bg-white');
           } else {
             if (id !== 'inputOpeningBalance' || appState.manualOpeningOverride) {
               el.removeAttribute('readonly');
               el.classList.remove('bg-slate-100', 'cursor-not-allowed');
+              el.classList.add('bg-white');
             }
           }
         }
       });
 
+      // Freeze / unlock all payment lines (outflows)
+      const outflowRows = document.querySelectorAll('.outflow-row');
+      outflowRows.forEach(row => {
+        const partyInp = row.querySelector('.outflow-party');
+        const amtInp = row.querySelector('.outflow-amount');
+        const catSel = row.querySelector('.outflow-category');
+        const rmvBtn = row.querySelector('button[onclick*="removeOutflowRow"]');
+
+        if (!isAuth) {
+          if (partyInp) { partyInp.setAttribute('readonly', 'true'); partyInp.classList.add('bg-slate-100', 'cursor-not-allowed'); partyInp.classList.remove('bg-white'); }
+          if (amtInp) { amtInp.setAttribute('readonly', 'true'); amtInp.classList.add('bg-slate-100', 'cursor-not-allowed'); amtInp.classList.remove('bg-white'); }
+          if (catSel) { catSel.setAttribute('disabled', 'true'); catSel.classList.add('bg-slate-100', 'cursor-not-allowed'); catSel.classList.remove('bg-white'); }
+          if (rmvBtn) rmvBtn.style.display = 'none';
+        } else {
+          if (partyInp) { partyInp.removeAttribute('readonly'); partyInp.classList.remove('bg-slate-100', 'cursor-not-allowed'); partyInp.classList.add('bg-white'); }
+          if (amtInp) { amtInp.removeAttribute('readonly'); amtInp.classList.remove('bg-slate-100', 'cursor-not-allowed'); amtInp.classList.add('bg-white'); }
+          if (catSel) { catSel.removeAttribute('disabled'); catSel.classList.remove('bg-slate-100', 'cursor-not-allowed'); catSel.classList.add('bg-white'); }
+          if (rmvBtn) rmvBtn.style.display = 'inline-flex';
+        }
+      });
+
+      // Toggle action buttons in terminal
       if (saveBtn) saveBtn.style.display = isAuth ? 'inline-flex' : 'none';
       if (clearBtn) clearBtn.style.display = isAuth ? 'inline-flex' : 'none';
       if (addLineBtn) addLineBtn.style.display = isAuth ? 'inline-flex' : 'none';
@@ -4697,20 +4779,24 @@
 
             <td class="py-3 px-3 text-center whitespace-nowrap no-print">
               <div class="flex items-center justify-center gap-1">
-                <button onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="p-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 transition-colors">
-                  <i class="fa-solid fa-pen-to-square"></i>
-                </button>
-                <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-800 transition-colors">
-                  <i class="fa-solid fa-receipt"></i>
-                </button>
                 ${appState.isAdminLoggedIn ? `
+                  <button onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="p-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 transition-colors">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-800 transition-colors">
+                    <i class="fa-solid fa-receipt"></i>
+                  </button>
                   <button onclick="openAdminEditModalForDate('${r.date}')" title="Admin Full Edit" class="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
                     <i class="fa-solid fa-sliders"></i>
                   </button>
                   <button onclick="adminDeleteDayEntry('${r.date}')" title="Admin Delete Entry" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors">
                     <i class="fa-solid fa-trash-can"></i>
                   </button>
-                ` : ''}
+                ` : `
+                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-800 transition-colors">
+                    <i class="fa-solid fa-receipt"></i>
+                  </button>
+                `}
               </div>
             </td>
 
@@ -5576,17 +5662,27 @@
             </div>
           </div>
 
+          ${appState.isAdminLoggedIn ? `
           <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end gap-2">
             <button onclick="openNewCustomerUdhaarModal('${escapeHtml(c.name)}')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 shadow-sm">
               <i class="fa-solid fa-money-bill-transfer"></i>
               <span>${isUr ? 'وصولی / نیا ادھار درج کریں' : 'Record Payment / Credit'}</span>
             </button>
           </div>
+          ` : ''}
         </div>
       `).join('');
     }
 
     function openNewCustomerUdhaarModal(custName = '') {
+      if (!appState.isAdminLoggedIn) {
+        showToastNotification(
+          appState.language === 'ur' ? 'رسائی مسترد' : 'Access Denied',
+          appState.language === 'ur' ? 'ادھار ریکارڈ کرنے کے لیے ایڈمن لاگ ان درکار ہے۔' : 'Administrator authentication required to record udhaar credit/payment.'
+        );
+        openAdminLoginModal();
+        return;
+      }
       const modal = document.getElementById('customerUdhaarModal');
       const nameInput = document.getElementById('udhaarModalCustomerName');
       const amtInput = document.getElementById('udhaarModalAmount');
@@ -5605,6 +5701,11 @@
     }
 
     function submitCustomerUdhaarEntry(e) {
+      if (!appState.isAdminLoggedIn) {
+        if (e) e.preventDefault();
+        showToastNotification('Access Denied', 'Admin login required.');
+        return;
+      }
       e.preventDefault();
       const custName = document.getElementById('udhaarModalCustomerName').value.trim();
       const actionType = document.querySelector('input[name="udhaarTxnType"]:checked')?.value || 'recovery';
