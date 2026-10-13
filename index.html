@@ -181,9 +181,10 @@
             <span class="hidden lg:inline" data-i18n="btnPrint">Print</span>
           </button>
 
-          <!-- Reset / Wipe Button -->
-          <button onclick="confirmResetData()" title="Reset All Data" class="inline-flex items-center p-2 text-xs font-medium rounded-lg text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-all shadow-sm">
-            <i class="fa-solid fa-trash-can"></i>
+          <!-- Discreet Admin Portal Gateway Trigger -->
+          <button id="btnOpenAdminGateway" onclick="navigateToAdmin()" title="Administrator Control Center" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold rounded-lg text-slate-700 hover:text-purple-700 bg-slate-100 hover:bg-purple-50 border border-slate-300 hover:border-purple-300 transition-all shadow-sm">
+            <i class="fa-solid fa-lock text-slate-500 hover:text-purple-600 text-xs"></i>
+            <span class="hidden sm:inline" id="adminPortalNavText">Admin</span>
           </button>
         </div>
       </div>
@@ -217,12 +218,7 @@
           <span id="badgeVendorsCount" class="ml-1 rtl:mr-1 rtl:ml-0 text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700 font-mono font-bold">0</span>
         </button>
 
-        <!-- Tab 5: Admin Backend -->
-        <button id="tabBtn-admin" onclick="switchTab('admin')" class="tab-btn px-3.5 py-2 rounded-lg font-bold flex items-center gap-2 text-purple-700 hover:text-purple-900 hover:bg-purple-50 border-b-2 border-transparent transition-all whitespace-nowrap">
-          <i class="fa-solid fa-shield-halved text-purple-600"></i>
-          <span data-i18n="tabAdminBackend">5. Admin Backend (CRUD)</span>
-          <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 font-bold uppercase tracking-wider" data-i18n="adminPill">Admin</span>
-        </button>
+
       </nav>
     </div>
   </header>
@@ -1207,189 +1203,375 @@
     </div>
 
     <!-- ======================================================================= -->
-    <!-- TAB 5: ADMIN BACKEND (CRUD MANAGEMENT PORTAL)                           -->
+    <!-- SECURE ADMIN PORTAL (PROTECTED VIEW - FULL CRUD & DYNAMIC CMS)           -->
     <!-- ======================================================================= -->
     <div id="tabContent-admin" class="tab-panel hidden space-y-6">
       
-      <!-- Admin Header Banner -->
-      <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Top Admin Banner with Session Status & Log Out Action -->
+      <div class="bg-gradient-to-r from-purple-950 via-indigo-950 to-slate-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-purple-800/40">
         <div>
-          <div class="flex items-center gap-2 mb-1">
-            <span class="px-2 py-0.5 rounded bg-purple-500/30 text-purple-200 text-xs font-bold uppercase tracking-wider border border-purple-400/30" data-i18n="adminBadge">Admin Control Center</span>
-            <span id="adminDbStatusBadge" class="text-xs text-emerald-400 font-mono flex items-center gap-1.5 font-bold">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[11px] font-bold uppercase tracking-wider border border-purple-400/30 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping"></span>
-              <span data-i18n="adminDbConnected">Cloud Database & Auto-Backup Active</span>
+              <span data-i18n="adminSecuredBadge">Authenticated Administrator Session</span>
             </span>
+            <span class="text-xs text-slate-400 font-mono" id="adminSessionUserBadge">Logged in as: admin</span>
           </div>
-          <h2 class="text-lg sm:text-xl font-black" data-i18n="adminHeaderTitle">Daily Cash Book Admin Management</h2>
-          <p class="text-xs text-slate-300 mt-0.5" data-i18n="adminHeaderDesc">Add, update, and delete merchant register entries. Every edit immediately recalculates the ledger cascade across all tabs.</p>
+          <h2 class="text-xl sm:text-2xl font-black tracking-tight" id="adminDashboardHeading">Administrative Control Center</h2>
+          <p class="text-xs text-purple-200 mt-1" data-i18n="adminPortalSubdesc">
+            Complete authority over daily entries, continuous balance recalculation, and dynamic CMS label customization.
+          </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 self-start md:self-auto">
-          <button type="button" onclick="triggerImmediateBackup('manual')" class="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white border border-purple-400/40 flex items-center gap-2 shadow-md transition-all" title="Trigger Instant Database Snapshot Backup">
-            <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
-            <span data-i18n="btnBackupNow">Backup DB Now</span>
-          </button>
-
-          <button type="button" onclick="openAdminCreateModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-2 shadow-md transition-all">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button type="button" onclick="openAdminCreateModal()" class="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-2 shadow-md transition-all">
             <i class="fa-solid fa-plus-circle text-sm"></i>
             <span data-i18n="btnAdminAddNewDay">+ Add New Daily Record</span>
           </button>
+
+          <button type="button" onclick="returnToPublicView()" class="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 flex items-center gap-1.5 transition-colors" title="View Public Cashbook">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span data-i18n="btnExitToPublic">Public View</span>
+          </button>
+
+          <button type="button" onclick="handleAdminLogout()" class="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-400/30 flex items-center gap-1.5 transition-colors" title="Log Out from Admin">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span data-i18n="btnLogout">Log Out</span>
+          </button>
         </div>
       </div>
 
+      <!-- Admin Sub-Navigation Modules Bar -->
+      <div class="flex items-center space-x-2 border-b border-slate-200 pb-1 rtl:space-x-reverse overflow-x-auto text-xs sm:text-sm font-bold">
+        <button type="button" id="adminSubNavBtn-crud" onclick="switchAdminSubModule('crud')" class="px-4 py-2.5 rounded-xl bg-purple-700 text-white shadow-sm flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-table-list"></i>
+          <span data-i18n="adminSubModLedger">Module A: Ledger CRUD & Recalculation Engine</span>
+        </button>
+
+        <button type="button" id="adminSubNavBtn-cms" onclick="switchAdminSubModule('cms')" class="px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-sliders"></i>
+          <span data-i18n="adminSubModCms">Module B: Dynamic CMS & Label Customizer</span>
+        </button>
+
+        <button type="button" id="adminSubNavBtn-db" onclick="switchAdminSubModule('db')" class="px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-database"></i>
+          <span data-i18n="adminSubModDb">Module C: Database & Snapshots</span>
+        </button>
+      </div>
+
       <!-- =================================================================== -->
-      <!-- CLOUD DATABASE & NIGHTLY 1:00 AM BACKUP CONTROL CENTER               -->
+      <!-- MODULE A: LEDGER DATA CRUD & CASCADE ENGINE CONTAINER               -->
       <!-- =================================================================== -->
-      <div class="bg-white border-2 border-purple-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div id="adminModuleContainer-crud" class="space-y-4">
         
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg shadow-sm">
-              <i class="fa-solid fa-database"></i>
+        <!-- Search, Filters, and Metrics Strip -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          <div class="relative flex-grow sm:flex-grow-0 sm:w-80">
+            <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center text-slate-400 text-xs">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="adminSearchInput" oninput="renderAdminTable()" placeholder="Search date, party, remarks..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:ring-1 focus:ring-purple-500 focus:outline-none">
+          </div>
+
+          <div class="flex items-center gap-3 text-xs">
+            <span id="adminRecordCount" class="font-mono font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">0 Total Records</span>
+            <button type="button" onclick="triggerContinuousRecalculateCascade()" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 flex items-center gap-1.5 transition-colors">
+              <i class="fa-solid fa-calculator text-emerald-600"></i>
+              <span data-i18n="btnRecalcCascade">Force Cascade Recalculate</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Master Register Records Table -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-700">
+              <i class="fa-solid fa-database text-purple-600"></i>
+              <span data-i18n="adminTableTitle">System Master Register Records</span>
             </div>
+            <span class="text-[11px] text-slate-500 font-mono" data-i18n="adminSameFieldNamesNote">Uses identical 5-column field names</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left rtl:text-right border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-300">
+                  <th class="py-3 px-4 whitespace-nowrap" data-i18n="thDateDay">Date & Day</th>
+                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap" data-i18n="thOpeningCash">Opening Cash</th>
+                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-emerald-800" data-i18n="thCol1Sale">Col 1: Daily Sale</th>
+                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-800" data-i18n="thCol2TotalAvail">Col 2: Total Available</th>
+                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-rose-800" data-i18n="adminCol3TotalOutflow">Col 3: Total Outflow</th>
+                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-900" data-i18n="thCol4ClosingCash">Col 4: Closing Cash</th>
+                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-amber-900" data-i18n="thCol5MarketCredit">Col 5: Market Credit</th>
+                  <th class="py-3 px-4 text-center whitespace-nowrap" data-i18n="adminTableCrudActions">Admin Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminTableBody" class="divide-y divide-slate-200">
+                <!-- Rendered via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- MODULE B: DYNAMIC CMS & SYSTEM CUSTOMIZATION ENGINE                 -->
+      <!-- =================================================================== -->
+      <div id="adminModuleContainer-cms" class="hidden space-y-5">
+        
+        <div class="bg-white border-2 border-purple-200 rounded-3xl p-6 shadow-sm space-y-6">
+          <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
             <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-black text-slate-900" data-i18n="titleDbBackupCenter">Database & Automated 1:00 AM Nightly Backup</h3>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  <i class="fa-regular fa-clock"></i> 01:00 AM PKT
-                </span>
-              </div>
-              <p class="text-xs text-slate-500" data-i18n="subDbBackupCenter">
-                Persistent serverless database storage, automatic 1:00 AM PKT cron backups, and one-click restore management
+              <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-palette text-purple-600"></i>
+                <span data-i18n="cmsSectionTitle">Dynamic CMS & Field Label Customizer</span>
+              </h3>
+              <p class="text-xs text-slate-500 mt-1" data-i18n="cmsSectionDesc">
+                Customize branding, column terminology, and KPI labels dynamically across public and admin interfaces without modifying source code.
               </p>
             </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="resetCmsLabelsToDefault()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-colors" data-i18n="btnCmsReset">
+                Reset to Defaults
+              </button>
+              <button type="button" onclick="saveCmsSettings()" class="px-5 py-2 rounded-xl text-xs font-black text-white bg-purple-700 hover:bg-purple-800 shadow-md shadow-purple-700/20 flex items-center gap-2 transition-all" data-i18n="btnCmsSave">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Save & Apply CMS</span>
+              </button>
+            </div>
           </div>
 
-          <!-- Fast Action Buttons -->
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="syncWithDatabase()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 flex items-center gap-1.5 transition-colors">
-              <i class="fa-solid fa-rotate text-purple-600"></i>
-              <span data-i18n="btnSyncDb">Sync DB</span>
-            </button>
-            <button type="button" onclick="downloadDatabaseDump()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 transition-colors">
-              <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
-              <span data-i18n="btnDownloadDump">Download Snapshot</span>
-            </button>
-            <label class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 flex items-center gap-1.5 transition-colors cursor-pointer">
-              <i class="fa-solid fa-file-arrow-up text-sky-600"></i>
-              <span data-i18n="btnRestoreDump">Restore Snapshot</span>
-              <input type="file" id="snapshotFileInput" accept=".json" onchange="uploadDatabaseDump(event)" class="hidden">
-            </label>
+          <!-- Section 1: Application Branding -->
+          <div class="space-y-3">
+            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-building"></i>
+              <span data-i18n="cmsHeaderBranding">1. Application Branding & Title</span>
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700">Browser Tab Title</label>
+                <input type="text" id="cmsInpBrowserTitle" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-purple-500 focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700">Main Header Title</label>
+                <input type="text" id="cmsInpHeaderTitle" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-purple-500 focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700">Header Subtitle</label>
+                <input type="text" id="cmsInpHeaderSubtitle" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 focus:ring-1 focus:ring-purple-500 focus:outline-none">
+              </div>
+            </div>
           </div>
+
+          <!-- Section 2: 5-Column Core Register Headers -->
+          <div class="space-y-3 pt-3 border-t border-slate-100">
+            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-columns"></i>
+              <span data-i18n="cmsHeaderColumns">2. Core 5-Column Notebook Headers (Business Dialect)</span>
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+              <div class="space-y-1 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                <label class="font-bold text-emerald-900 block">Col 1: Daily Sale</label>
+                <input type="text" id="cmsInpCol1" class="w-full bg-white border border-emerald-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-emerald-800 focus:outline-none">
+              </div>
+              <div class="space-y-1 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200">
+                <label class="font-bold text-sky-900 block">Col 2: Total Available</label>
+                <input type="text" id="cmsInpCol2" class="w-full bg-white border border-sky-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-sky-800 focus:outline-none">
+              </div>
+              <div class="space-y-1 p-2.5 rounded-xl bg-rose-50/70 border border-rose-200">
+                <label class="font-bold text-rose-900 block">Col 3: Purchases & Outflows</label>
+                <input type="text" id="cmsInpCol3" class="w-full bg-white border border-rose-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-rose-800 focus:outline-none">
+              </div>
+              <div class="space-y-1 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200">
+                <label class="font-bold text-sky-950 block">Col 4: Closing Cash</label>
+                <input type="text" id="cmsInpCol4" class="w-full bg-white border border-sky-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-sky-900 focus:outline-none">
+              </div>
+              <div class="space-y-1 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200">
+                <label class="font-bold text-amber-950 block">Col 5: Market Credit (Udhaar)</label>
+                <input type="text" id="cmsInpCol5" class="w-full bg-white border border-amber-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-900 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Top Dashboard KPI Card Labels -->
+          <div class="space-y-3 pt-3 border-t border-slate-100">
+            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span data-i18n="cmsHeaderKpis">3. Dashboard Top KPI Card Labels</span>
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+              <div class="space-y-1">
+                <label class="font-bold text-slate-700">KPI 1: Opening Cash</label>
+                <input type="text" id="cmsInpKpiOpening" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="font-bold text-emerald-800">KPI 2: Today's Sales</label>
+                <input type="text" id="cmsInpKpiSales" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="font-bold text-rose-800">KPI 3: Total Outflows</label>
+                <input type="text" id="cmsInpKpiOutflows" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="font-bold text-sky-800">KPI 4: Closing Cash</label>
+                <input type="text" id="cmsInpKpiClosing" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="font-bold text-amber-800">KPI 5: Market Credit</label>
+                <input type="text" id="cmsInpKpiCredit" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Currency Symbol & Footer Text -->
+          <div class="space-y-3 pt-3 border-t border-slate-100">
+            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-gear"></i>
+              <span data-i18n="cmsHeaderConfig">4. Currency, Formatting & Footer Configuration</span>
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div class="space-y-1">
+                <label class="font-bold text-slate-700">Currency Symbol</label>
+                <input type="text" id="cmsInpCurrencySymbol" placeholder="PKR" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold font-mono focus:outline-none">
+              </div>
+              <div class="space-y-1 sm:col-span-2">
+                <label class="font-bold text-slate-700">Footer Text & Business Memo</label>
+                <input type="text" id="cmsInpFooterText" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none">
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- 3 Diagnostic Cards: DB Status, Nightly Cron Schedule, Backup History -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- MODULE C: DATABASE SNAPSHOTS & BACKUP MANAGEMENT                    -->
+      <!-- =================================================================== -->
+      <div id="adminModuleContainer-db" class="hidden space-y-4">
+        
+        <div class="bg-white border-2 border-purple-200 rounded-2xl p-5 shadow-sm space-y-4">
           
-          <!-- Card 1: Database Status & Type -->
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
-            <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
-              <span data-i18n="lblDbEngine">Database Engine:</span>
-              <span id="dbEngineBadge" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-purple-100 text-purple-800">PostgreSQL (Vercel / Cloud)</span>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg shadow-sm">
+                <i class="fa-solid fa-database"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-black text-slate-900" data-i18n="titleDbBackupCenter">Database & Automated 1:00 AM Nightly Backup</h3>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <i class="fa-regular fa-clock"></i> 01:00 AM PKT
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500" data-i18n="subDbBackupCenter">
+                  Persistent serverless database storage, automatic 1:00 AM PKT cron backups, and one-click restore management
+                </p>
+              </div>
             </div>
-            <div class="text-sm font-mono font-black text-slate-900" id="dbRecordsStatus">
-              0 Daily Records Active
-            </div>
-            <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
-              <span data-i18n="lblLastSync">Last Synchronized:</span>
-              <span id="dbLastSyncTime" class="font-mono text-slate-700 font-medium">Just now</span>
+
+            <!-- Fast Action Buttons -->
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="triggerImmediateBackup('manual')" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-purple-700 hover:bg-purple-800 text-white flex items-center gap-1.5 transition-colors shadow-sm">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Backup Now</span>
+              </button>
+              <button type="button" onclick="syncWithDatabase()" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-rotate text-purple-600"></i>
+                <span data-i18n="btnSyncDb">Sync DB</span>
+              </button>
+              <button type="button" onclick="downloadDatabaseDump()" class="px-3 py-2 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
+                <span data-i18n="btnDownloadDump">Download Snapshot</span>
+              </button>
+              <label class="px-3 py-2 rounded-lg text-xs font-bold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 flex items-center gap-1.5 transition-colors cursor-pointer">
+                <i class="fa-solid fa-file-arrow-up text-sky-600"></i>
+                <span data-i18n="btnRestoreDump">Restore Snapshot</span>
+                <input type="file" id="snapshotFileInput" accept=".json" onchange="uploadDatabaseDump(event)" class="hidden">
+              </label>
             </div>
           </div>
 
-          <!-- Card 2: 1:00 AM Automated Backup Status -->
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
-            <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
-              <span data-i18n="lblAutomated1AM">Nightly 1AM Automation:</span>
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                <i class="fa-solid fa-check text-[9px]"></i> Active
+          <!-- 3 Diagnostic Cards: DB Status, Nightly Cron Schedule, Backup History -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
+                <span data-i18n="lblDbEngine">Database Engine:</span>
+                <span id="dbEngineBadge" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-purple-100 text-purple-800">PostgreSQL (Vercel / Cloud)</span>
+              </div>
+              <div class="text-sm font-mono font-black text-slate-900" id="dbRecordsStatus">
+                0 Daily Records Active
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
+                <span data-i18n="lblLastSync">Last Synchronized:</span>
+                <span id="dbLastSyncTime" class="font-mono text-slate-700 font-medium">Just now</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
+                <span data-i18n="lblAutomated1AM">Nightly 1AM Automation:</span>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                  <i class="fa-solid fa-check text-[9px]"></i> Active
+                </span>
+              </div>
+              <div class="text-sm font-black text-emerald-800 font-mono" id="nextBackupDisplay">
+                Every Night @ 01:00 AM PKT
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
+                <span data-i18n="lblCronSpec">Vercel Cron:</span>
+                <span class="font-mono text-slate-700 font-bold">0 20 * * * (UTC)</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
+                <span data-i18n="lblTotalSnapshots">Available Snapshots:</span>
+                <span id="backupSnapshotsCount" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-200 text-slate-800">1 Available</span>
+              </div>
+              <div class="text-sm font-mono font-black text-slate-900" id="lastBackupSnapshotTime">
+                Latest: Today
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
+                <span data-i18n="lblRetentionPolicy">Retention Policy:</span>
+                <span class="font-mono text-slate-700">Rolling 30 Days</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Danger Zone: Factory Reset with Safe Confirmation -->
+          <div class="bg-rose-50/60 border border-rose-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-rose-900 text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                <span>Danger Zone: Reset All Ledger Data to Factory Default</span>
+              </div>
+              <p class="text-[11px] text-rose-700 mt-0.5">Wipes all saved cashbook days, customer Udhaar accounts, and recalculates empty state.</p>
+            </div>
+            <button type="button" onclick="adminFactoryReset()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm whitespace-nowrap">
+              <i class="fa-solid fa-trash-can mr-1"></i> Factory Reset
+            </button>
+          </div>
+
+          <!-- Recent Backups Table -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <div class="bg-slate-100/70 px-4 py-2 flex items-center justify-between text-xs font-bold text-slate-700">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+                <span data-i18n="titleRecentBackups">Recent Automated & Manual Backups</span>
               </span>
+              <button type="button" onclick="loadBackupsList()" class="text-purple-700 hover:underline text-[11px] font-medium" data-i18n="btnRefreshList">Refresh List</button>
             </div>
-            <div class="text-sm font-black text-emerald-800 font-mono" id="nextBackupDisplay">
-              Every Night @ 01:00 AM PKT
-            </div>
-            <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
-              <span data-i18n="lblCronSpec">Vercel Cron:</span>
-              <span class="font-mono text-slate-700 font-bold">0 20 * * * (UTC)</span>
-            </div>
-          </div>
-
-          <!-- Card 3: Recent Backups Count -->
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
-            <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
-              <span data-i18n="lblTotalSnapshots">Available Snapshots:</span>
-              <span id="backupSnapshotsCount" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-200 text-slate-800">1 Available</span>
-            </div>
-            <div class="text-sm font-mono font-black text-slate-900" id="lastBackupSnapshotTime">
-              Latest: Today
-            </div>
-            <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
-              <span data-i18n="lblRetentionPolicy">Retention Policy:</span>
-              <span class="font-mono text-slate-700">Rolling 30 Days</span>
+            <div id="adminBackupsListContainer" class="max-h-48 overflow-y-auto divide-y divide-slate-100 text-xs bg-white">
+              <div class="p-4 text-center text-slate-400 font-medium">Checking backup snapshots...</div>
             </div>
           </div>
 
         </div>
 
-        <!-- Collapsible Recent Backups Table -->
-        <div class="border border-slate-200 rounded-xl overflow-hidden">
-          <div class="bg-slate-100/70 px-4 py-2 flex items-center justify-between text-xs font-bold text-slate-700">
-            <span class="flex items-center gap-1.5">
-              <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
-              <span data-i18n="titleRecentBackups">Recent Automated & Manual Backups</span>
-            </span>
-            <button type="button" onclick="loadBackupsList()" class="text-purple-700 hover:underline text-[11px] font-medium" data-i18n="btnRefreshList">Refresh List</button>
-          </div>
-          <div id="adminBackupsListContainer" class="max-h-48 overflow-y-auto divide-y divide-slate-100 text-xs bg-white">
-            <div class="p-4 text-center text-slate-400 font-medium">Checking backup snapshots...</div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Admin Search and Actions Bar -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-        <div class="relative flex-grow sm:flex-grow-0 sm:w-80">
-          <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center text-slate-400 text-xs">
-            <i class="fa-solid fa-magnifying-glass"></i>
-          </span>
-          <input type="text" id="adminSearchInput" oninput="renderAdminTable()" placeholder="Search date, party, remarks..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-        </div>
-
-        <div class="flex items-center gap-2 text-xs text-slate-500">
-          <span id="adminRecordCount" class="font-mono font-bold text-slate-700">0 Total Records</span>
-        </div>
-      </div>
-
-      <!-- Admin Entries Management Table -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-          <div class="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-700">
-            <i class="fa-solid fa-database text-purple-600"></i>
-            <span data-i18n="adminTableTitle">System Master Register Records</span>
-          </div>
-          <span class="text-[11px] text-slate-500 font-mono" data-i18n="adminSameFieldNamesNote">Uses identical merchant 5-column field names</span>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left rtl:text-right border-collapse text-xs">
-            <thead>
-              <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-300">
-                <th class="py-3 px-4 whitespace-nowrap" data-i18n="thDateDay">Date & Day</th>
-                <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap" data-i18n="thOpeningCash">Opening Cash</th>
-                <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-emerald-800" data-i18n="thCol1Sale">Col 1: Daily Sale</th>
-                <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-800" data-i18n="thCol2TotalAvail">Col 2: Total Available</th>
-                <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-rose-800" data-i18n="adminCol3TotalOutflow">Col 3: Total Outflow</th>
-                <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-900" data-i18n="thCol4ClosingCash">Col 4: Closing Cash</th>
-                <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-amber-900" data-i18n="thCol5MarketCredit">Col 5: Market Credit</th>
-                <th class="py-3 px-4 text-center whitespace-nowrap" data-i18n="adminTableCrudActions">Admin Actions</th>
-              </tr>
-            </thead>
-            <tbody id="adminTableBody" class="divide-y divide-slate-200">
-              <!-- Rendered via JavaScript -->
-            </tbody>
-          </table>
-        </div>
       </div>
 
     </div>
@@ -1536,6 +1718,78 @@
   </div>
 
   <!-- ========================================================================= -->
+  
+  <!-- ========================================================================= -->
+  <!-- SECURE ADMIN AUTHENTICATION SCREEN & LOGIN GATEWAY                        -->
+  <!-- ========================================================================= -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-300 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Top Header Banner -->
+      <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 p-6 text-white text-center relative">
+        <button type="button" onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 text-2xl mb-3 shadow-inner">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h2 class="text-lg font-black tracking-tight" data-i18n="adminLoginTitle">Administrative Access Gateway</h2>
+        <p class="text-xs text-purple-200 mt-1" data-i18n="adminLoginSubtitle">Restricted portal for ledger management, label customizer, and backups</p>
+      </div>
+
+      <!-- Login Form Body -->
+      <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
+        
+        <div id="adminLoginError" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-bold flex items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+          <span id="adminLoginErrorMsg">Invalid username or password.</span>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-700" data-i18n="lblAdminUsername">Administrator Username</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+              <i class="fa-solid fa-user-shield"></i>
+            </span>
+            <input type="text" id="adminAuthUsername" required placeholder="admin" autocomplete="username" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-700" data-i18n="lblAdminPassword">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+              <i class="fa-solid fa-key"></i>
+            </span>
+            <input type="password" id="adminAuthPassword" required placeholder="••••••••" autocomplete="current-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            <button type="button" onclick="togglePasswordVisibility('adminAuthPassword')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 text-xs">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 flex items-center justify-between">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="adminRememberSession" checked class="rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+            <span data-i18n="lblRememberSession">Remember Session (12 hrs)</span>
+          </label>
+          <span class="text-slate-400 font-mono">Default: admin / admin123</span>
+        </div>
+
+        <div class="pt-2 flex items-center gap-2.5">
+          <button type="button" onclick="closeAdminLoginModal()" class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors" data-i18n="btnCancel">
+            Cancel
+          </button>
+          <button type="submit" id="btnAdminLoginSubmit" class="flex-1 px-5 py-2.5 rounded-xl text-xs font-black text-white bg-purple-700 hover:bg-purple-800 shadow-md shadow-purple-700/20 flex items-center justify-center gap-2 transition-all">
+            <i class="fa-solid fa-lock-open text-xs"></i>
+            <span data-i18n="btnSignIn">Sign In</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: PARTY TRANSACTION STATEMENT (DETAILED LEDGER DRILL-DOWN)           -->
   <!-- ========================================================================= -->
   <div id="partyModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -2114,15 +2368,40 @@
     ];
 
     // Master Application State
+    // DEFAULT CMS & SYSTEM SETTINGS CONFIGURATION
+    const DEFAULT_CMS_SETTINGS = {
+      browserTitle: "Daily Cash Book & Financial Management",
+      headerTitle: "Daily Cash Book & Financial Management",
+      headerSubtitle: "Retail & Wholesale 5-Column Daily Cash Ledger & Admin System",
+      col1Name: "Col 1: Daily Sale",
+      col2Name: "Col 2: Total Available",
+      col3Name: "Col 3: Purchases & Outflows",
+      col4Name: "Col 4: Closing Cash",
+      col5Name: "Col 5: Market Credit",
+      kpiOpening: "Opening Cash",
+      kpiSales: "Today's Sales",
+      kpiOutflows: "Total Outflows",
+      kpiClosing: "Closing Cash",
+      kpiCredit: "Market Credit (Udhaar)",
+      currencySymbol: "PKR",
+      footerText: "Light Theme Single Page Cash Ledger & Admin System"
+    };
+
     let appState = {
-      currency: 'PKR', // Strictly locked to PKR as requested
-      language: 'en', // 'en' or 'ur'
+      currency: 'PKR',
+      language: 'en',
       selectedDate: getTodayString(),
       manualOpeningOverride: false,
-      doughnutMode: 'vendor', // 'vendor' or 'category'
-      ledgerSubtab: 'vendors', // 'vendors' or 'udhaar'
+      doughnutMode: 'vendor',
+      ledgerSubtab: 'vendors',
       customerAccounts: JSON.parse(JSON.stringify(DEFAULT_CUSTOMER_ACCOUNTS)),
-      records: {} // Key: 'YYYY-MM-DD', Value: DayRecord
+      records: {},
+      // SECURE ADMIN STATE & CMS
+      isAdminLoggedIn: false,
+      adminUser: null,
+      adminToken: null,
+      adminSubModule: 'crud', // 'crud', 'cms', 'db'
+      systemSettings: { ...DEFAULT_CMS_SETTINGS }
     };
 
     // Chart instances
@@ -2162,6 +2441,8 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadSettings();
       loadStoredRecords();
+      loadCmsSettings();
+      checkExistingAdminSession();
 
       // Preload notebook sample entries if fresh
       if (Object.keys(appState.records).length === 0) {
@@ -2172,7 +2453,17 @@
       renderQuickVendorChips();
       setupKeyboardShortcuts();
       applyLanguage(appState.language);
+      applyDynamicCmsSettings();
       refreshAllViews();
+
+      // Route handling for /admin or #admin
+      if (window.location.pathname.endsWith('/admin') || window.location.hash === '#admin') {
+        if (appState.isAdminLoggedIn) {
+          openAdminDashboardView();
+        } else {
+          openAdminLoginModal();
+        }
+      }
 
       // Connect with Database on Vercel / serverless runtime
       syncWithDatabase(true);
@@ -2626,6 +2917,465 @@
     /**
      * TAB NAVIGATION
      */
+
+    /**
+     * =========================================================================
+     * SECURE ADMINISTRATIVE AUTHENTICATION, ROUTE ISOLATION & CMS ENGINE
+     * =========================================================================
+     */
+    const ADMIN_SESSION_STORAGE_KEY = 'roznamcha_admin_session_v1';
+    const CMS_SETTINGS_STORAGE_KEY = 'roznamcha_cms_settings_v1';
+
+    // 1. ROUTE & GATEWAY NAVIGATION
+    function navigateToAdmin() {
+      if (appState.isAdminLoggedIn) {
+        openAdminDashboardView();
+      } else {
+        openAdminLoginModal();
+      }
+    }
+
+    function openAdminLoginModal() {
+      const modal = document.getElementById('adminLoginModal');
+      const errBox = document.getElementById('adminLoginError');
+      if (errBox) errBox.classList.add('hidden');
+      if (modal) modal.classList.remove('hidden');
+      const userInp = document.getElementById('adminAuthUsername');
+      if (userInp) userInp.focus();
+    }
+
+    function closeAdminLoginModal() {
+      const modal = document.getElementById('adminLoginModal');
+      if (modal) modal.classList.add('hidden');
+      // If user came via /admin direct URL without auth, revert URL to /
+      if (window.location.pathname.includes('/admin') || window.location.hash === '#admin') {
+        window.history.pushState({}, '', '/');
+      }
+    }
+
+    function togglePasswordVisibility(fieldId) {
+      const f = document.getElementById(fieldId);
+      if (f) {
+        f.type = f.type === 'password' ? 'text' : 'password';
+      }
+    }
+
+    // 2. ADMIN AUTHENTICATION HANDLERS
+    async function handleAdminLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById('adminAuthUsername')?.value.trim();
+      const password = document.getElementById('adminAuthPassword')?.value;
+      const remember = document.getElementById('adminRememberSession')?.checked;
+      const errorBox = document.getElementById('adminLoginError');
+      const errorMsg = document.getElementById('adminLoginErrorMsg');
+      const isUr = appState.language === 'ur';
+
+      if (!username || !password) return;
+
+      try {
+        // Authenticate via serverless API /api/admin or secure local verification
+        let authSuccess = false;
+        let token = null;
+
+        try {
+          const res = await fetch('/api/admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'login', username, password })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.token) {
+              authSuccess = true;
+              token = data.token;
+            }
+          }
+        } catch (apiErr) {
+          // Local fallback verification for standalone file operation
+          if (username === 'admin' && (password === 'admin123' || password === 'admin')) {
+            authSuccess = true;
+            token = 'local_session_' + Date.now();
+          }
+        }
+
+        if (authSuccess) {
+          appState.isAdminLoggedIn = true;
+          appState.adminUser = username;
+          appState.adminToken = token;
+
+          const sessionPayload = {
+            username,
+            token,
+            expiresAt: Date.now() + (12 * 60 * 60 * 1000)
+          };
+
+          if (remember) {
+            localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(sessionPayload));
+          } else {
+            sessionStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(sessionPayload));
+          }
+
+          closeAdminLoginModal();
+          updateAdminAuthUiState();
+          openAdminDashboardView();
+
+          showToastNotification(
+            isUr ? 'ایڈمن لاگ ان کامیاب' : 'Admin Authenticated',
+            isUr ? 'انتظامی کنٹرول پینل میں خوش آمدید۔' : 'Welcome to the Administrative Control Center.'
+          );
+        } else {
+          if (errorBox && errorMsg) {
+            errorMsg.textContent = isUr ? 'غلط یوزر نام یا پاس ورڈ درج کیا گیا۔' : 'Invalid username or password.';
+            errorBox.classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        if (errorBox && errorMsg) {
+          errorMsg.textContent = err.message || 'Login failed';
+          errorBox.classList.remove('hidden');
+        }
+      }
+    }
+
+    function handleAdminLogout() {
+      const isUr = appState.language === 'ur';
+      if (confirm(isUr ? 'کیا آپ واقعی ایڈمن پورٹل سے لاگ آؤٹ کرنا چاہتے ہیں؟' : 'Log out from the Administrator Control Center?')) {
+        appState.isAdminLoggedIn = false;
+        appState.adminUser = null;
+        appState.adminToken = null;
+        localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+        sessionStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+
+        updateAdminAuthUiState();
+        returnToPublicView();
+
+        showToastNotification(
+          isUr ? 'لاگ آؤٹ مکمل' : 'Logged Out',
+          isUr ? 'ایڈمن سیشن بحفاظت بند کر دیا گیا۔' : 'Admin session terminated safely.'
+        );
+      }
+    }
+
+    function checkExistingAdminSession() {
+      try {
+        let raw = localStorage.getItem(ADMIN_SESSION_STORAGE_KEY) || sessionStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
+        if (raw) {
+          const sess = JSON.parse(raw);
+          if (sess && sess.expiresAt && Date.now() < sess.expiresAt) {
+            appState.isAdminLoggedIn = true;
+            appState.adminUser = sess.username || 'admin';
+            appState.adminToken = sess.token;
+            updateAdminAuthUiState();
+            return true;
+          } else {
+            localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+            sessionStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+          }
+        }
+      } catch (e) {}
+      appState.isAdminLoggedIn = false;
+      updateAdminAuthUiState();
+      return false;
+    }
+
+    function updateAdminAuthUiState() {
+      const navText = document.getElementById('adminPortalNavText');
+      const userBadge = document.getElementById('adminSessionUserBadge');
+
+      if (navText) {
+        navText.textContent = appState.isAdminLoggedIn ? 'Admin (Active)' : 'Admin';
+      }
+      if (userBadge) {
+        userBadge.textContent = appState.isAdminLoggedIn 
+          ? `Logged in as: ${appState.adminUser || 'admin'}` 
+          : 'Not authenticated';
+      }
+      // Re-render register table to show or hide admin action buttons
+      renderRegisterTable();
+    }
+
+    // 3. ADMIN PORTAL ROUTE MANAGEMENT
+    function openAdminDashboardView() {
+      if (!appState.isAdminLoggedIn) {
+        openAdminLoginModal();
+        return;
+      }
+
+      // Hide all standard user operational tabs
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active', 'border-emerald-600', 'text-emerald-800', 'bg-emerald-50');
+        b.classList.add('text-slate-600', 'border-transparent');
+      });
+
+      // Show isolated Admin Portal
+      const adminPanel = document.getElementById('tabContent-admin');
+      if (adminPanel) adminPanel.classList.remove('hidden');
+
+      // Update URL hash / path to reflect /admin isolated state
+      if (!window.location.pathname.includes('/admin')) {
+        window.history.pushState({ view: 'admin' }, '', '#admin');
+      }
+
+      // Render Admin Module Subtab
+      switchAdminSubModule(appState.adminSubModule || 'crud');
+    }
+
+    function returnToPublicView() {
+      // Revert URL to public root
+      window.history.pushState({ view: 'public' }, '', window.location.pathname.replace(/\/admin$/, '') || '/');
+      // Switch back to Daily Entry Terminal (Tab 1)
+      switchTab('entry');
+    }
+
+    function switchAdminSubModule(subMod) {
+      appState.adminSubModule = subMod;
+      const mods = ['crud', 'cms', 'db'];
+
+      mods.forEach(m => {
+        const c = document.getElementById(`adminModuleContainer-${m}`);
+        const b = document.getElementById(`adminSubNavBtn-${m}`);
+        if (c) {
+          if (m === subMod) c.classList.remove('hidden');
+          else c.classList.add('hidden');
+        }
+        if (b) {
+          if (m === subMod) {
+            b.className = 'px-4 py-2.5 rounded-xl bg-purple-700 text-white shadow-sm flex items-center gap-2 transition-all';
+          } else {
+            b.className = 'px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all';
+          }
+        }
+      });
+
+      if (subMod === 'crud') {
+        renderAdminTable();
+      } else if (subMod === 'cms') {
+        loadCmsFormFields();
+      } else if (subMod === 'db') {
+        loadBackupsList();
+      }
+    }
+
+    // 4. MODULE A: LEDGER DATA CRUD & CONTINUOUS CASCADE ENGINE
+    function triggerContinuousRecalculateCascade() {
+      recalculateLedgerCascade();
+      refreshAllViews();
+      const isUr = appState.language === 'ur';
+      showToastNotification(
+        isUr ? 'مکمل کھاتہ دوبارہ شمار ہو گیا' : 'Continuous Cascade Recalculated',
+        isUr ? 'تمام تاریخوں کے ابتدائی اور اختتامی کیش بیلنسز کی جانچ اور حساب مکمل۔' : 'Re-verified all continuous daily balances across timeline.'
+      );
+    }
+
+    function adminDeleteDayEntry(dateIso) {
+      if (!appState.isAdminLoggedIn) {
+        openAdminLoginModal();
+        return;
+      }
+      deleteDayEntry(dateIso);
+    }
+
+    // 5. MODULE B: DYNAMIC CMS & SYSTEM CUSTOMIZATION ENGINE
+    function loadCmsSettings() {
+      try {
+        const raw = localStorage.getItem(CMS_SETTINGS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState.systemSettings = { ...DEFAULT_CMS_SETTINGS, ...parsed };
+        }
+      } catch (e) {
+        appState.systemSettings = { ...DEFAULT_CMS_SETTINGS };
+      }
+      applyDynamicCmsSettings();
+    }
+
+    function applyDynamicCmsSettings() {
+      const s = appState.systemSettings || DEFAULT_CMS_SETTINGS;
+
+      // 1. Browser Title
+      if (s.browserTitle) {
+        document.title = s.browserTitle;
+      }
+
+      // 2. Main Header Title & Subtitle
+      const titleSpan = document.querySelector('[data-i18n="appTitle"]');
+      if (titleSpan && s.headerTitle) {
+        titleSpan.textContent = s.headerTitle;
+      }
+      const subtitleP = document.querySelector('[data-i18n="appSubtitle"]');
+      if (subtitleP && s.headerSubtitle) {
+        subtitleP.textContent = s.headerSubtitle;
+      }
+
+      // 3. 5-Column Core Register Headers in public table
+      const th1 = document.querySelector('th[data-i18n="thCol1Sale"]');
+      if (th1 && s.col1Name) th1.textContent = s.col1Name;
+
+      const th2 = document.querySelector('th[data-i18n="thCol2TotalAvail"]');
+      if (th2 && s.col2Name) th2.textContent = s.col2Name;
+
+      const th3 = document.querySelector('th[data-i18n="thCol3Outflows"]');
+      if (th3 && s.col3Name) th3.textContent = s.col3Name;
+
+      const th4 = document.querySelector('th[data-i18n="thCol4ClosingCash"]');
+      if (th4 && s.col4Name) th4.textContent = s.col4Name;
+
+      const th5 = document.querySelector('th[data-i18n="thCol5MarketCredit"]');
+      if (th5 && s.col5Name) th5.textContent = s.col5Name;
+
+      // 4. Top KPI Card Labels
+      const kpiOpening = document.querySelector('[data-i18n="kpiOpeningCashLabel"]');
+      if (kpiOpening && s.kpiOpening) kpiOpening.textContent = s.kpiOpening;
+
+      const kpiSales = document.querySelector('[data-i18n="kpiTodaySalesLabel"]');
+      if (kpiSales && s.kpiSales) kpiSales.textContent = s.kpiSales;
+
+      const kpiOutflows = document.querySelector('[data-i18n="kpiTodayOutflowsLabel"]');
+      if (kpiOutflows && s.kpiOutflows) kpiOutflows.textContent = s.kpiOutflows;
+
+      const kpiClosing = document.querySelector('[data-i18n="kpiClosingCashLabel"]');
+      if (kpiClosing && s.kpiClosing) kpiClosing.textContent = s.kpiClosing;
+
+      const kpiCredit = document.querySelector('[data-i18n="kpiMarketCreditLabel"]');
+      if (kpiCredit && s.kpiCredit) kpiCredit.textContent = s.kpiCredit;
+
+      // 5. Currency Symbol
+      if (s.currencySymbol) {
+        appState.currency = s.currencySymbol;
+        const curBadge = document.querySelector('[data-i18n="currencyPKRBadge"]');
+        if (curBadge) curBadge.textContent = `${s.currencySymbol} Only`;
+      }
+
+      // 6. Footer Text
+      const footerSpan = document.querySelector('[data-i18n="footerText"]');
+      if (footerSpan && s.footerText) {
+        footerSpan.textContent = s.footerText;
+      }
+    }
+
+    function loadCmsFormFields() {
+      const s = appState.systemSettings || DEFAULT_CMS_SETTINGS;
+      const setVal = (id, val) => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = val || '';
+      };
+
+      setVal('cmsInpBrowserTitle', s.browserTitle || DEFAULT_CMS_SETTINGS.browserTitle);
+      setVal('cmsInpHeaderTitle', s.headerTitle || DEFAULT_CMS_SETTINGS.headerTitle);
+      setVal('cmsInpHeaderSubtitle', s.headerSubtitle || DEFAULT_CMS_SETTINGS.headerSubtitle);
+      setVal('cmsInpCol1', s.col1Name || DEFAULT_CMS_SETTINGS.col1Name);
+      setVal('cmsInpCol2', s.col2Name || DEFAULT_CMS_SETTINGS.col2Name);
+      setVal('cmsInpCol3', s.col3Name || DEFAULT_CMS_SETTINGS.col3Name);
+      setVal('cmsInpCol4', s.col4Name || DEFAULT_CMS_SETTINGS.col4Name);
+      setVal('cmsInpCol5', s.col5Name || DEFAULT_CMS_SETTINGS.col5Name);
+      setVal('cmsInpKpiOpening', s.kpiOpening || DEFAULT_CMS_SETTINGS.kpiOpening);
+      setVal('cmsInpKpiSales', s.kpiSales || DEFAULT_CMS_SETTINGS.kpiSales);
+      setVal('cmsInpKpiOutflows', s.kpiOutflows || DEFAULT_CMS_SETTINGS.kpiOutflows);
+      setVal('cmsInpKpiClosing', s.kpiClosing || DEFAULT_CMS_SETTINGS.kpiClosing);
+      setVal('cmsInpKpiCredit', s.kpiCredit || DEFAULT_CMS_SETTINGS.kpiCredit);
+      setVal('cmsInpCurrencySymbol', s.currencySymbol || DEFAULT_CMS_SETTINGS.currencySymbol);
+      setVal('cmsInpFooterText', s.footerText || DEFAULT_CMS_SETTINGS.footerText);
+    }
+
+    async function saveCmsSettings() {
+      const getVal = (id) => document.getElementById(id)?.value.trim() || '';
+
+      const updated = {
+        browserTitle: getVal('cmsInpBrowserTitle') || DEFAULT_CMS_SETTINGS.browserTitle,
+        headerTitle: getVal('cmsInpHeaderTitle') || DEFAULT_CMS_SETTINGS.headerTitle,
+        headerSubtitle: getVal('cmsInpHeaderSubtitle') || DEFAULT_CMS_SETTINGS.headerSubtitle,
+        col1Name: getVal('cmsInpCol1') || DEFAULT_CMS_SETTINGS.col1Name,
+        col2Name: getVal('cmsInpCol2') || DEFAULT_CMS_SETTINGS.col2Name,
+        col3Name: getVal('cmsInpCol3') || DEFAULT_CMS_SETTINGS.col3Name,
+        col4Name: getVal('cmsInpCol4') || DEFAULT_CMS_SETTINGS.col4Name,
+        col5Name: getVal('cmsInpCol5') || DEFAULT_CMS_SETTINGS.col5Name,
+        kpiOpening: getVal('cmsInpKpiOpening') || DEFAULT_CMS_SETTINGS.kpiOpening,
+        kpiSales: getVal('cmsInpKpiSales') || DEFAULT_CMS_SETTINGS.kpiSales,
+        kpiOutflows: getVal('cmsInpKpiOutflows') || DEFAULT_CMS_SETTINGS.kpiOutflows,
+        kpiClosing: getVal('cmsInpKpiClosing') || DEFAULT_CMS_SETTINGS.kpiClosing,
+        kpiCredit: getVal('cmsInpKpiCredit') || DEFAULT_CMS_SETTINGS.kpiCredit,
+        currencySymbol: getVal('cmsInpCurrencySymbol') || DEFAULT_CMS_SETTINGS.currencySymbol,
+        footerText: getVal('cmsInpFooterText') || DEFAULT_CMS_SETTINGS.footerText
+      };
+
+      appState.systemSettings = updated;
+      localStorage.setItem(CMS_SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+
+      // Persist to database backend if connected
+      try {
+        await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (appState.adminToken || '')
+          },
+          body: JSON.stringify({ action: 'save_settings', settings: updated })
+        });
+      } catch (e) {}
+
+      applyDynamicCmsSettings();
+      refreshAllViews();
+
+      const isUr = appState.language === 'ur';
+      showToastNotification(
+        isUr ? 'سیٹنگز محفوظ ہو گئیں' : 'CMS Settings Applied',
+        isUr ? 'تمام کالم، لیبلز اور ٹائٹل فوری طور پر تبدیل کر دیے گئے۔' : 'Branding, column terminology, and KPI labels updated live!'
+      );
+    }
+
+    function resetCmsLabelsToDefault() {
+      const isUr = appState.language === 'ur';
+      if (confirm(isUr ? 'کیا آپ تمام فیلڈ نام دوبارہ اصل پر بحال کرنا چاہتے ہیں؟' : 'Reset all dynamic CMS labels back to defaults?')) {
+        appState.systemSettings = { ...DEFAULT_CMS_SETTINGS };
+        localStorage.removeItem(CMS_SETTINGS_STORAGE_KEY);
+        loadCmsFormFields();
+        applyDynamicCmsSettings();
+        refreshAllViews();
+        showToastNotification(
+          isUr ? 'ڈیفالٹ بحال ہو گیا' : 'Defaults Restored',
+          isUr ? 'اصل نام کامیابی سے لاگو ہو گئے۔' : 'Standard merchant ledger terminology restored.'
+        );
+      }
+    }
+
+    // 6. MODULE C: FACTORY RESET DANGER ACTION
+    async function adminFactoryReset() {
+      if (!appState.isAdminLoggedIn) {
+        openAdminLoginModal();
+        return;
+      }
+      const isUr = appState.language === 'ur';
+      const promptText = isUr 
+        ? 'وارننگ! اس عمل سے تمام کیش بک کا ڈیٹا صاف ہو جائے گا۔ تصدیق کے لیے RESET لکھیں:' 
+        : 'CRITICAL ACTION: This will permanently wipe all register days. Type RESET to confirm:';
+
+      const userConf = prompt(promptText);
+      if (userConf === 'RESET') {
+        appState.records = {};
+        appState.customerAccounts = [];
+        saveRecordsToStorage();
+        recalculateLedgerCascade();
+        refreshAllViews();
+
+        try {
+          await fetch('/api/admin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + (appState.adminToken || '')
+            },
+            body: JSON.stringify({ action: 'factory_reset' })
+          });
+        } catch (e) {}
+
+        showToastNotification(
+          isUr ? 'مکمل کھاتہ ری سیٹ ہو گیا' : 'Factory Reset Complete',
+          isUr ? 'تمام سابقہ ریکارڈز صاف کر دیے گئے۔' : 'All stored days and customer accounts wiped.'
+        );
+      }
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(b => {
@@ -3538,12 +4288,14 @@
                 <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-800 transition-colors">
                   <i class="fa-solid fa-receipt"></i>
                 </button>
-                <button onclick="openAdminEditModalForDate('${r.date}')" title="Admin Edit / Update" class="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
-                  <i class="fa-solid fa-sliders"></i>
-                </button>
-                <button onclick="deleteDayEntry('${r.date}')" title="Delete Entry" class="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
+                ${appState.isAdminLoggedIn ? `
+                  <button onclick="openAdminEditModalForDate('${r.date}')" title="Admin Full Edit" class="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
+                    <i class="fa-solid fa-sliders"></i>
+                  </button>
+                  <button onclick="adminDeleteDayEntry('${r.date}')" title="Admin Delete Entry" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                ` : ''}
               </div>
             </td>
 

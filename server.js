@@ -7,6 +7,7 @@ const url = require('url');
 
 const recordsHandler = require('./api/records');
 const backupHandler = require('./api/backup');
+const adminHandler = require('./api/admin');
 
 const PORT = process.env.PORT || 3000;
 
@@ -52,8 +53,13 @@ const server = http.createServer(async (req, res) => {
     return backupHandler(req, res);
   }
 
+  if (pathname.startsWith('/api/admin')) {
+    req.body = await getBody();
+    return adminHandler(req, res);
+  }
+
   // Serve static files
-  let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
+  let filePath = path.join(__dirname, pathname === '/' || pathname === '/admin' ? 'index.html' : pathname);
   
   if (!fs.existsSync(filePath)) {
     filePath = path.join(__dirname, 'index.html');
@@ -87,5 +93,6 @@ server.listen(PORT, () => {
   console.log(` API Endpoints:`);
   console.log(`  - Database Records: http://localhost:${PORT}/api/records`);
   console.log(`  - Nightly 1AM Backup: http://localhost:${PORT}/api/backup?auto=true`);
+  console.log(`  - Admin Auth & CMS: http://localhost:${PORT}/api/admin`);
   console.log(`======================================================\n`);
 });
