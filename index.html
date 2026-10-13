@@ -886,8 +886,15 @@
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="adminGatewayUsername" required placeholder="admin" value="admin"
+            <input type="text" id="adminGatewayUsername" required placeholder="admin or superadmin" value="admin"
               class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-sm font-semibold placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium px-1 pt-1.5">
+            <span>Roles:</span>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="setLoginQuickFill('admin')" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-[10px] font-bold cursor-pointer transition-colors" title="Quick fill Admin">admin</button>
+              <button type="button" onclick="setLoginQuickFill('superadmin')" class="px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold cursor-pointer transition-colors" title="Quick fill Super Admin">👑 superadmin</button>
+            </div>
           </div>
         </div>
 
@@ -940,6 +947,21 @@
             <div class="text-[10px] font-black uppercase tracking-wider text-emerald-400">CONTROL PANEL</div>
             <h2 class="text-sm font-black text-white" id="adminSidebarShopName">Roznamcha Admin</h2>
           </div>
+        </div>
+        <!-- Active User Profile & Role Indicator -->
+        <div class="px-4 py-3 border-b border-slate-800 bg-slate-950/40 flex items-center justify-between">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div id="adminUserAvatar" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div class="min-w-0">
+              <div id="adminSidebarUsername" class="text-xs font-bold text-white truncate">admin</div>
+              <div id="adminSidebarRoleBadge" class="text-[10px] text-emerald-400 font-bold leading-none mt-0.5">Staff Admin</div>
+            </div>
+          </div>
+          <button type="button" id="adminSidebarChangePassBtn" onclick="openAdminChangePasswordModal()" title="Change Password" class="hidden text-slate-400 hover:text-amber-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer shrink-0">
+            <i class="fa-solid fa-key text-xs"></i>
+          </button>
         </div>
 
         <!-- Navigation Menu Items -->
@@ -1518,6 +1540,90 @@
         <!-- ================================================================= -->
         <div id="adminSection-settings" class="admin-tab-section hidden space-y-6">
           
+          <!-- Super Admin Security & Password Management Card -->
+          <div id="superAdminSecurityCard" class="hidden bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-base shadow-sm">
+                  <i class="fa-solid fa-key text-amber-600"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <span data-i18n="headerSuperAdminSecurity">Super Admin Security & Password Management</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">Super Admin Only</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5" data-i18n="subSuperAdminSecurity">Change master credentials and rotate operational staff access</p>
+                </div>
+              </div>
+            </div>
+
+            <form onsubmit="handleSuperAdminChangePasswordForm(event)" class="space-y-4 max-w-xl">
+              <div id="superAdminPassMsgBox" class="hidden p-3 rounded-xl text-xs font-semibold flex items-center gap-2"></div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5" data-i18n="lblTargetAccount">Select Account to Update:</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors has-[:checked]:bg-amber-50 has-[:checked]:border-amber-400 has-[:checked]:text-amber-900">
+                    <input type="radio" name="adminTargetUserRadio" value="superadmin" checked onchange="toggleSuperAdminPassInputs(this.value)" class="text-amber-600 focus:ring-amber-500">
+                    <div>
+                      <div class="text-xs font-black">👑 Super Admin</div>
+                      <div class="text-[10px] text-slate-500">Master Owner Account</div>
+                    </div>
+                  </label>
+                  <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-400 has-[:checked]:text-emerald-900">
+                    <input type="radio" name="adminTargetUserRadio" value="admin" onchange="toggleSuperAdminPassInputs(this.value)" class="text-emerald-600 focus:ring-emerald-500">
+                    <div>
+                      <div class="text-xs font-black">🛡️ Staff Admin</div>
+                      <div class="text-[10px] text-slate-500">Operational Daily Account</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Current Password (required for Super Admin) -->
+              <div id="superAdminCurrentPassGroup">
+                <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lblCurrentPassword">Current Super Admin Password</label>
+                <div class="relative">
+                  <input type="password" id="superAdminCurrentPassword" placeholder="Enter current master password"
+                    class="w-full px-3 py-2 pr-10 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono">
+                  <button type="button" onclick="togglePassField('superAdminCurrentPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i class="fa-regular fa-eye text-xs"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lblNewPassword">New Password (Min 6 chars)</label>
+                  <div class="relative">
+                    <input type="password" id="superAdminNewPassword" required minlength="6" placeholder="Enter new password"
+                      class="w-full px-3 py-2 pr-10 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono">
+                    <button type="button" onclick="togglePassField('superAdminNewPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lblConfirmPassword">Confirm New Password</label>
+                  <div class="relative">
+                    <input type="password" id="superAdminConfirmPassword" required minlength="6" placeholder="Confirm new password"
+                      class="w-full px-3 py-2 pr-10 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono">
+                    <button type="button" onclick="togglePassField('superAdminConfirmPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-2">
+                <button type="submit" id="btnSubmitChangePass" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-black text-xs shadow-md shadow-amber-600/20 transition-all flex items-center gap-2 cursor-pointer">
+                  <i class="fa-solid fa-key text-xs"></i>
+                  <span data-i18n="btnUpdatePassword">Update Password</span>
+                </button>
+              </div>
+            </form>
+          </div>
+          
           <!-- Business Profile -->
           <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
             <h3 class="text-sm font-black text-slate-900 mb-1 flex items-center gap-2">
@@ -1626,7 +1732,7 @@
                 <input type="file" id="adminRestoreFileInput" accept=".json" onchange="uploadDatabaseDump(event)" class="hidden">
               </label>
 
-              <button type="button" onclick="adminFactoryReset()" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 flex items-center gap-2 transition-colors cursor-pointer ml-auto">
+              <button type="button" id="adminFactoryResetBtn" onclick="adminFactoryReset()" class="hidden px-4 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 items-center gap-2 transition-colors cursor-pointer ml-auto">
                 <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
                 <span>Reset to Factory Defaults</span>
               </button>
@@ -1656,6 +1762,91 @@
 
 
 <!-- ========================================================================= -->
+  <!-- SUPER ADMIN CHANGE PASSWORD MODAL                                         -->
+  <!-- ========================================================================= -->
+  <div id="adminChangePasswordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center">
+            <i class="fa-solid fa-key text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900" data-i18n="headerSuperAdminSecurity">Super Admin Security & Passwords</h3>
+            <p class="text-[11px] text-slate-500" data-i18n="subSuperAdminSecurity">Update authentication credentials</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAdminChangePasswordModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSuperAdminChangePasswordForm(event)" class="space-y-4">
+        <div id="superAdminModalPassMsgBox" class="hidden p-3 rounded-xl text-xs font-semibold flex items-center gap-2"></div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5" data-i18n="lblTargetAccount">Account to Update:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer has-[:checked]:bg-amber-50 has-[:checked]:border-amber-400 has-[:checked]:text-amber-900 text-xs font-bold transition-all">
+              <input type="radio" name="modalTargetUserRadio" value="superadmin" checked onchange="toggleSuperAdminPassInputs(this.value)" class="text-amber-600">
+              <span>👑 Super Admin</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-400 has-[:checked]:text-emerald-900 text-xs font-bold transition-all">
+              <input type="radio" name="modalTargetUserRadio" value="admin" onchange="toggleSuperAdminPassInputs(this.value)" class="text-emerald-600">
+              <span>🛡️ Staff Admin</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="modalSuperAdminCurrentPassGroup">
+          <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lblCurrentPassword">Current Super Admin Password</label>
+          <div class="relative">
+            <input type="password" id="modalSuperAdminCurrentPassword" placeholder="Current master password"
+              class="w-full px-3 py-2 pr-10 rounded-xl border border-slate-300 bg-slate-50 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono">
+            <button type="button" onclick="togglePassField('modalSuperAdminCurrentPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+              <i class="fa-regular fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lblNewPassword">New Password (Min 6 chars)</label>
+          <div class="relative">
+            <input type="password" id="modalSuperAdminNewPassword" required minlength="6" placeholder="New password"
+              class="w-full px-3 py-2 pr-10 rounded-xl border border-slate-300 bg-slate-50 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono">
+            <button type="button" onclick="togglePassField('modalSuperAdminNewPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+              <i class="fa-regular fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lblConfirmPassword">Confirm New Password</label>
+          <div class="relative">
+            <input type="password" id="modalSuperAdminConfirmPassword" required minlength="6" placeholder="Repeat new password"
+              class="w-full px-3 py-2 pr-10 rounded-xl border border-slate-300 bg-slate-50 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono">
+            <button type="button" onclick="togglePassField('modalSuperAdminConfirmPassword', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+              <i class="fa-regular fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeAdminChangePasswordModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md shadow-amber-600/20 transition-all flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-check text-xs"></i>
+            <span data-i18n="btnUpdatePassword">Update Password</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
 <!-- SHARED MODALS & SYSTEM TOAST                                              -->
 <!-- ========================================================================= -->
 <div id="slipModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1907,6 +2098,18 @@
         lblTotalCreditExtended: "Total Credit Extended:",
         lblTotalRecoveredCash: "Total Recovered Cash:",
         adminBadge: "Admin Control Center",
+        lblRoleSuperAdmin: "Super Admin",
+        lblRoleStaffAdmin: "Staff Admin",
+        btnChangePassword: "Change Password",
+        headerSuperAdminSecurity: "Super Admin Security & Password Management",
+        subSuperAdminSecurity: "Change master credentials and rotate operational staff access",
+        lblTargetAccount: "Select Account to Update:",
+        lblCurrentPassword: "Current Super Admin Password",
+        lblNewPassword: "New Password (Min 6 chars)",
+        lblConfirmPassword: "Confirm New Password",
+        btnUpdatePassword: "Update Password",
+        toastPasswordUpdated: "Password updated successfully!",
+        toastSuperAdminOnly: "Access restricted to Super Admin only.",
         adminSyncLive: "Real-time Frontend Sync",
         adminHeaderTitle: "Daily Cash Book Admin Management",
         adminHeaderDesc: "Add, update, and delete merchant register entries. Every edit immediately recalculates the ledger cascade across all tabs.",
@@ -2097,6 +2300,18 @@
         lblTotalCreditExtended: "کل ادھار دیا گیا:",
         lblTotalRecoveredCash: "کل وصول شدہ کیش:",
         adminBadge: "ایڈمن کنٹرول سنٹر",
+        lblRoleSuperAdmin: "سپر ایڈمن (مالک)",
+        lblRoleStaffAdmin: "اسٹاف ایڈمن",
+        btnChangePassword: "پاس ورڈ تبدیل کریں",
+        headerSuperAdminSecurity: "سپر ایڈمن سیکیورٹی و پاس ورڈ مینجمنٹ",
+        subSuperAdminSecurity: "ماسٹر پاس ورڈ تبدیل کریں اور اسٹاف ایڈمن کی رسائی کو کنٹرول کریں",
+        lblTargetAccount: "اکاؤنٹ کا انتخاب:",
+        lblCurrentPassword: "موجودہ سپر ایڈمن پاس ورڈ",
+        lblNewPassword: "نیا پاس ورڈ (کم از کم ۶ حروف)",
+        lblConfirmPassword: "نئے پاس ورڈ کی تصدیق",
+        btnUpdatePassword: "پاس ورڈ اپ ڈیٹ کریں",
+        toastPasswordUpdated: "پاس ورڈ کامیابی سے تبدیل ہو گیا!",
+        toastSuperAdminOnly: "یہ سہولت صرف سپر ایڈمن (مالک) کے لیے دستیاب ہے۔",
         adminSyncLive: "لائیو ڈیٹا مطابقت پذیری",
         adminHeaderTitle: "روزنامچہ کیش بک ایڈمن کنٹرول پینل",
         adminHeaderDesc: "کسی بھی تاریخ کا اندراج شامل کریں، تبدیل کریں یا حذف کریں۔ تمام ترامیم فوراً رجسٹر اور تجزیات پر لاگو ہوں گی۔",
@@ -2185,6 +2400,7 @@
       // STRICT RBAC & ADMIN STATE
       isAdminLoggedIn: false,
       adminUser: null,
+      adminRole: null, // 'admin' or 'superadmin'
       adminToken: null,
       adminSubModule: 'crud', // 'crud', 'cms', 'kpi', 'db'
       systemSettings: { ...DEFAULT_CMS_SETTINGS },
@@ -2717,6 +2933,7 @@
           if (sess && sess.expiresAt && Date.now() < sess.expiresAt) {
             appState.isAdminLoggedIn = true;
             appState.adminUser = sess.username || 'admin';
+            appState.adminRole = sess.role || (sess.username === 'superadmin' ? 'superadmin' : 'admin');
             appState.adminToken = sess.token;
             updateAdminAuthUiState();
             return true;
@@ -2740,8 +2957,59 @@
       }
       if (userBadge) {
         userBadge.textContent = appState.isAdminLoggedIn 
-          ? `Logged in as: ${appState.adminUser || 'admin'}` 
+          ? `Logged in as: ${appState.adminUser || 'admin'} (${appState.adminRole === 'superadmin' ? 'Super Admin' : 'Admin'})` 
           : 'Not authenticated';
+      }
+
+      // 1. Sidebar profile & role indicator
+      const sidebarUser = document.getElementById('adminSidebarUsername');
+      const sidebarRole = document.getElementById('adminSidebarRoleBadge');
+      const sidebarAvatar = document.getElementById('adminUserAvatar');
+      const sidebarChangePassBtn = document.getElementById('adminSidebarChangePassBtn');
+
+      const isSuper = appState.isAdminLoggedIn && appState.adminRole === 'superadmin';
+
+      if (sidebarUser) sidebarUser.textContent = appState.adminUser || 'admin';
+      if (sidebarRole) {
+        if (isSuper) {
+          sidebarRole.textContent = '👑 Super Admin';
+          sidebarRole.className = 'text-[10px] text-amber-400 font-bold leading-none mt-0.5';
+        } else {
+          sidebarRole.textContent = '🛡️ Staff Admin';
+          sidebarRole.className = 'text-[10px] text-emerald-400 font-bold leading-none mt-0.5';
+        }
+      }
+      if (sidebarAvatar) {
+        if (isSuper) {
+          sidebarAvatar.className = 'w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner';
+          sidebarAvatar.innerHTML = '<i class="fa-solid fa-crown text-amber-400"></i>';
+        } else {
+          sidebarAvatar.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner';
+          sidebarAvatar.innerHTML = '<i class="fa-solid fa-user-shield text-emerald-400"></i>';
+        }
+      }
+      if (sidebarChangePassBtn) {
+        if (isSuper) sidebarChangePassBtn.classList.remove('hidden');
+        else sidebarChangePassBtn.classList.add('hidden');
+      }
+
+      // 2. Strict Super Admin Control: Reset to Factory Defaults button
+      const factoryResetBtn = document.getElementById('adminFactoryResetBtn');
+      if (factoryResetBtn) {
+        if (isSuper) {
+          factoryResetBtn.classList.remove('hidden');
+          factoryResetBtn.classList.add('flex');
+        } else {
+          factoryResetBtn.classList.add('hidden');
+          factoryResetBtn.classList.remove('flex');
+        }
+      }
+
+      // 3. Super Admin Security & Password Management card in Settings
+      const superAdminCard = document.getElementById('superAdminSecurityCard');
+      if (superAdminCard) {
+        if (isSuper) superAdminCard.classList.remove('hidden');
+        else superAdminCard.classList.add('hidden');
       }
       // Re-render register table to show or hide admin action buttons
       renderRegisterTable();
@@ -3023,6 +3291,13 @@
         return;
       }
       const isUr = appState.language === 'ur';
+      if (appState.adminRole !== 'superadmin') {
+        showToastNotification(
+          isUr ? 'رسائی مسترد' : 'Access Denied',
+          isUr ? 'فیکٹری ری سیٹ صرف سپر ایڈمن (مالک) کے لیے دستیاب ہے۔' : 'Factory Reset is restricted to Super Admin only.'
+        );
+        return;
+      }
       const promptText = isUr 
         ? 'وارننگ! اس عمل سے تمام کیش بک کا ڈیٹا صاف ہو جائے گا۔ تصدیق کے لیے RESET لکھیں:' 
         : 'CRITICAL ACTION: This will permanently wipe all register days. Type RESET to confirm:';
@@ -5932,6 +6207,7 @@
       let authenticated = false;
       let sessionToken = null;
 
+      let userRole = null;
       try {
         const res = await fetch('/api/admin', {
           method: 'POST',
@@ -5942,22 +6218,32 @@
         if (data && data.success && data.token) {
           authenticated = true;
           sessionToken = data.token;
+          userRole = data.user?.role || (u.toLowerCase() === 'superadmin' ? 'superadmin' : 'admin');
         }
       } catch (err) {
-        // Fallback check
-        if (u === 'admin' && p === 'admin123') {
+        // Local fallback check
+        const storedSuperPass = localStorage.getItem('local_superadmin_pass') || 'superadmin123';
+        const storedAdminPass = localStorage.getItem('local_admin_pass') || 'admin123';
+        if (u.toLowerCase() === 'superadmin' && p === storedSuperPass) {
           authenticated = true;
           sessionToken = 'local_session_' + Date.now();
+          userRole = 'superadmin';
+        } else if (u.toLowerCase() === 'admin' && p === storedAdminPass) {
+          authenticated = true;
+          sessionToken = 'local_session_' + Date.now();
+          userRole = 'admin';
         }
       }
 
       if (authenticated) {
         appState.isAdminLoggedIn = true;
         appState.adminUser = u;
+        appState.adminRole = userRole || (u.toLowerCase() === 'superadmin' ? 'superadmin' : 'admin');
         appState.adminToken = sessionToken;
 
         const sessionPayload = {
           username: u,
+          role: appState.adminRole,
           token: sessionToken,
           expiresAt: Date.now() + (12 * 60 * 60 * 1000)
         };
@@ -7107,6 +7393,203 @@
       sel.innerHTML = months.map(m => `<option value="${m.value}" ${m.value === activePrefix ? 'selected' : ''}>${m.label}</option>`).join('');
     }
 
-</script>
+
+    /**
+     * SUPER ADMIN SECURITY & PASSWORD MANAGEMENT FUNCTIONS
+     */
+    function setLoginQuickFill(role) {
+      const uInp = document.getElementById('adminGatewayUsername');
+      const pInp = document.getElementById('adminGatewayPassword');
+      if (role === 'superadmin') {
+        if (uInp) uInp.value = 'superadmin';
+        if (pInp) pInp.value = 'superadmin123';
+      } else {
+        if (uInp) uInp.value = 'admin';
+        if (pInp) pInp.value = 'admin123';
+      }
+    }
+
+    function togglePassField(fieldId, btnElem) {
+      const inp = document.getElementById(fieldId);
+      if (!inp) return;
+      const isPass = inp.type === 'password';
+      inp.type = isPass ? 'text' : 'password';
+      const icon = btnElem ? btnElem.querySelector('i') : null;
+      if (icon) {
+        icon.className = isPass ? 'fa-regular fa-eye-slash text-xs' : 'fa-regular fa-eye text-xs';
+      }
+    }
+
+    function toggleSuperAdminPassInputs(targetUser) {
+      const isSuper = targetUser === 'superadmin';
+      const grp1 = document.getElementById('superAdminCurrentPassGroup');
+      if (grp1) grp1.style.display = isSuper ? 'block' : 'none';
+      const grp2 = document.getElementById('modalSuperAdminCurrentPassGroup');
+      if (grp2) grp2.style.display = isSuper ? 'block' : 'none';
+
+      // Keep radios synchronized between modal and settings card
+      document.querySelectorAll('input[name="adminTargetUserRadio"]').forEach(r => {
+        if (r.value === targetUser) r.checked = true;
+      });
+      document.querySelectorAll('input[name="modalTargetUserRadio"]').forEach(r => {
+        if (r.value === targetUser) r.checked = true;
+      });
+    }
+
+    function openAdminChangePasswordModal() {
+      if (!appState.isAdminLoggedIn || appState.adminRole !== 'superadmin') {
+        const isUr = appState.language === 'ur';
+        showToastNotification(
+          isUr ? 'رسائی مسترد' : 'Access Denied',
+          isUr ? 'پاس ورڈ تبدیل کرنے کی سہولت صرف سپر ایڈمن کے لیے ہے۔' : 'Password change is restricted to Super Admin only.'
+        );
+        return;
+      }
+      const modal = document.getElementById('adminChangePasswordModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAdminChangePasswordModal() {
+      const modal = document.getElementById('adminChangePasswordModal');
+      if (modal) modal.classList.add('hidden');
+      const msgBox = document.getElementById('superAdminModalPassMsgBox');
+      if (msgBox) msgBox.classList.add('hidden');
+    }
+
+    async function handleSuperAdminChangePasswordForm(e) {
+      if (e) e.preventDefault();
+      if (!appState.isAdminLoggedIn || appState.adminRole !== 'superadmin') {
+        alert('Access Denied: Only Super Admin can change passwords.');
+        return;
+      }
+
+      const isUr = appState.language === 'ur';
+
+      // Check whether event originated from modal or settings card
+      const form = e.target;
+      const isModal = form.closest('#adminChangePasswordModal') !== null;
+
+      const targetRadio = isModal
+        ? document.querySelector('input[name="modalTargetUserRadio"]:checked')
+        : document.querySelector('input[name="adminTargetUserRadio"]:checked');
+
+      const targetUser = targetRadio ? targetRadio.value : 'superadmin';
+
+      const currentPass = (isModal 
+        ? document.getElementById('modalSuperAdminCurrentPassword')?.value 
+        : document.getElementById('superAdminCurrentPassword')?.value) || '';
+
+      const newPass = (isModal 
+        ? document.getElementById('modalSuperAdminNewPassword')?.value 
+        : document.getElementById('superAdminNewPassword')?.value) || '';
+
+      const confirmPass = (isModal 
+        ? document.getElementById('modalSuperAdminConfirmPassword')?.value 
+        : document.getElementById('superAdminConfirmPassword')?.value) || '';
+
+      const msgBox = isModal 
+        ? document.getElementById('superAdminModalPassMsgBox') 
+        : document.getElementById('superAdminPassMsgBox');
+
+      if (newPass.length < 6) {
+        const err = isUr ? 'نیا پاس ورڈ کم از کم ۶ حروف پر مشتمل ہونا چاہیے۔' : 'New password must be at least 6 characters long.';
+        if (msgBox) {
+          msgBox.className = 'p-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-rose-50 text-rose-800 border border-rose-200';
+          msgBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + err;
+          msgBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        const err = isUr ? 'نیا پاس ورڈ اور تصدیقی پاس ورڈ مماثل نہیں ہیں۔' : 'New password and confirmation password do not match.';
+        if (msgBox) {
+          msgBox.className = 'p-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-rose-50 text-rose-800 border border-rose-200';
+          msgBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + err;
+          msgBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (targetUser === 'superadmin' && !currentPass) {
+        const err = isUr ? 'سپر ایڈمن کا موجودہ پاس ورڈ درج کرنا لازمی ہے۔' : 'Current Super Admin password is required.';
+        if (msgBox) {
+          msgBox.className = 'p-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-rose-50 text-rose-800 border border-rose-200';
+          msgBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + err;
+          msgBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (appState.adminToken || '')
+          },
+          body: JSON.stringify({
+            action: 'change_password',
+            targetUser,
+            currentPassword: currentPass,
+            newPassword: newPass
+          })
+        });
+
+        const data = await res.json();
+        if (data && data.success) {
+          if (targetUser === 'superadmin') {
+            localStorage.setItem('local_superadmin_pass', newPass);
+          } else {
+            localStorage.setItem('local_admin_pass', newPass);
+          }
+
+          const succMsg = isUr 
+            ? `${targetUser === 'superadmin' ? 'سپر ایڈمن' : 'اسٹاف ایڈمن'} کا پاس ورڈ کامیابی سے اپ ڈیٹ ہو گیا۔` 
+            : `Password for ${targetUser === 'superadmin' ? 'Super Admin' : 'Staff Admin'} updated successfully!`;
+
+          if (msgBox) {
+            msgBox.className = 'p-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200';
+            msgBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + succMsg;
+            msgBox.classList.remove('hidden');
+          }
+
+          form.reset();
+          toggleSuperAdminPassInputs(targetUser);
+
+          showToastNotification(
+            isUr ? 'پاس ورڈ تبدیل ہو گیا' : 'Password Updated',
+            succMsg
+          );
+
+          if (isModal) {
+            setTimeout(() => {
+              closeAdminChangePasswordModal();
+            }, 1200);
+          }
+        } else {
+          const errMsg = (data && data.error) ? data.error : (isUr ? 'پاس ورڈ تبدیل کرنے میں خرابی پیش آگئی۔' : 'Failed to update password.');
+          if (msgBox) {
+            msgBox.className = 'p-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-rose-50 text-rose-800 border border-rose-200';
+            msgBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + errMsg;
+            msgBox.classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        if (targetUser === 'superadmin') {
+          localStorage.setItem('local_superadmin_pass', newPass);
+        } else {
+          localStorage.setItem('local_admin_pass', newPass);
+        }
+        showToastNotification(
+          isUr ? 'پاس ورڈ تبدیل ہو گیا' : 'Password Updated',
+          isUr ? 'نیا پاس ورڈ مقامی طور پر محفوظ ہو گیا۔' : 'New password saved locally.'
+        );
+        form.reset();
+        if (isModal) closeAdminChangePasswordModal();
+      }
+    }
+
+  </script>
 </body>
 </html>

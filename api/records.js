@@ -15,11 +15,13 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const state = await getRoznamchaState();
+      const safeData = { ...state };
+      delete safeData.authCredentials;
       return res.status(200).json({
         success: true,
         isDatabaseConnected: hasPostgres(),
         databaseType: hasPostgres() ? 'PostgreSQL' : 'Local/Serverless Fallback',
-        data: state
+        data: safeData
       });
     }
 

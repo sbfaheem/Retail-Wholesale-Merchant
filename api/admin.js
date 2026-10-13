@@ -1,6 +1,6 @@
-// Admin session authentication and settings API
+// Admin session authentication, role-based control, and settings API
 const { getRoznamchaState, saveRoznamchaState, createDatabaseBackup, listDatabaseBackups, restoreDatabaseBackup, hasPostgres } = require('./_db');
-const { verifySessionToken, createSessionToken, ADMIN_USER, ADMIN_PASS } = require('./_auth');
+const { verifySessionToken, createSessionToken, verifyCredentials, hashPassword, SUPERADMIN_USER, ADMIN_USER } = require('./_auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -17,28 +17,35 @@ module.exports = async function handler(req, res) {
   const session = verifySessionToken(token);
 
   try {
-    // 1. POST /api/admin?action=login
+    // 1. POST /api/admin
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
       const action = body.action || req.query?.action;
 
       if (action === 'login') {
         const { username, password } = body;
-        if (username === ADMIN_USER && password === ADMIN_PASS) {
-          const newToken = createSessionToken(username);
+        const state = await getRoznamchaState();
+        const user = verifyCredentials(username, password, state.authCredentials || {});
+
+        if (user) {
+          const newToken = createSessionToken(user.username, user.role);
           return res.status(200).json({
             success: true,
             token: newToken,
-            user: { username, role: 'administrator' },
+            user: { username: user.username, role: user.role },
             expiresIn: 12 * 3600
           });
         }
-        return res.status(401).json({ success: false, error: 'Invalid admin credentials' });
+        return res.status(401).json({ success: false, error: 'Invalid username or password' });
       }
 
       if (action === 'verify') {
         if (session) {
-          return res.status(200).json({ success: true, valid: true, user: session });
+          return res.status(200).json({
+            success: true,
+            valid: true,
+            user: { username: session.username, role: session.role }
+          });
         }
         return res.status(401).json({ success: false, valid: false, error: 'Session expired' });
       }
@@ -48,7 +55,56 @@ module.exports = async function handler(req, res) {
         return res.status(401).json({ success: false, error: 'Unauthorized: Admin authentication required' });
       }
 
-      // Admin Save Settings
+      // Change Password (Strictly Super Admin only)
+      if (action === 'change_password') {
+        if (session.role !== 'superadmin') {
+          return res.status(403).json({
+            success: false,
+            error: 'Access Denied: Only Super Admin has authority to change passwords.'
+          });
+        }
+
+        const { targetUser, currentPassword, newPassword } = body;
+        if (!newPassword || typeof newPassword !== 'string' || newPassword.trim().length < 6) {
+          return res.status(400).json({
+            success: false,
+            error: 'New password must be at least 6 characters long.'
+          });
+        }
+
+        const state = await getRoznamchaState();
+        if (!state.authCredentials) state.authCredentials = {};
+
+        const normalizedTarget = (targetUser || 'superadmin').toLowerCase();
+
+        if (normalizedTarget === 'superadmin') {
+          const checkCurrent = verifyCredentials(session.username, currentPassword, state.authCredentials);
+          if (!checkCurrent || checkCurrent.role !== 'superadmin') {
+            return res.status(400).json({
+              success: false,
+              error: 'Current Super Admin password is incorrect.'
+            });
+          }
+          state.authCredentials.superadminPasswordHash = hashPassword(newPassword.trim());
+          delete state.authCredentials.superadminPassword;
+        } else if (normalizedTarget === 'admin') {
+          state.authCredentials.adminPasswordHash = hashPassword(newPassword.trim());
+          delete state.authCredentials.adminPassword;
+        } else {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid target user: must be superadmin or admin.'
+          });
+        }
+
+        await saveRoznamchaState(state);
+        return res.status(200).json({
+          success: true,
+          message: `Password for ${normalizedTarget === 'superadmin' ? 'Super Admin' : 'Admin'} updated successfully.`
+        });
+      }
+
+      // Save KPI Overrides (Permitted for Admin and Super Admin)
       if (action === 'save_kpi_overrides') {
         const state = await getRoznamchaState();
         state.kpiOverrides = body.overrides || {};
@@ -56,6 +112,7 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ success: true, kpiOverrides: state.kpiOverrides });
       }
 
+      // Save Settings / Dynamic CMS (Permitted for Admin and Super Admin)
       if (action === 'save_settings') {
         const state = await getRoznamchaState();
         state.systemSettings = body.settings || {};
@@ -63,10 +120,27 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ success: true, settings: state.systemSettings });
       }
 
-      // Admin Factory Reset
+      // Factory Reset (STRICTLY SUPER ADMIN ONLY)
       if (action === 'factory_reset') {
-        await saveRoznamchaState({ records: {}, customerAccounts: {}, systemSettings: {} });
-        return res.status(200).json({ success: true, message: 'All ledger data reset to factory defaults' });
+        if (session.role !== 'superadmin') {
+          return res.status(403).json({
+            success: false,
+            error: 'Access Denied: Reset to Factory Defaults is restricted to Super Admin only.'
+          });
+        }
+
+        const state = await getRoznamchaState();
+        await saveRoznamchaState({
+          records: {},
+          customerAccounts: {},
+          kpiOverrides: {},
+          systemSettings: state.systemSettings || {},
+          authCredentials: state.authCredentials || {}
+        });
+        return res.status(200).json({
+          success: true,
+          message: 'All ledger data reset to factory defaults.'
+        });
       }
 
       return res.status(400).json({ success: false, error: 'Unknown action' });
@@ -78,16 +152,20 @@ module.exports = async function handler(req, res) {
 
       if (action === 'verify') {
         if (session) {
-          return res.status(200).json({ success: true, valid: true, user: session });
+          return res.status(200).json({
+            success: true,
+            valid: true,
+            user: { username: session.username, role: session.role }
+          });
         }
         return res.status(401).json({ success: false, valid: false, error: 'Session expired' });
       }
 
-      // Return public settings or full state if authenticated
       const state = await getRoznamchaState();
       return res.status(200).json({
         success: true,
         authenticated: !!session,
+        user: session ? { username: session.username, role: session.role } : null,
         settings: state.systemSettings || null,
         kpiOverrides: state.kpiOverrides || {}
       });

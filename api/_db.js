@@ -21,6 +21,8 @@ let memoryCache = {
   records: {},
   customerAccounts: {},
   kpiOverrides: {},
+  systemSettings: {},
+  authCredentials: {},
   backups: [],
   lastUpdated: new Date().toISOString()
 };
@@ -102,10 +104,13 @@ async function getRoznamchaState() {
 }
 
 async function saveRoznamchaState(data) {
+  const currentState = await getRoznamchaState().catch(() => ({}));
   const payload = {
-    records: data.records || {},
-    kpiOverrides: data.kpiOverrides || {},
-    customerAccounts: data.customerAccounts || {},
+    records: data.records !== undefined ? data.records : (currentState.records || {}),
+    kpiOverrides: data.kpiOverrides !== undefined ? data.kpiOverrides : (currentState.kpiOverrides || {}),
+    customerAccounts: data.customerAccounts !== undefined ? data.customerAccounts : (currentState.customerAccounts || {}),
+    systemSettings: data.systemSettings !== undefined ? data.systemSettings : (currentState.systemSettings || {}),
+    authCredentials: data.authCredentials !== undefined ? data.authCredentials : (currentState.authCredentials || memoryCache.authCredentials || {}),
     lastUpdated: new Date().toISOString()
   };
 
