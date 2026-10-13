@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" class="h-full">
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -117,10 +119,12 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
 
+
   <!-- ========================================================================= -->
-  <!-- TOP EXECUTIVE APP HEADER (CLEAN LIGHT THEME)                              -->
+  <!-- PUBLIC VIEWER APPLICATION (READ-ONLY)                                     -->
   <!-- ========================================================================= -->
-  <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+  <div id="publicViewerApp" class="flex flex-col min-h-screen">
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 sm:h-20">
         
@@ -177,10 +181,10 @@
           </button>
 
           <!-- Discreet Admin Portal Gateway Trigger -->
-          <button id="btnOpenAdminGateway" onclick="navigateToAdmin()" title="Administrator Control Center" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold rounded-lg text-slate-700 hover:text-purple-700 bg-slate-100 hover:bg-purple-50 border border-slate-300 hover:border-purple-300 transition-all shadow-sm">
-            <i class="fa-solid fa-lock text-slate-500 hover:text-purple-600 text-xs"></i>
-            <span class="hidden sm:inline" id="adminPortalNavText">Admin</span>
-          </button>
+          <button type="button" onclick="navigateToAdmin()" class="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer">
+    <i class="fa-solid fa-lock text-xs"></i>
+    <span>Admin Panel</span>
+  </button>
         </div>
       </div>
 
@@ -366,7 +370,9 @@
     <!-- ======================================================================= -->
     <!-- TAB 1: DAILY ENTRY TERMINAL (INTERACTIVE CASHIER TERMINAL)              -->
     <!-- ======================================================================= -->
-    <div id="tabContent-entry" class="tab-panel space-y-6">
+    
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow">
+      <div id="tabContent-entry" class="tab-panel space-y-6">
 
       <!-- Read-Only Mode Informational Banner for Public / Guest Visitors -->
       <div id="terminalReadOnlyBanner" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
@@ -1219,812 +1225,852 @@
     <!-- ======================================================================= -->
     <!-- SECURE ADMIN PORTAL (PROTECTED VIEW - FULL CRUD & DYNAMIC CMS)           -->
     <!-- ======================================================================= -->
-    <div id="tabContent-admin" class="tab-panel hidden space-y-6">
+    
+    </main>
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-book-bookmark text-emerald-600"></i>
+        <span class="font-bold text-slate-700">Roznamcha</span> &mdash; <span data-i18n="footerText">Light Theme Single Page Cash Ledger & Admin System (PKR Only)</span>
+      </div>
+      <div class="flex items-center gap-4 text-[11px] text-slate-500">
+        <span data-i18n="footerPersistent">Persistent Local Storage</span>
+        <span>&bull;</span>
+        <span data-i18n="footerBilingual">English & اردو Support</span>
+
+      </div>
+    </div>
+  </footer>
+  </div>
+
+
+
+  <!-- ========================================================================= -->
+  <!-- DEDICATED ADMIN GATEWAY & LOGIN SCREEN (/admin)                           -->
+  <!-- Inspired directly by reference: https://monthly-expense-dashboard.vercel.app/admin -->
+  <!-- ========================================================================= -->
+  <div id="adminLoginScreen" class="hidden min-h-screen bg-emerald-800 flex items-center justify-center p-4 sm:p-6 font-sans">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-emerald-900/10 animate-in fade-in zoom-in-95 duration-200">
       
-      <!-- Top Admin Banner with Session Status & Log Out Action -->
-      <div class="bg-gradient-to-r from-purple-950 via-indigo-950 to-slate-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-purple-800/40">
+      <!-- Branded Lock Header -->
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center mx-auto mb-3 shadow-inner">
+          <i class="fa-solid fa-lock text-2xl text-emerald-700"></i>
+        </div>
+        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Admin Panel</h2>
+        <p class="text-xs text-slate-500 font-medium mt-1">Retail & Wholesale Daily Cash Book</p>
+      </div>
+
+      <!-- Authentication Form -->
+      <form id="adminGatewayLoginForm" onsubmit="handleAdminGatewayLogin(event)" class="space-y-4">
+        
+        <div id="adminGatewayErrorBox" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation text-sm shrink-0"></i>
+          <span id="adminGatewayErrorMsg">Invalid username or password.</span>
+        </div>
+
         <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[11px] font-bold uppercase tracking-wider border border-purple-400/30 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping"></span>
-              <span data-i18n="adminSecuredBadge">Authenticated Administrator Session</span>
-            </span>
-            <span class="text-xs text-slate-400 font-mono" id="adminSessionUserBadge">Logged in as: admin</span>
-          </div>
-          <h2 class="text-xl sm:text-2xl font-black tracking-tight" id="adminDashboardHeading">Administrative Control Center</h2>
-          <p class="text-xs text-purple-200 mt-1" data-i18n="adminPortalSubdesc">
-            Complete authority over daily entries, continuous balance recalculation, and dynamic CMS label customization.
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2.5">
-          <button type="button" onclick="openAdminCreateModal()" class="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-2 shadow-md transition-all">
-            <i class="fa-solid fa-plus-circle text-sm"></i>
-            <span data-i18n="btnAdminAddNewDay">+ Add New Daily Record</span>
-          </button>
-
-          <button type="button" onclick="returnToPublicView()" class="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 flex items-center gap-1.5 transition-colors" title="View Public Cashbook">
-            <i class="fa-solid fa-arrow-left"></i>
-            <span data-i18n="btnExitToPublic">Public View</span>
-          </button>
-
-          <button type="button" onclick="handleAdminLogout()" class="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-400/30 flex items-center gap-1.5 transition-colors" title="Log Out from Admin">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span data-i18n="btnLogout">Log Out</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Admin Sub-Navigation Modules Bar -->
-      <div class="flex items-center space-x-2 border-b border-slate-200 pb-1 rtl:space-x-reverse overflow-x-auto text-xs sm:text-sm font-bold">
-        <button type="button" id="adminSubNavBtn-crud" onclick="switchAdminSubModule('crud')" class="px-4 py-2.5 rounded-xl bg-purple-700 text-white shadow-sm flex items-center gap-2 transition-all">
-          <i class="fa-solid fa-table-list"></i>
-          <span data-i18n="adminSubModLedger">Module A: Ledger CRUD & Recalculation Engine</span>
-        </button>
-
-        <button type="button" id="adminSubNavBtn-cms" onclick="switchAdminSubModule('cms')" class="px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all">
-          <i class="fa-solid fa-sliders"></i>
-          <span data-i18n="adminSubModCms">Module B: Dynamic CMS & Label Customizer</span>
-        </button>
-
-        <button type="button" id="adminSubNavBtn-kpi" onclick="switchAdminSubModule('kpi')" class="px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all">
-          <i class="fa-solid fa-chart-line text-amber-500"></i>
-          <span>Module C: 7 Top Summary KPI Card Overrides</span>
-        </button>
-
-        <button type="button" id="adminSubNavBtn-db" onclick="switchAdminSubModule('db')" class="px-4 py-2.5 rounded-xl text-slate-600 hover:text-purple-900 hover:bg-purple-50 flex items-center gap-2 transition-all">
-          <i class="fa-solid fa-database"></i>
-          <span>Module D: Database & Snapshots</span>
-        </button>
-      </div>
-
-      <!-- =================================================================== -->
-      <!-- MODULE A: LEDGER DATA CRUD & CASCADE ENGINE CONTAINER               -->
-      <!-- =================================================================== -->
-      <div id="adminModuleContainer-crud" class="space-y-4">
-        
-        <!-- Search, Filters, and Metrics Strip -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-          <div class="relative flex-grow sm:flex-grow-0 sm:w-80">
-            <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center text-slate-400 text-xs">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </span>
-            <input type="text" id="adminSearchInput" oninput="renderAdminTable()" placeholder="Search date, party, remarks..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-          </div>
-
-          <div class="flex items-center gap-3 text-xs">
-            <span id="adminRecordCount" class="font-mono font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">0 Total Records</span>
-            <button type="button" onclick="triggerContinuousRecalculateCascade()" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 flex items-center gap-1.5 transition-colors">
-              <i class="fa-solid fa-calculator text-emerald-600"></i>
-              <span data-i18n="btnRecalcCascade">Force Cascade Recalculate</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Master Register Records Table -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-          <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-            <div class="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-700">
-              <i class="fa-solid fa-database text-purple-600"></i>
-              <span data-i18n="adminTableTitle">System Master Register Records</span>
-            </div>
-            <span class="text-[11px] text-slate-500 font-mono" data-i18n="adminSameFieldNamesNote">Uses identical 5-column field names</span>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left rtl:text-right border-collapse text-xs">
-              <thead>
-                <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-300">
-                  <th class="py-3 px-4 whitespace-nowrap" data-i18n="thDateDay">Date & Day</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap" data-i18n="thOpeningCash">Opening Cash</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-emerald-800" data-i18n="thCol1Sale">Col 1: Daily Sale</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-800" data-i18n="thCol2TotalAvail">Col 2: Total Available</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-rose-800" data-i18n="adminCol3TotalOutflow">Col 3: Total Outflow</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-sky-900" data-i18n="thCol4ClosingCash">Col 4: Closing Cash</th>
-                  <th class="py-3 px-3 text-right rtl:text-left whitespace-nowrap text-amber-900" data-i18n="thCol5MarketCredit">Col 5: Market Credit</th>
-                  <th class="py-3 px-4 text-center whitespace-nowrap" data-i18n="adminTableCrudActions">Admin Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminTableBody" class="divide-y divide-slate-200">
-                <!-- Rendered via JavaScript -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- =================================================================== -->
-      <!-- MODULE B: DYNAMIC CMS & SYSTEM CUSTOMIZATION ENGINE                 -->
-      <!-- =================================================================== -->
-      <div id="adminModuleContainer-cms" class="hidden space-y-5">
-        
-        <div class="bg-white border-2 border-purple-200 rounded-3xl p-6 shadow-sm space-y-6">
-          <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
-            <div>
-              <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-palette text-purple-600"></i>
-                <span data-i18n="cmsSectionTitle">Dynamic CMS & Field Label Customizer</span>
-              </h3>
-              <p class="text-xs text-slate-500 mt-1" data-i18n="cmsSectionDesc">
-                Customize branding, column terminology, and KPI labels dynamically across public and admin interfaces without modifying source code.
-              </p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="resetCmsLabelsToDefault()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-colors" data-i18n="btnCmsReset">
-                Reset to Defaults
-              </button>
-              <button type="button" onclick="saveCmsSettings()" class="px-5 py-2 rounded-xl text-xs font-black text-white bg-purple-700 hover:bg-purple-800 shadow-md shadow-purple-700/20 flex items-center gap-2 transition-all" data-i18n="btnCmsSave">
-                <i class="fa-solid fa-floppy-disk"></i>
-                <span>Save & Apply CMS</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Section 1: Application Branding -->
-          <div class="space-y-3">
-            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-building"></i>
-              <span data-i18n="cmsHeaderBranding">1. Application Branding & Title</span>
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-slate-700">Browser Tab Title</label>
-                <input type="text" id="cmsInpBrowserTitle" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-slate-700">Main Header Title</label>
-                <input type="text" id="cmsInpHeaderTitle" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-slate-700">Header Subtitle</label>
-                <input type="text" id="cmsInpHeaderSubtitle" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 2: 5-Column Core Register Headers -->
-          <div class="space-y-3 pt-3 border-t border-slate-100">
-            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-columns"></i>
-              <span data-i18n="cmsHeaderColumns">2. Core 5-Column Notebook Headers (Business Dialect)</span>
-            </h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-              <div class="space-y-1 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
-                <label class="font-bold text-emerald-900 block">Col 1: Daily Sale</label>
-                <input type="text" id="cmsInpCol1" class="w-full bg-white border border-emerald-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-emerald-800 focus:outline-none">
-              </div>
-              <div class="space-y-1 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200">
-                <label class="font-bold text-sky-900 block">Col 2: Total Available</label>
-                <input type="text" id="cmsInpCol2" class="w-full bg-white border border-sky-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-sky-800 focus:outline-none">
-              </div>
-              <div class="space-y-1 p-2.5 rounded-xl bg-rose-50/70 border border-rose-200">
-                <label class="font-bold text-rose-900 block">Col 3: Purchases & Outflows</label>
-                <input type="text" id="cmsInpCol3" class="w-full bg-white border border-rose-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-rose-800 focus:outline-none">
-              </div>
-              <div class="space-y-1 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200">
-                <label class="font-bold text-sky-950 block">Col 4: Closing Cash</label>
-                <input type="text" id="cmsInpCol4" class="w-full bg-white border border-sky-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-sky-900 focus:outline-none">
-              </div>
-              <div class="space-y-1 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200">
-                <label class="font-bold text-amber-950 block">Col 5: Market Credit (Udhaar)</label>
-                <input type="text" id="cmsInpCol5" class="w-full bg-white border border-amber-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-900 focus:outline-none">
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 3: Top Dashboard KPI Card Labels -->
-          <div class="space-y-3 pt-3 border-t border-slate-100">
-            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-chart-pie"></i>
-              <span data-i18n="cmsHeaderKpis">3. Dashboard Top KPI Card Labels</span>
-            </h4>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-              <div class="space-y-1">
-                <label class="font-bold text-slate-700">KPI 1: Opening Cash</label>
-                <input type="text" id="cmsInpKpiOpening" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
-              </div>
-              <div class="space-y-1">
-                <label class="font-bold text-emerald-800">KPI 2: Today's Sales</label>
-                <input type="text" id="cmsInpKpiSales" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
-              </div>
-              <div class="space-y-1">
-                <label class="font-bold text-rose-800">KPI 3: Total Outflows</label>
-                <input type="text" id="cmsInpKpiOutflows" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
-              </div>
-              <div class="space-y-1">
-                <label class="font-bold text-sky-800">KPI 4: Closing Cash</label>
-                <input type="text" id="cmsInpKpiClosing" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
-              </div>
-              <div class="space-y-1">
-                <label class="font-bold text-amber-800">KPI 5: Market Credit</label>
-                <input type="text" id="cmsInpKpiCredit" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none">
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 4: Currency Symbol & Footer Text -->
-          <div class="space-y-3 pt-3 border-t border-slate-100">
-            <h4 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-gear"></i>
-              <span data-i18n="cmsHeaderConfig">4. Currency, Formatting & Footer Configuration</span>
-            </h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <div class="space-y-1">
-                <label class="font-bold text-slate-700">Currency Symbol</label>
-                <input type="text" id="cmsInpCurrencySymbol" placeholder="PKR" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold font-mono focus:outline-none">
-              </div>
-              <div class="space-y-1 sm:col-span-2">
-                <label class="font-bold text-slate-700">Footer Text & Business Memo</label>
-                <input type="text" id="cmsInpFooterText" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none">
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- =================================================================== -->
-      
-      <!-- =================================================================== -->
-      <!-- MODULE C: ALL 7 TOP KPI SUMMARY CARDS OVERRIDE AUTHORITY             -->
-      <!-- =================================================================== -->
-      <div id="adminModuleContainer-kpi" class="hidden space-y-5">
-        <div class="bg-white border-2 border-purple-200 rounded-3xl p-6 shadow-sm space-y-6">
-          
-          <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-mono text-[10px] font-bold border border-amber-300">
-                  Full Administrator Authority
-                </span>
-                <h3 class="text-base font-black text-slate-900">7 Top KPI Summary Cards Control Center</h3>
-              </div>
-              <p class="text-xs text-slate-500 mt-1">
-                Toggle any of the 7 top dashboard summary cards between <strong>Auto-Calculate Mode</strong> (derived from active ledger entries) and <strong>Manual Override Mode</strong> (custom administrator values). Updates sync instantly to public read-only viewers.
-              </p>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="resetAllKpiOverridesToAuto()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-colors">
-                Reset All to Auto-Calculate
-              </button>
-              <button type="button" onclick="saveAllKpiOverridesFromForm()" class="px-5 py-2 rounded-xl text-xs font-black text-white bg-purple-700 hover:bg-purple-800 shadow-md shadow-purple-700/20 flex items-center gap-1.5 transition-all">
-                <i class="fa-solid fa-floppy-disk"></i>
-                <span>Save All Overrides</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 7 KPI Grid Configuration Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            
-            <!-- Card 1: Opening Cash -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-slate-800">1. Opening Cash</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
-                  <input type="checkbox" id="kpiOvrToggle-openingCash" onchange="toggleKpiFieldState('openingCash')" class="rounded text-purple-600 focus:ring-purple-500">
-                  <span class="text-purple-900">Manual Override</span>
-                </label>
-              </div>
-              <div class="space-y-1">
-                <label class="text-[11px] text-slate-500 block font-medium">Custom Figure (PKR):</label>
-                <input type="number" id="kpiOvrVal-openingCash" step="any" placeholder="0" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-              </div>
-              <p class="text-[10px] text-slate-400 font-mono" id="kpiOvrStatus-openingCash">Mode: Auto-derived from prior closing</p>
-            </div>
-
-            <!-- Card 2: Today's Sales -->
-            <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-emerald-900">2. Today's Sales (Inflow)</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
-                  <input type="checkbox" id="kpiOvrToggle-todaySales" onchange="toggleKpiFieldState('todaySales')" class="rounded text-purple-600 focus:ring-purple-500">
-                  <span class="text-purple-900">Manual Override</span>
-                </label>
-              </div>
-              <div class="space-y-1">
-                <label class="text-[11px] text-emerald-800 block font-medium">Custom Figure (PKR):</label>
-                <input type="number" id="kpiOvrVal-todaySales" step="any" placeholder="0" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-emerald-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-              </div>
-              <p class="text-[10px] text-emerald-700 font-mono" id="kpiOvrStatus-todaySales">Mode: Auto-calculated from day entry</p>
-            </div>
-
-            <!-- Card 3: Total Outflows -->
-            <div class="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-rose-900">3. Total Outflows</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
-                  <input type="checkbox" id="kpiOvrToggle-todayOutflows" onchange="toggleKpiFieldState('todayOutflows')" class="rounded text-purple-600 focus:ring-purple-500">
-                  <span class="text-purple-900">Manual Override</span>
-                </label>
-              </div>
-              <div class="space-y-1">
-                <label class="text-[11px] text-rose-800 block font-medium">Custom Figure (PKR):</label>
-                <input type="number" id="kpiOvrVal-todayOutflows" step="any" placeholder="0" class="w-full bg-white border border-rose-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-rose-900 focus:ring-1 focus:ring-rose-500 focus:outline-none">
-              </div>
-              <p class="text-[10px] text-rose-700 font-mono" id="kpiOvrStatus-todayOutflows">Mode: Auto-summed from payment lines</p>
-            </div>
-
-            <!-- Card 4: Closing Cash -->
-            <div class="p-4 rounded-2xl bg-sky-50/60 border border-sky-200 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-sky-900">4. Closing Cash-in-Hand</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
-                  <input type="checkbox" id="kpiOvrToggle-closingCash" onchange="toggleKpiFieldState('closingCash')" class="rounded text-purple-600 focus:ring-purple-500">
-                  <span class="text-purple-900">Manual Override</span>
-                </label>
-              </div>
-              <div class="space-y-1">
-                <label class="text-[11px] text-sky-800 block font-medium">Custom Figure (PKR):</label>
-                <input type="number" id="kpiOvrVal-closingCash" step="any" placeholder="0" class="w-full bg-white border border-sky-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-sky-900 focus:ring-1 focus:ring-sky-500 focus:outline-none">
-              </div>
-              <p class="text-[10px] text-sky-700 font-mono" id="kpiOvrStatus-closingCash">Mode: Auto-derived (Available - Outflows)</p>
-            </div>
-
-            <!-- Card 5: Market Credit -->
-            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-amber-900">5. Market Credit (Udhaar)</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
-                  <input type="checkbox" id="kpiOvrToggle-marketCredit" onchange="toggleKpiFieldState('marketCredit')" class="rounded text-purple-600 focus:ring-purple-500">
-                  <span class="text-purple-900">Manual Override</span>
-                </label>
-              </div>
-              <div class="space-y-1">
-                <label class="text-[11px] text-amber-800 block font-medium">Custom Figure (PKR):</label>
-                <input type="number" id="kpiOvrVal-marketCredit" step="any" placeholder="0" class="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-900 focus:ring-1 focus:ring-amber-500 focus:outline-none">
-              </div>
-              <p class="text-[10px] text-amber-700 font-mono" id="kpiOvrStatus-marketCredit">Mode: Auto-derived from customer accounts</p>
-            </div>
-
-            <!-- Card 6: Current Month Sales -->
-            <div class="p-4 rounded-2xl bg-teal-50/60 border border-teal-200 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-teal-900">6. Current Month Sales</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
-                  <input type="checkbox" id="kpiOvrToggle-currentMonthSales" onchange="toggleKpiFieldState('currentMonthSales')" class="rounded text-purple-600 focus:ring-purple-500">
-                  <span class="text-purple-900">Manual Override</span>
-                </label>
-              </div>
-              <div class="space-y-1">
-                <label class="text-[11px] text-teal-800 block font-medium">Custom Figure (PKR):</label>
-                <input type="number" id="kpiOvrVal-currentMonthSales" step="any" placeholder="0" class="w-full bg-white border border-teal-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-teal-900 focus:ring-1 focus:ring-teal-500 focus:outline-none">
-              </div>
-              <p class="text-[10px] text-teal-700 font-mono" id="kpiOvrStatus-currentMonthSales">Mode: Auto-aggregated from active month</p>
-            </div>
-
-            <!-- Card 7: Last Month Sales & Status -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 md:col-span-2 lg:col-span-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-slate-800">7. Last Month Sales & Commercial Status</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold">
-                  <input type="checkbox" id="kpiOvrToggle-lastMonthSales" onchange="toggleKpiFieldState('lastMonthSales')" class="rounded text-purple-600 focus:ring-purple-500">
-                  <span class="text-purple-900">Manual Override</span>
-                </label>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="space-y-1">
-                  <label class="text-[11px] text-slate-500 block font-medium">Benchmark Figure (PKR):</label>
-                  <input type="number" id="kpiOvrVal-lastMonthSales" step="any" placeholder="0" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-                </div>
-                <div class="space-y-1">
-                  <label class="text-[11px] text-slate-500 block font-medium">Override Commercial Status:</label>
-                  <select id="kpiOvrStatus-lastMonthSalesSelect" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-                    <option value="AUTO">Auto-Compare (Based on Difference)</option>
-                    <option value="PROFIT">Force PROFIT Status (Emerald)</option>
-                    <option value="LOSS">Force LOSS Status (Rose)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-
-      <!-- MODULE D: DATABASE SNAPSHOTS & BACKUP MANAGEMENT                    -->
-      <!-- =================================================================== -->
-      <div id="adminModuleContainer-db" class="hidden space-y-4">
-        
-        <div class="bg-white border-2 border-purple-200 rounded-2xl p-5 shadow-sm space-y-4">
-          
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg shadow-sm">
-                <i class="fa-solid fa-database"></i>
-              </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <h3 class="text-sm font-black text-slate-900" data-i18n="titleDbBackupCenter">Database & Automated 1:00 AM Nightly Backup</h3>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    <i class="fa-regular fa-clock"></i> 01:00 AM PKT
-                  </span>
-                </div>
-                <p class="text-xs text-slate-500" data-i18n="subDbBackupCenter">
-                  Persistent serverless database storage, automatic 1:00 AM PKT cron backups, and one-click restore management
-                </p>
-              </div>
-            </div>
-
-            <!-- Fast Action Buttons -->
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="triggerImmediateBackup('manual')" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-purple-700 hover:bg-purple-800 text-white flex items-center gap-1.5 transition-colors shadow-sm">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <span>Backup Now</span>
-              </button>
-              <button type="button" onclick="syncWithDatabase()" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 flex items-center gap-1.5 transition-colors">
-                <i class="fa-solid fa-rotate text-purple-600"></i>
-                <span data-i18n="btnSyncDb">Sync DB</span>
-              </button>
-              <button type="button" onclick="downloadDatabaseDump()" class="px-3 py-2 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 transition-colors">
-                <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
-                <span data-i18n="btnDownloadDump">Download Snapshot</span>
-              </button>
-              <label class="px-3 py-2 rounded-lg text-xs font-bold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 flex items-center gap-1.5 transition-colors cursor-pointer">
-                <i class="fa-solid fa-file-arrow-up text-sky-600"></i>
-                <span data-i18n="btnRestoreDump">Restore Snapshot</span>
-                <input type="file" id="snapshotFileInput" accept=".json" onchange="uploadDatabaseDump(event)" class="hidden">
-              </label>
-            </div>
-          </div>
-
-          <!-- 3 Diagnostic Cards: DB Status, Nightly Cron Schedule, Backup History -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
-              <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
-                <span data-i18n="lblDbEngine">Database Engine:</span>
-                <span id="dbEngineBadge" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-purple-100 text-purple-800">PostgreSQL (Vercel / Cloud)</span>
-              </div>
-              <div class="text-sm font-mono font-black text-slate-900" id="dbRecordsStatus">
-                0 Daily Records Active
-              </div>
-              <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
-                <span data-i18n="lblLastSync">Last Synchronized:</span>
-                <span id="dbLastSyncTime" class="font-mono text-slate-700 font-medium">Just now</span>
-              </div>
-            </div>
-
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
-              <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
-                <span data-i18n="lblAutomated1AM">Nightly 1AM Automation:</span>
-                <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                  <i class="fa-solid fa-check text-[9px]"></i> Active
-                </span>
-              </div>
-              <div class="text-sm font-black text-emerald-800 font-mono" id="nextBackupDisplay">
-                Every Night @ 01:00 AM PKT
-              </div>
-              <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
-                <span data-i18n="lblCronSpec">Vercel Cron:</span>
-                <span class="font-mono text-slate-700 font-bold">0 20 * * * (UTC)</span>
-              </div>
-            </div>
-
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
-              <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
-                <span data-i18n="lblTotalSnapshots">Available Snapshots:</span>
-                <span id="backupSnapshotsCount" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-200 text-slate-800">1 Available</span>
-              </div>
-              <div class="text-sm font-mono font-black text-slate-900" id="lastBackupSnapshotTime">
-                Latest: Today
-              </div>
-              <div class="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
-                <span data-i18n="lblRetentionPolicy">Retention Policy:</span>
-                <span class="font-mono text-slate-700">Rolling 30 Days</span>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Danger Zone: Factory Reset with Safe Confirmation -->
-          <div class="bg-rose-50/60 border border-rose-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div class="font-bold text-rose-900 text-xs flex items-center gap-1.5">
-                <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
-                <span>Danger Zone: Reset All Ledger Data to Factory Default</span>
-              </div>
-              <p class="text-[11px] text-rose-700 mt-0.5">Wipes all saved cashbook days, customer Udhaar accounts, and recalculates empty state.</p>
-            </div>
-            <button type="button" onclick="adminFactoryReset()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm whitespace-nowrap">
-              <i class="fa-solid fa-trash-can mr-1"></i> Factory Reset
-            </button>
-          </div>
-
-          <!-- Recent Backups Table -->
-          <div class="border border-slate-200 rounded-xl overflow-hidden">
-            <div class="bg-slate-100/70 px-4 py-2 flex items-center justify-between text-xs font-bold text-slate-700">
-              <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
-                <span data-i18n="titleRecentBackups">Recent Automated & Manual Backups</span>
-              </span>
-              <button type="button" onclick="loadBackupsList()" class="text-purple-700 hover:underline text-[11px] font-medium" data-i18n="btnRefreshList">Refresh List</button>
-            </div>
-            <div id="adminBackupsListContainer" class="max-h-48 overflow-y-auto divide-y divide-slate-100 text-xs bg-white">
-              <div class="p-4 text-center text-slate-400 font-medium">Checking backup snapshots...</div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- ========================================================================= -->
-  
-  <!-- ========================================================================= -->
-  <!-- MODAL: QUICK ADMIN KPI OVERRIDE                                           -->
-  <!-- ========================================================================= -->
-  <div id="quickKpiOverrideModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-300 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-purple-50/70">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
-            <i class="fa-solid fa-pen-to-square"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-black text-slate-900" id="quickKpiModalTitle">Adjust Summary KPI Metric</h4>
-            <p class="text-[10px] text-slate-500">Toggle calculation mode or set custom override</p>
-          </div>
-        </div>
-        <button onclick="closeQuickKpiModal()" class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="p-5 space-y-4">
-        <div class="space-y-2">
-          <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-purple-300">
-            <input type="radio" name="quickKpiMode" value="auto" checked onchange="onQuickKpiModeChange(this.value)" class="text-purple-600 focus:ring-0">
-            <div>
-              <span class="text-xs font-bold text-slate-800 block">Auto-Calculate Mode</span>
-              <span class="text-[10px] text-slate-500">Derived automatically from real ledger entries</span>
-            </div>
-          </label>
-
-          <label class="flex items-center gap-2 p-3 rounded-xl bg-purple-50/60 border border-purple-200 cursor-pointer hover:border-purple-400">
-            <input type="radio" name="quickKpiMode" value="manual" onchange="onQuickKpiModeChange(this.value)" class="text-purple-600 focus:ring-0">
-            <div>
-              <span class="text-xs font-bold text-purple-950 block">Manual Override Mode</span>
-              <span class="text-[10px] text-purple-700">Display fixed administrator value on public URL</span>
-            </div>
-          </label>
-        </div>
-
-        <div id="quickKpiManualInputs" class="space-y-1.5 hidden">
-          <label class="text-xs font-bold text-slate-700">Custom Metric Value (PKR):</label>
-          <input type="number" id="quickKpiValueInput" step="any" placeholder="0" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm font-mono font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-        </div>
-
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="closeQuickKpiModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:text-slate-900">Cancel</button>
-          <button type="button" onclick="saveQuickKpiModal()" class="px-5 py-2 rounded-xl text-xs font-black bg-purple-700 hover:bg-purple-800 text-white shadow-md">Apply & Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: ADMIN ADD / UPDATE ENTRY FORM (WITH IDENTICAL FIELD NAMES)         -->
-  <!-- ========================================================================= -->
-  <div id="adminEditModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-300 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-      
-      <!-- Modal Header -->
-      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-purple-50/70">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
-            <i class="fa-solid fa-pen-to-square"></i>
-          </div>
-          <div>
-            <h3 class="text-sm font-black text-slate-900" id="adminModalTitle">Admin: Add / Update Daily Record</h3>
-            <p class="text-[11px] text-slate-500" data-i18n="adminModalSubtitle">Update this entry with identical 5-column ledger field names</p>
-          </div>
-        </div>
-        <button onclick="closeAdminEditModal()" class="w-8 h-8 rounded-lg bg-white border border-slate-300 text-slate-500 hover:text-slate-800 flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <!-- Modal Form Body -->
-      <form id="adminEntryForm" onsubmit="submitAdminEntryForm(event)" class="p-5 overflow-y-auto space-y-4 flex-grow">
-        
-        <!-- Date & Day -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <div class="space-y-1">
-            <label class="text-xs font-bold text-slate-700" data-i18n="thDateDay">Date & Day</label>
-            <input type="date" id="adminFormFieldDate" required onchange="onAdminDateChange(this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-          </div>
-          <div class="space-y-1">
-            <label class="text-xs font-bold text-slate-700" data-i18n="lblDayName">Day Name Resolution</label>
-            <input type="text" id="adminFormFieldDayName" readonly class="w-full bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 cursor-not-allowed">
-          </div>
-        </div>
-
-        <!-- 5-Column Core Fields matching merchant register -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
-          <!-- Opening Balance -->
-          <div class="space-y-1">
-            <label class="text-xs font-bold text-slate-700" data-i18n="lblOpeningBalance">Previous Closing Balance (Opening Cash)</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center text-slate-500 font-mono text-xs font-bold">PKR</span>
-              <input type="number" id="adminFormFieldOpening" step="any" oninput="recalcAdminModalBalances()" class="w-full bg-white border border-slate-300 rounded-lg pl-12 rtl:pl-3 rtl:pr-12 pr-3 py-2 text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-            </div>
-            <p class="text-[10px] text-slate-400" data-i18n="adminOpeningTip">Leave as calculated or override manually</p>
-          </div>
-
-          <!-- Column 1: Daily Sale (Cash Inflow) -->
-          <div class="space-y-1">
-            <label class="text-xs font-black text-emerald-800" data-i18n="lblCol1Sale">Column 1: Daily Sale (Cash Inflow)</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center text-emerald-700 font-mono text-xs font-bold">PKR</span>
-              <input type="number" id="adminFormFieldSale" min="0" step="any" required placeholder="0" oninput="recalcAdminModalBalances()" class="w-full bg-white border-2 border-emerald-400 rounded-lg pl-12 rtl:pl-3 rtl:pr-12 pr-3 py-2 text-sm font-mono font-black text-emerald-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-            </div>
-          </div>
-
-          <!-- Column 2: Total Balance (Available Funds) -->
-          <div class="space-y-1 sm:col-span-2 bg-sky-50/70 p-3 rounded-xl border border-sky-200">
-            <div class="flex justify-between items-center text-xs">
-              <span class="font-bold text-sky-900" data-i18n="lblCol2TotalAvail">Column 2: Total Balance (Available Funds)</span>
-              <span class="text-[10px] font-mono text-sky-700" data-i18n="tagOpeningPlusSale">Opening + Sale</span>
-            </div>
-            <div class="text-xl font-black font-mono text-sky-950 tabular-nums" id="adminDisplayAvailable">
-              PKR 0
-            </div>
-          </div>
-        </div>
-
-        <!-- Column 3: Purchases & Outflows (Line Items Sub-Ledger) -->
-        <div class="space-y-2 border border-slate-200 p-3 rounded-xl bg-slate-50">
-          <div class="flex items-center justify-between">
-            <label class="text-xs font-bold text-rose-800 uppercase" data-i18n="headerCol3Outflows">Column 3: Purchases & Outflows (Line Items)</label>
-            <button type="button" onclick="addAdminOutflowRow()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 flex items-center gap-1">
-              <i class="fa-solid fa-plus text-[10px]"></i> <span data-i18n="btnAddItem">+ Add Outflow Line</span>
-            </button>
-          </div>
-
-          <div id="adminOutflowRowsContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-            <!-- Outflow item rows -->
-          </div>
-
-          <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-200">
-            <span class="text-slate-500 font-bold" data-i18n="lblTotalOutflowSum">Total Outflow Sum:</span>
-            <span class="font-mono font-black text-rose-700" id="adminDisplayTotalOutflows">PKR 0</span>
-          </div>
-        </div>
-
-        <!-- Column 4: Remaining Balance (Closing Cash) Preview -->
-        <div class="bg-slate-100 p-3 rounded-xl border border-slate-200 flex justify-between items-center">
-          <div>
-            <span class="text-xs font-bold text-slate-800 block" data-i18n="lblCol4ClosingCash">Column 4: Remaining Balance (Closing Cash)</span>
-            <span class="text-[10px] text-slate-500 font-mono" data-i18n="tagAvailMinusOutflows">Total Available − Total Outflows</span>
-          </div>
-          <span class="text-2xl font-black font-mono text-emerald-800 tabular-nums" id="adminDisplayClosingCash">PKR 0</span>
-        </div>
-
-        <!-- Column 5: Market Credit (Udhaar / Receivables) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-amber-50/70 p-3 rounded-xl border border-amber-200">
-          <div class="space-y-1">
-            <label class="text-[11px] font-bold text-rose-800" data-i18n="lblCreditGiven">New Credit Given (Udhaar Diya)</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-2.5 rtl:pr-2.5 flex items-center text-rose-600 font-mono text-xs font-bold">PKR</span>
-              <input type="number" id="adminFormFieldCreditGiven" min="0" placeholder="0" class="w-full bg-white border border-rose-300 rounded-lg pl-11 rtl:pl-2 rtl:pr-11 pr-2 py-1.5 text-xs font-mono font-bold text-rose-800 focus:ring-1 focus:ring-rose-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="space-y-1">
-            <label class="text-[11px] font-bold text-emerald-800" data-i18n="lblCreditRecovered">Credit Recovered (Wapasi)</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-2.5 rtl:pr-2.5 flex items-center text-emerald-600 font-mono text-xs font-bold">PKR</span>
-              <input type="number" id="adminFormFieldCreditRecovered" min="0" placeholder="0" class="w-full bg-white border border-emerald-300 rounded-lg pl-11 rtl:pl-2 rtl:pr-11 pr-2 py-1.5 text-xs font-mono font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-            </div>
-          </div>
-        </div>
-
-        <!-- Notes / Memo -->
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700" data-i18n="lblDailyNotes">Daily Notes / Memo</label>
-          <input type="text" id="adminFormFieldNotes" placeholder="Remarks, counter notes..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-purple-500 focus:outline-none">
-        </div>
-
-        <!-- Submit Button Strip -->
-        <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
-          <button type="button" onclick="closeAdminEditModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" data-i18n="btnCancel">
-            Cancel
-          </button>
-          <button type="submit" class="px-6 py-2 rounded-xl text-xs font-black bg-purple-700 hover:bg-purple-800 text-white shadow-md transition-all flex items-center gap-1.5">
-            <i class="fa-solid fa-floppy-disk"></i>
-            <span data-i18n="btnAdminSave">Save & Update Entry</span>
-          </button>
-        </div>
-
-      </form>
-
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  
-  <!-- ========================================================================= -->
-  <!-- SECURE ADMIN AUTHENTICATION SCREEN & LOGIN GATEWAY                        -->
-  <!-- ========================================================================= -->
-  <div id="adminLoginModal" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-300 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-      
-      <!-- Modal Top Header Banner -->
-      <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 p-6 text-white text-center relative">
-        <button type="button" onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 text-2xl mb-3 shadow-inner">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <h2 class="text-lg font-black tracking-tight" data-i18n="adminLoginTitle">Administrative Access Gateway</h2>
-        <p class="text-xs text-purple-200 mt-1" data-i18n="adminLoginSubtitle">Restricted portal for ledger management, label customizer, and backups</p>
-      </div>
-
-      <!-- Login Form Body -->
-      <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
-        
-        <div id="adminLoginError" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-bold flex items-center gap-2">
-          <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
-          <span id="adminLoginErrorMsg">Invalid username or password.</span>
-        </div>
-
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700" data-i18n="lblAdminUsername">Administrator Username</label>
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5">USERNAME</label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
-              <i class="fa-solid fa-user-shield"></i>
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">
+              <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="adminAuthUsername" required placeholder="admin" autocomplete="username" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            <input type="text" id="adminGatewayUsername" required placeholder="admin" value="admin"
+              class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-sm font-semibold placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
           </div>
         </div>
 
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700" data-i18n="lblAdminPassword">Password</label>
+        <div>
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5">PASSWORD</label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">
               <i class="fa-solid fa-key"></i>
             </span>
-            <input type="password" id="adminAuthPassword" required placeholder="••••••••" autocomplete="current-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-            <button type="button" onclick="togglePasswordVisibility('adminAuthPassword')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 text-xs">
-              <i class="fa-solid fa-eye"></i>
+            <input type="password" id="adminGatewayPassword" required placeholder="••••••••" value="admin123"
+              class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-sm font-semibold placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+            <button type="button" onclick="toggleAdminGatewayPasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">
+              <i id="adminGatewayPasswordEye" class="fa-regular fa-eye text-sm"></i>
             </button>
           </div>
         </div>
 
-        <div class="text-[11px] text-slate-500 flex items-center justify-between">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" id="adminRememberSession" checked class="rounded border-slate-300 text-purple-600 focus:ring-purple-500">
-            <span data-i18n="lblRememberSession">Remember Session (12 hrs)</span>
-          </label>
-          <span class="text-slate-400 font-mono">Default: admin / admin123</span>
-        </div>
+        <button type="submit" id="adminGatewayLoginBtn"
+          class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer">
+          <span>Login to Admin Panel</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
 
-        <div class="pt-2 flex items-center gap-2.5">
-          <button type="button" onclick="closeAdminLoginModal()" class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors" data-i18n="btnCancel">
-            Cancel
-          </button>
-          <button type="submit" id="btnAdminLoginSubmit" class="flex-1 px-5 py-2.5 rounded-xl text-xs font-black text-white bg-purple-700 hover:bg-purple-800 shadow-md shadow-purple-700/20 flex items-center justify-center gap-2 transition-all">
-            <i class="fa-solid fa-lock-open text-xs"></i>
-            <span data-i18n="btnSignIn">Sign In</span>
-          </button>
+        <div class="pt-3 border-t border-slate-100 text-center">
+          <a href="javascript:void(0)" onclick="returnToPublicView()" class="text-xs font-bold text-slate-500 hover:text-emerald-700 flex items-center justify-center gap-1.5 transition-colors">
+            <span>← Back to Viewer Dashboard</span>
+          </a>
         </div>
 
       </form>
     </div>
   </div>
 
-  <!-- MODAL: PARTY TRANSACTION STATEMENT (DETAILED LEDGER DRILL-DOWN)           -->
+
+
   <!-- ========================================================================= -->
-  <div id="partyModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <!-- DEDICATED ADMIN CONTROL PANEL (TWO-COLUMN DESKTOP & RESPONSIVE LAYOUT)     -->
+  <!-- ========================================================================= -->
+  <div id="adminApp" class="hidden min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans">
+    
+    <!-- Left Navigation Sidebar -->
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col justify-between shrink-0 border-r border-slate-800 shadow-2xl min-h-screen">
+      <div>
+        <!-- Sidebar Brand Header -->
+        <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shadow-inner">
+            <i class="fa-solid fa-shield-halved text-lg"></i>
+          </div>
+          <div>
+            <div class="text-[10px] font-black uppercase tracking-wider text-emerald-400">CONTROL PANEL</div>
+            <h2 class="text-sm font-black text-white" id="adminSidebarShopName">Roznamcha Admin</h2>
+          </div>
+        </div>
+
+        <!-- Navigation Menu Items -->
+        <nav class="p-3 space-y-1.5">
+          <button type="button" onclick="switchAdminTab('dashboard')" id="adminNavBtn-dashboard"
+            class="admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-white bg-emerald-600/20 border border-emerald-500/30 cursor-pointer">
+            <span class="text-base">📊</span>
+            <span>Dashboard</span>
+          </button>
+          
+          <button type="button" onclick="switchAdminTab('records')" id="adminNavBtn-records"
+            class="admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent cursor-pointer">
+            <span class="text-base">📝</span>
+            <span>Daily Records</span>
+          </button>
+          
+          <button type="button" onclick="switchAdminTab('outflows')" id="adminNavBtn-outflows"
+            class="admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent cursor-pointer">
+            <span class="text-base">💸</span>
+            <span>Purchases & Outflows</span>
+          </button>
+          
+          <button type="button" onclick="switchAdminTab('udhaar')" id="adminNavBtn-udhaar"
+            class="admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent cursor-pointer">
+            <span class="text-base">🤝</span>
+            <span>Market Credit (Udhaar)</span>
+          </button>
+          
+          <button type="button" onclick="switchAdminTab('analytics')" id="adminNavBtn-analytics"
+            class="admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent cursor-pointer">
+            <span class="text-base">📈</span>
+            <span>Reports & Analytics</span>
+          </button>
+          
+          <button type="button" onclick="switchAdminTab('settings')" id="adminNavBtn-settings"
+            class="admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent cursor-pointer">
+            <span class="text-base">⚙️</span>
+            <span>Settings & CMS</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Sidebar Footer Links -->
+      <div class="p-3 border-t border-slate-800 space-y-1.5">
+        <button type="button" onclick="returnToPublicView()"
+          class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+          <i class="fa-solid fa-eye text-emerald-400"></i>
+          <span>Viewer Mode (Public View)</span>
+        </button>
+        <button type="button" onclick="handleAdminLogout()"
+          class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-50 min-h-screen">
+      
+      <!-- Top Bar Controls -->
+      <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-30 shadow-sm">
+        <div>
+          <h1 id="adminTopBarTitle" class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>Daily Cash Book Records</span>
+            <span id="adminTopBarDateBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">OCTOBER 2026</span>
+          </h1>
+          <p id="adminTopBarSubtitle" class="text-xs text-slate-500">Retail & Wholesale Merchant Roznamcha Ledger Management</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Date / Month Navigator -->
+          <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold">
+            <button type="button" onclick="adminNavigateDate(-1)" title="Previous Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer">
+              ◀ Prev
+            </button>
+            <button type="button" onclick="adminGoToToday()" class="px-3 py-1.5 rounded-lg text-emerald-700 hover:text-emerald-800 hover:bg-white transition-colors cursor-pointer">
+              Current (Today)
+            </button>
+            <button type="button" onclick="adminNavigateDate(1)" title="Next Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer">
+              Next ▶
+            </button>
+          </div>
+
+          <input type="date" id="adminDateSelector" onchange="onAdminSelectedDateChange(this.value)" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+
+          <!-- Bilingual Switcher -->
+          <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold">
+            <button type="button" onclick="setLanguage('en')" id="adminLangBtnEn" class="px-2.5 py-1.5 rounded-lg transition-colors bg-white text-emerald-800 shadow-sm cursor-pointer">
+              English
+            </button>
+            <button type="button" onclick="setLanguage('ur')" id="adminLangBtnUr" class="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-colors cursor-pointer">
+              اردو
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Sections Container -->
+      <div class="p-4 sm:p-6 space-y-6">
+
+        <!-- ================================================================= -->
+        <!-- SECTION 1: DASHBOARD (HIGH-LEVEL SUMMARY & 7 KPI BOX OVERRIDES)   -->
+        <!-- ================================================================= -->
+        <div id="adminSection-dashboard" class="admin-tab-section space-y-6">
+          
+          <!-- Quick Status Strip -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-slate-500 text-xs font-bold block">Today's Sales</span>
+                <span class="text-lg font-black text-emerald-700 font-mono" id="adminDashTodaySaleVal">PKR 0</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-slate-500 text-xs font-bold block">Today's Outflows</span>
+                <span class="text-lg font-black text-rose-600 font-mono" id="adminDashTodayOutflowsVal">PKR 0</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-slate-500 text-xs font-bold block">Active Recorded Days</span>
+                <span class="text-lg font-black text-slate-900 font-mono" id="adminDashTotalDaysVal">0 Days</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-calendar-check"></i>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-slate-500 text-xs font-bold block">Active Customer Accounts</span>
+                <span class="text-lg font-black text-amber-800 font-mono" id="adminDashTotalDebtorsVal">0 Debtors</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7 KPI Summary Box Overrides Header -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-slate-100 pb-4">
+              <div>
+                <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                  <i class="fa-solid fa-sliders text-emerald-600"></i>
+                  <span>Top 7 KPI Summary Boxes Override Authority</span>
+                </h3>
+                <p class="text-xs text-slate-500">
+                  Switch any summary metric between <span class="font-bold text-emerald-700">Auto-Calculate</span> (software math) and <span class="font-bold text-purple-700">Manual Override</span> (custom merchant entry). Updates sync live to the public dashboard.
+                </p>
+              </div>
+              <span class="text-xs px-3 py-1 rounded-full font-bold bg-purple-50 text-purple-700 border border-purple-200 shrink-0">
+                Live Public Sync Active
+              </span>
+            </div>
+
+            <!-- 7 KPI Cards Grid -->
+            <div id="adminDashboardKpiCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <!-- Dynamically populated 7 KPI override cards -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- SECTION 2: DAILY RECORDS (CORE ROZNAMCHA - FORM TOP, TABLE BOTTOM)-->
+        <!-- ================================================================= -->
+        <div id="adminSection-records" class="admin-tab-section hidden space-y-6">
+          
+          <!-- TOP FORM: Add / Edit Daily Entry -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-pen-nib"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900" id="adminRecordFormHeading">Add / Edit Daily Entry</h3>
+                  <p class="text-[11px] text-slate-500">Record daily sales, opening balances, and end-of-day register tallies</p>
+                </div>
+              </div>
+              <button type="button" id="adminRecordCancelBtn" onclick="cancelEditAdminRecord()" class="hidden px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+                Cancel Edit
+              </button>
+            </div>
+
+            <form id="adminDailyRecordForm" onsubmit="submitAdminRecordForm(event)" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Date -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Date</label>
+                  <input type="date" id="adminRecFormFieldDate" required onchange="onAdminRecordFormDateChange(this.value)"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+
+                <!-- Opening Cash -->
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-xs font-bold text-slate-700">Opening Cash (PKR)</label>
+                    <label class="text-[10px] text-purple-700 flex items-center gap-1 font-bold cursor-pointer">
+                      <input type="checkbox" id="adminRecFormFieldManualOpeningToggle" onchange="toggleAdminRecordManualOpening(this.checked)" class="rounded text-emerald-600">
+                      <span>Override</span>
+                    </label>
+                  </div>
+                  <input type="number" min="0" step="any" id="adminRecFormFieldOpening" oninput="onAdminRecordFormInputChange()" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-100 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+
+                <!-- Today's Cash Sale -->
+                <div>
+                  <label class="block text-xs font-bold text-emerald-800 mb-1">Column 1: Today's Sale (PKR)</label>
+                  <input type="number" min="0" step="any" id="adminRecFormFieldSale" oninput="onAdminRecordFormInputChange()" required placeholder="0"
+                    class="w-full px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50/40 text-emerald-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+
+                <!-- Total Available Balance -->
+                <div>
+                  <label class="block text-xs font-bold text-sky-800 mb-1">Total Available (Opening + Sale)</label>
+                  <div class="w-full px-3 py-2 rounded-xl border border-sky-200 bg-sky-50 text-sky-900 text-xs font-mono font-black" id="adminRecFormFieldAvailableDisplay">
+                    PKR 0
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Notes / Urdu Memo -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Daily Note / Memo (Urdu / Optional)</label>
+                <input type="text" id="adminRecFormFieldNotes" placeholder="e.g. کاؤنٹر علی نے سنبھالا / Special remarks..."
+                  class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              </div>
+
+              <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="submit" id="adminRecordSubmitBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/30 flex items-center gap-2 transition-all cursor-pointer">
+                  <i class="fa-solid fa-plus-circle"></i>
+                  <span id="adminRecordSubmitBtnText">+ Add Record</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- BOTTOM TABLE: Active Register Entries -->
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-book-bookmark text-emerald-700"></i>
+                <h3 class="text-sm font-black text-slate-900">Active Register Entries</h3>
+                <span id="adminRecordsCountBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-slate-200 text-slate-700">0 days</span>
+              </div>
+              <div class="w-full sm:w-64">
+                <input type="text" id="adminRecordsSearchInput" oninput="renderAdminRecordsTable()" placeholder="Search date, memo, vendor..."
+                  class="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-100 text-slate-800 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                  <tr>
+                    <th class="py-3 px-4">Date</th>
+                    <th class="py-3 px-3 text-right">Opening</th>
+                    <th class="py-3 px-3 text-right text-emerald-800">Sale</th>
+                    <th class="py-3 px-3 text-right text-sky-800">Available</th>
+                    <th class="py-3 px-3 text-right text-rose-700">Outflows</th>
+                    <th class="py-3 px-3 text-right text-sky-900">Closing Cash</th>
+                    <th class="py-3 px-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminRecordsTableBody" class="divide-y divide-slate-200 font-mono">
+                  <!-- Dynamically populated records -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- SECTION 3: PURCHASES & OUTFLOWS (FORM TOP, TABLE BOTTOM)          -->
+        <!-- ================================================================= -->
+        <div id="adminSection-outflows" class="admin-tab-section hidden space-y-6">
+          
+          <!-- TOP FORM: Record Payment / Outflow -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900" id="adminOutflowFormHeading">Record Payment / Outflow</h3>
+                  <p class="text-[11px] text-slate-500">Record line-item supplier payments, operating expenses, and cash withdrawals</p>
+                </div>
+              </div>
+              <button type="button" id="adminOutflowCancelBtn" onclick="cancelEditAdminOutflow()" class="hidden px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+                Cancel Edit
+              </button>
+            </div>
+
+            <form id="adminOutflowForm" onsubmit="submitAdminOutflowForm(event)" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Date -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Select Date</label>
+                  <input type="date" id="adminOutflowFormFieldDate" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-500">
+                </div>
+
+                <!-- Party Name -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Party / Vendor Name</label>
+                  <input type="text" id="adminOutflowFormFieldParty" required placeholder="e.g. Momin, Petrol, Ali"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500">
+                </div>
+
+                <!-- Category -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                  <select id="adminOutflowFormFieldCategory" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500">
+                    <option value="Vendor">Vendor Stock / Supplier</option>
+                    <option value="Operating">Operating Expense / Fuel</option>
+                    <option value="Staff">Staff / Personal Drawings</option>
+                  </select>
+                </div>
+
+                <!-- Amount (PKR) -->
+                <div>
+                  <label class="block text-xs font-bold text-rose-800 mb-1">Amount (PKR)</label>
+                  <input type="number" min="0" step="any" id="adminOutflowFormFieldAmount" required placeholder="0"
+                    class="w-full px-3 py-2 rounded-xl border border-rose-300 bg-rose-50/40 text-rose-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-500">
+                </div>
+
+              </div>
+
+              <!-- Quick Select Party Chips -->
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="text-[11px] font-bold text-slate-400">Quick Tags:</span>
+                <button type="button" onclick="selectOutflowTag('Petrol', 'Operating')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">⛽ Petrol</button>
+                <button type="button" onclick="selectOutflowTag('Ali', 'Staff')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">👤 Ali</button>
+                <button type="button" onclick="selectOutflowTag('Momin', 'Vendor')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">📦 Momin</button>
+                <button type="button" onclick="selectOutflowTag('Tariq', 'Vendor')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">📦 Tariq</button>
+                <button type="button" onclick="selectOutflowTag('Chacha', 'Staff')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">👤 Chacha</button>
+                <button type="button" onclick="selectOutflowTag('Basit', 'Vendor')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">📦 Basit</button>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Memo / Line Note (Optional)</label>
+                <input type="text" id="adminOutflowFormFieldNote" placeholder="e.g. Invoice #4012 / Van fuel"
+                  class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500">
+              </div>
+
+              <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="submit" id="adminOutflowSubmitBtn" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-600/30 flex items-center gap-2 transition-all cursor-pointer">
+                  <i class="fa-solid fa-plus-circle"></i>
+                  <span id="adminOutflowSubmitBtnText">+ Record Payment</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- BOTTOM TABLE: Disbursement Register -->
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-money-bill-transfer text-rose-600"></i>
+                <h3 class="text-sm font-black text-slate-900">Disbursement Register</h3>
+                <span id="adminOutflowsCountBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-slate-200 text-slate-700">0 items</span>
+              </div>
+              <div class="w-full sm:w-64">
+                <input type="text" id="adminOutflowsSearchInput" oninput="renderAdminOutflowsTable()" placeholder="Search party, memo (e.g. Ali)..."
+                  class="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500">
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-100 text-slate-800 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                  <tr>
+                    <th class="py-3 px-4">Date</th>
+                    <th class="py-3 px-3">Party Name</th>
+                    <th class="py-3 px-3">Category</th>
+                    <th class="py-3 px-3 text-right text-rose-700">Amount</th>
+                    <th class="py-3 px-4">Memo</th>
+                    <th class="py-3 px-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOutflowsTableBody" class="divide-y divide-slate-200 font-mono">
+                  <!-- Dynamically populated outflows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- SECTION 4: MARKET CREDIT / UDHAAR (FORM TOP, TABLE BOTTOM)        -->
+        <!-- ================================================================= -->
+        <div id="adminSection-udhaar" class="admin-tab-section hidden space-y-6">
+          
+          <!-- TOP FORM: Record Market Credit / Udhaar -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900">Record Market Credit / Udhaar</h3>
+                  <p class="text-[11px] text-slate-500">Record credit extended to clients or recover cash payments from debtors</p>
+                </div>
+              </div>
+            </div>
+
+            <form id="adminUdhaarForm" onsubmit="submitAdminUdhaarForm(event)" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Party Name -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Customer / Party Name</label>
+                  <input type="text" id="adminUdhaarFormFieldName" required placeholder="e.g. Bashir Ahmed"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+
+                <!-- Phone -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Contact Phone</label>
+                  <input type="text" id="adminUdhaarFormFieldPhone" placeholder="0300-1234567"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+
+                <!-- Transaction Type Toggle -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Transaction Type</label>
+                  <div class="grid grid-cols-2 gap-1 p-0.5 bg-slate-100 rounded-xl border border-slate-300">
+                    <button type="button" id="adminUdhaarTypeGivenBtn" onclick="setAdminUdhaarType('given')" class="py-1.5 px-2 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition-all">
+                      Credit Given
+                    </button>
+                    <button type="button" id="adminUdhaarTypeRecBtn" onclick="setAdminUdhaarType('recovered')" class="py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">
+                      Cash Recovered
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Amount -->
+                <div>
+                  <label class="block text-xs font-bold text-amber-900 mb-1">Amount (PKR)</label>
+                  <input type="number" min="0" step="any" id="adminUdhaarFormFieldAmount" required placeholder="0"
+                    class="w-full px-3 py-2 rounded-xl border border-amber-300 bg-amber-50/40 text-amber-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Transaction Date</label>
+                  <input type="date" id="adminUdhaarFormFieldDate" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-xs font-mono font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Note / Reference (Optional)</label>
+                  <input type="text" id="adminUdhaarFormFieldNote" placeholder="e.g. Invoice #219 / Counter cash recovery"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md shadow-amber-600/30 flex items-center gap-2 transition-all cursor-pointer">
+                  <i class="fa-solid fa-plus-circle"></i>
+                  <span>+ Record Udhaar Entry</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- BOTTOM TABLE: Debtor & Market Credit Accounts -->
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-users-line text-amber-700"></i>
+                <h3 class="text-sm font-black text-slate-900">Debtor & Market Credit Accounts</h3>
+                <span id="adminUdhaarAccountsCountBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-slate-200 text-slate-700">0 accounts</span>
+              </div>
+              <div class="w-full sm:w-64">
+                <input type="text" id="adminUdhaarSearchInput" oninput="renderAdminUdhaarTable()" placeholder="Search debtor by name, phone..."
+                  class="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500">
+              </div>
+            </div>
+
+            <!-- Summary Strip -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 border-b border-slate-200 bg-slate-50/50">
+              <div class="p-3 text-center">
+                <span class="text-[11px] font-bold text-slate-500 block">Total Receivables (Active Udhaar)</span>
+                <span class="text-base font-black font-mono text-amber-800" id="adminUdhaarSumBalance">PKR 0</span>
+              </div>
+              <div class="p-3 text-center">
+                <span class="text-[11px] font-bold text-slate-500 block">Total Credit Given</span>
+                <span class="text-base font-black font-mono text-slate-700" id="adminUdhaarSumGiven">PKR 0</span>
+              </div>
+              <div class="p-3 text-center">
+                <span class="text-[11px] font-bold text-slate-500 block">Total Cash Recovered</span>
+                <span class="text-base font-black font-mono text-emerald-700" id="adminUdhaarSumRecovered">PKR 0</span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-100 text-slate-800 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                  <tr>
+                    <th class="py-3 px-4">Debtor Name</th>
+                    <th class="py-3 px-3">Phone</th>
+                    <th class="py-3 px-3 text-right">Total Given</th>
+                    <th class="py-3 px-3 text-right text-emerald-700">Recovered</th>
+                    <th class="py-3 px-3 text-right text-amber-800">Receivable Balance</th>
+                    <th class="py-3 px-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminUdhaarTableBody" class="divide-y divide-slate-200 font-mono">
+                  <!-- Dynamically populated debtor accounts -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- SECTION 5: REPORTS & ANALYTICS                                    -->
+        <!-- ================================================================= -->
+        <div id="adminSection-analytics" class="admin-tab-section hidden space-y-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="text-sm font-black text-slate-900 mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-indigo-600"></i>
+              <span>Financial Reports & Comparative Analytics</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Weekly and monthly transaction breakdowns and vendor payment insights</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between">
+                  <span>Daily Sales vs Outflows</span>
+                  <span class="text-[10px] text-slate-400">Past 14 Days</span>
+                </h4>
+                <div class="h-64">
+                  <canvas id="adminSalesOutflowsChart"></canvas>
+                </div>
+              </div>
+
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between">
+                  <span>Outflow Disbursements Breakdown</span>
+                  <span class="text-[10px] text-slate-400">By Category / Vendor</span>
+                </h4>
+                <div class="h-64">
+                  <canvas id="adminVendorDoughnutChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- SECTION 6: SETTINGS & CMS (BUSINESS PROFILE, LABELS, BACKUP)      -->
+        <!-- ================================================================= -->
+        <div id="adminSection-settings" class="admin-tab-section hidden space-y-6">
+          
+          <!-- Business Profile -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="text-sm font-black text-slate-900 mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-store text-emerald-600"></i>
+              <span>Business Profile & Application Branding</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Customize shop name, contact numbers, and header titles across viewer and admin views</p>
+
+            <form onsubmit="saveAdminBusinessProfile(event)" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Shop / Business Name</label>
+                  <input type="text" id="adminSettingShopName" placeholder="Daily Cash Book & Financial Management"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Contact Phone</label>
+                  <input type="text" id="adminSettingPhone" placeholder="0300-0000000"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp Support Number (International Format)</label>
+                  <input type="text" id="adminSettingWhatsapp" placeholder="923000000000"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Currency Symbol</label>
+                  <input type="text" id="adminSettingCurrency" placeholder="PKR" value="PKR"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition-all cursor-pointer">
+                  Save Business Profile
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Column & Field Terminology Customizer -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="text-sm font-black text-slate-900 mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-table-columns text-purple-600"></i>
+              <span>Terminology & Column Customizer (Dynamic CMS)</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Rename the 5 core cashbook columns to match your merchant dialect without changing code</p>
+
+            <form onsubmit="saveAdminColumnLabels(event)" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Column 1: Daily Sale Label</label>
+                  <input type="text" id="adminCmsCol1" placeholder="Daily Sale / Cash Inflow"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Column 2: Total Available Label</label>
+                  <input type="text" id="adminCmsCol2" placeholder="Total Balance / Available Funds"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Column 3: Outflows & Purchases Label</label>
+                  <input type="text" id="adminCmsCol3" placeholder="Purchase / Expenses / Outflows"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Column 4: Closing Cash Label</label>
+                  <input type="text" id="adminCmsCol4" placeholder="Remaining Balance / Closing Cash"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Column 5: Market Credit (Udhaar) Label</label>
+                  <input type="text" id="adminCmsCol5" placeholder="Market Credit / Udhaar"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-sm transition-all cursor-pointer">
+                  Save Column Labels
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Database Tools & Snapshots -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="text-sm font-black text-slate-900 mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-database text-sky-600"></i>
+              <span>Database Maintenance, Backups & Snapshots</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Export snapshots, download backups, or safely restore ledger data</p>
+
+            <div class="flex flex-wrap items-center gap-3 mb-6">
+              <button type="button" onclick="downloadDatabaseDump('json')" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer">
+                <i class="fa-solid fa-file-code text-indigo-600"></i>
+                <span>Download Snapshot (JSON)</span>
+              </button>
+              
+              <button type="button" onclick="exportDataToCSV()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer">
+                <i class="fa-solid fa-file-csv text-emerald-600"></i>
+                <span>Download Ledger (CSV)</span>
+              </button>
+
+              <label class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer">
+                <i class="fa-solid fa-upload text-amber-600"></i>
+                <span>Restore Snapshot (JSON)</span>
+                <input type="file" id="adminRestoreFileInput" accept=".json" onchange="uploadDatabaseDump(event)" class="hidden">
+              </label>
+
+              <button type="button" onclick="adminFactoryReset()" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 flex items-center gap-2 transition-colors cursor-pointer ml-auto">
+                <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                <span>Reset to Factory Defaults</span>
+              </button>
+            </div>
+
+            <!-- 1:00 AM Nightly Backup Indicator -->
+            <div class="p-3.5 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between text-xs text-sky-900">
+              <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-clock-rotate-left text-sky-600 text-sm"></i>
+                <div>
+                  <span class="font-bold">Automated 1:00 AM Nightly Database Backup:</span>
+                  <span class="text-sky-700 ml-1">Configured on Vercel Serverless Cron (schedule: 0 20 * * * UTC)</span>
+                </div>
+              </div>
+              <span class="font-mono font-bold text-sky-800 bg-white px-2.5 py-0.5 rounded-lg border border-sky-200">Active</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+
+<!-- ========================================================================= -->
+<!-- SHARED MODALS & SYSTEM TOAST                                              -->
+<!-- ========================================================================= -->
+<div id="slipModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-300 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 no-print">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-emerald-600"></i>
+          <h3 class="text-sm font-bold text-slate-900" data-i18n="headerSlipModal">Daily Roznamcha Cash Slip</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="printSlipContent()" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-print"></i> <span data-i18n="btnPrintSlip">Print Slip</span>
+          </button>
+          <button onclick="closeSlipModal()" class="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-500 hover:text-slate-800 flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Slip Area -->
+      <div id="printableSlipArea" class="p-6 overflow-y-auto space-y-4 bg-white text-slate-900 font-sans">
+        <!-- Rendered in clean black & white receipt format -->
+      </div>
+
+    </div>
+  </div>
+<div id="partyModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white border border-slate-300 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
       
       <!-- Modal Header -->
@@ -2087,129 +2133,18 @@
 
     </div>
   </div>
-
-  <!-- ========================================================================= -->
-  <!-- MODAL: DAILY ROZNAMCHA SLIP / RECEIPT (KACHA PARCHA)                       -->
-  <!-- ========================================================================= -->
-  <div id="slipModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-300 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-      
-      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 no-print">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-receipt text-emerald-600"></i>
-          <h3 class="text-sm font-bold text-slate-900" data-i18n="headerSlipModal">Daily Roznamcha Cash Slip</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="printSlipContent()" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-print"></i> <span data-i18n="btnPrintSlip">Print Slip</span>
-          </button>
-          <button onclick="closeSlipModal()" class="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-500 hover:text-slate-800 flex items-center justify-center">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Printable Slip Area -->
-      <div id="printableSlipArea" class="p-6 overflow-y-auto space-y-4 bg-white text-slate-900 font-sans">
-        <!-- Rendered in clean black & white receipt format -->
-      </div>
-
+<div id="toastNotification" class="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-50 transform transition-all duration-300 translate-y-24 opacity-0 pointer-events-none flex items-center p-4 bg-white border-2 border-emerald-500 shadow-2xl rounded-xl text-slate-800 space-x-3 rtl:space-x-reverse">
+    <div id="toastIcon" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <div>
+      <div id="toastTitle" class="text-sm font-bold text-slate-900">Entry Saved</div>
+      <div id="toastMessage" class="text-xs text-slate-600">Daily Roznamcha ledger successfully locked and calculated.</div>
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- MODAL: RECORD CUSTOMER UDHAAR TRANSACTION (CREDIT / REPAYMENT)            -->
-  <!-- ========================================================================= -->
-  <div id="customerUdhaarModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-300 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-      
-      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-emerald-50">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
-            <i class="fa-solid fa-hand-holding-dollar"></i>
-          </div>
-          <div>
-            <h3 class="text-sm font-bold text-slate-900" data-i18n="headerUdhaarModal">Record Customer Udhaar Entry</h3>
-            <p class="text-[11px] text-slate-500" data-i18n="subUdhaarModal">Credit issuance or cash recovery settlement (PKR)</p>
-          </div>
-        </div>
-        <button onclick="closeCustomerUdhaarModal()" class="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-500 hover:text-slate-800 flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+<script>
 
-      <form onsubmit="submitCustomerUdhaarEntry(event)" class="p-5 space-y-4">
-        <!-- Customer Name -->
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700" data-i18n="lblCustomerName">Customer / Store Name</label>
-          <input type="text" id="udhaarModalCustomerName" required placeholder="e.g. M/S Khan Cloth Store" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-        </div>
-
-        <!-- Transaction Type -->
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700" data-i18n="lblTxnAction">Transaction Action</label>
-          <div class="grid grid-cols-2 gap-2">
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-emerald-500">
-              <input type="radio" name="udhaarTxnType" value="recovery" checked class="text-emerald-600 focus:ring-0">
-              <span class="text-xs font-bold text-emerald-800" data-i18n="optCashRecovered">Cash Recovered</span>
-            </label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-rose-500">
-              <input type="radio" name="udhaarTxnType" value="credit" class="text-rose-600 focus:ring-0">
-              <span class="text-xs font-bold text-rose-800" data-i18n="optNewCreditGiven">New Credit Given</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Amount (PKR) -->
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700" data-i18n="lblAmountPKR">Amount (PKR)</label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center text-slate-500 font-mono text-xs font-bold">PKR</span>
-            <input type="number" id="udhaarModalAmount" min="1" step="any" required placeholder="0" class="w-full bg-white border border-slate-300 rounded-xl pl-12 rtl:pl-3 rtl:pr-12 pr-3 py-2 text-sm font-mono font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-          </div>
-        </div>
-
-        <!-- Note / Reference -->
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700" data-i18n="lblNoteMemo">Note / Memo</label>
-          <input type="text" id="udhaarModalNote" placeholder="Payment receipt #, counter delivery..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-        </div>
-
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="closeCustomerUdhaarModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors" data-i18n="btnCancel">
-            Cancel
-          </button>
-          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all" data-i18n="btnSaveUdhaar">
-            Save Udhaar Entry
-          </button>
-        </div>
-      </form>
-
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- APPLICATION FOOTER (LIGHT THEME)                                          -->
-  <!-- ========================================================================= -->
-  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print mt-auto">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-book-bookmark text-emerald-600"></i>
-        <span class="font-bold text-slate-700">Roznamcha</span> &mdash; <span data-i18n="footerText">Light Theme Single Page Cash Ledger & Admin System (PKR Only)</span>
-      </div>
-      <div class="flex items-center gap-4 text-[11px] text-slate-500">
-        <span data-i18n="footerPersistent">Persistent Local Storage</span>
-        <span>&bull;</span>
-        <span data-i18n="footerBilingual">English & اردو Support</span>
-
-      </div>
-    </div>
-  </footer>
-
-  <!-- ========================================================================= -->
-  <!-- CORE JAVASCRIPT ENGINE & BILINGUAL TRANSLATION DICTIONARY                 -->
-  <!-- ========================================================================= -->
-  <script>
     /**
      * ROZNAMCHA PRO - CORE JAVASCRIPT ENGINE (LIGHT THEME & BILINGUAL EN/UR)
      */
@@ -2690,13 +2625,7 @@
       refreshAllViews();
 
       // Route handling for /admin or #admin
-      if (window.location.pathname.endsWith('/admin') || window.location.hash === '#admin') {
-        if (appState.isAdminLoggedIn) {
-          openAdminDashboardView();
-        } else {
-          openAdminLoginModal();
-        }
-      }
+      routeApp();
 
       // Connect with Database on Vercel / serverless runtime
       syncWithDatabase(true);
@@ -6310,6 +6239,1114 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
-  </script>
+  
+
+    /**
+     * =========================================================================
+     * CENTRAL APPLICATION ROUTER & DEDICATED ADMIN CONTROL PANEL LOGIC
+     * =========================================================================
+     */
+    let adminEditingRecordDate = null;
+    let adminEditingOutflow = null;
+    let adminUdhaarTxnType = 'given';
+
+    function routeApp() {
+      const isPathAdmin = window.location.pathname.endsWith('/admin') || window.location.hash === '#admin' || window.location.search.includes('admin');
+      const publicApp = document.getElementById('publicViewerApp');
+      const adminLoginScreen = document.getElementById('adminLoginScreen');
+      const adminApp = document.getElementById('adminApp');
+
+      if (isPathAdmin) {
+        if (appState.isAdminLoggedIn) {
+          if (publicApp) publicApp.classList.add('hidden');
+          if (adminLoginScreen) adminLoginScreen.classList.add('hidden');
+          if (adminApp) adminApp.classList.remove('hidden');
+          switchAdminTab(appState.activeAdminTab || 'dashboard');
+          updateAdminTopBarInfo();
+        } else {
+          if (publicApp) publicApp.classList.add('hidden');
+          if (adminApp) adminApp.classList.add('hidden');
+          if (adminLoginScreen) adminLoginScreen.classList.remove('hidden');
+        }
+      } else {
+        if (adminLoginScreen) adminLoginScreen.classList.add('hidden');
+        if (adminApp) adminApp.classList.add('hidden');
+        if (publicApp) publicApp.classList.remove('hidden');
+        switchTab(appState.activePublicTab || 'entry');
+        refreshAllViews();
+      }
+    }
+
+    function navigateToAdmin() {
+      try {
+        window.history.pushState({ view: 'admin' }, '', '/admin');
+      } catch (e) {
+        window.location.hash = '#admin';
+      }
+      routeApp();
+    }
+
+    function returnToPublicView() {
+      try {
+        window.history.pushState({ view: 'public' }, '', window.location.pathname.replace(/\/admin$/, '') || '/');
+      } catch (e) {
+        window.location.hash = '';
+      }
+      routeApp();
+    }
+
+    window.addEventListener('popstate', () => {
+      routeApp();
+    });
+
+    function toggleAdminGatewayPasswordVisibility() {
+      const inp = document.getElementById('adminGatewayPassword');
+      const icon = document.getElementById('adminGatewayPasswordEye');
+      if (inp) {
+        if (inp.type === 'password') {
+          inp.type = 'text';
+          if (icon) icon.className = 'fa-regular fa-eye-slash text-sm';
+        } else {
+          inp.type = 'password';
+          if (icon) icon.className = 'fa-regular fa-eye text-sm';
+        }
+      }
+    }
+
+    async function handleAdminGatewayLogin(e) {
+      if (e) e.preventDefault();
+      const u = (document.getElementById('adminGatewayUsername')?.value || '').trim();
+      const p = (document.getElementById('adminGatewayPassword')?.value || '').trim();
+      const errorBox = document.getElementById('adminGatewayErrorBox');
+      const errorMsg = document.getElementById('adminGatewayErrorMsg');
+      const isUr = appState.language === 'ur';
+
+      if (errorBox) errorBox.classList.add('hidden');
+
+      let authenticated = false;
+      let sessionToken = null;
+
+      try {
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'login', username: u, password: p })
+        });
+        const data = await res.json();
+        if (data && data.success && data.token) {
+          authenticated = true;
+          sessionToken = data.token;
+        }
+      } catch (err) {
+        // Fallback check
+        if (u === 'admin' && p === 'admin123') {
+          authenticated = true;
+          sessionToken = 'local_session_' + Date.now();
+        }
+      }
+
+      if (authenticated) {
+        appState.isAdminLoggedIn = true;
+        appState.adminUser = u;
+        appState.adminToken = sessionToken;
+
+        const sessionPayload = {
+          username: u,
+          token: sessionToken,
+          expiresAt: Date.now() + (12 * 60 * 60 * 1000)
+        };
+        try {
+          localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(sessionPayload));
+        } catch (e) {}
+
+        routeApp();
+        showToastNotification(
+          isUr ? 'ایڈمن لاگ ان کامیاب' : 'Admin Authenticated',
+          isUr ? 'انتظامی کنٹرول پینل میں خوش آمدید۔' : 'Welcome to the Dedicated Admin Control Panel.'
+        );
+      } else {
+        if (errorBox && errorMsg) {
+          errorMsg.textContent = isUr ? 'غلط یوزر نام یا پاس ورڈ درج کیا گیا۔' : 'Invalid username or password.';
+          errorBox.classList.remove('hidden');
+        }
+      }
+    }
+
+    function handleAdminLogout() {
+      appState.isAdminLoggedIn = false;
+      appState.adminUser = null;
+      appState.adminToken = null;
+      try {
+        localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+        sessionStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+      } catch (e) {}
+
+      routeApp();
+      const isUr = appState.language === 'ur';
+      showToastNotification(
+        isUr ? 'لاگ آؤٹ مکمل' : 'Logged Out',
+        isUr ? 'ایڈمن سیشن کامیابی سے بند کر دیا گیا۔' : 'Admin session terminated.'
+      );
+    }
+
+    function switchAdminTab(tabName) {
+      appState.activeAdminTab = tabName;
+      const tabs = ['dashboard', 'records', 'outflows', 'udhaar', 'analytics', 'settings'];
+
+      tabs.forEach(t => {
+        const panel = document.getElementById('adminSection-' + t);
+        const btn = document.getElementById('adminNavBtn-' + t);
+        if (panel) {
+          if (t === tabName) panel.classList.remove('hidden');
+          else panel.classList.add('hidden');
+        }
+        if (btn) {
+          if (t === tabName) {
+            btn.className = 'admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-white bg-emerald-600/20 border border-emerald-500/30 cursor-pointer';
+          } else {
+            btn.className = 'admin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent cursor-pointer';
+          }
+        }
+      });
+
+      updateAdminTopBarInfo();
+
+      if (tabName === 'dashboard') {
+        renderAdminDashboard();
+      } else if (tabName === 'records') {
+        initAdminRecordForm();
+        renderAdminRecordsTable();
+      } else if (tabName === 'outflows') {
+        initAdminOutflowForm();
+        renderAdminOutflowsTable();
+      } else if (tabName === 'udhaar') {
+        initAdminUdhaarForm();
+        renderAdminUdhaarTable();
+      } else if (tabName === 'analytics') {
+        renderAdminAnalytics();
+      } else if (tabName === 'settings') {
+        initAdminSettingsForm();
+      }
+    }
+
+    function updateAdminTopBarInfo() {
+      const titles = {
+        dashboard: 'Admin Dashboard & Summary Overrides',
+        records: 'Daily Cash Book Records (Core Roznamcha)',
+        outflows: 'Purchases & Outflow Disbursements',
+        udhaar: 'Market Credit & Customer Receivables (Udhaar)',
+        analytics: 'Reports & Comparative Analytics',
+        settings: 'Settings, Dynamic CMS & Database Backup'
+      };
+      const titleElem = document.getElementById('adminTopBarTitle');
+      const badgeElem = document.getElementById('adminTopBarDateBadge');
+      const dateSelector = document.getElementById('adminDateSelector');
+
+      if (titleElem && titleElem.firstElementChild) {
+        titleElem.firstElementChild.textContent = titles[appState.activeAdminTab] || 'Daily Cash Book Records';
+      }
+
+      const activeDate = appState.selectedDate || getTodayString();
+      if (dateSelector) dateSelector.value = activeDate;
+
+      if (badgeElem) {
+        const parts = activeDate.split('-');
+        const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const mIdx = parseInt(parts[1], 10) - 1;
+        badgeElem.textContent = `${monthNames[mIdx] || ''} ${parts[0]}`;
+      }
+    }
+
+    function onAdminSelectedDateChange(newDate) {
+      if (!newDate) return;
+      appState.selectedDate = newDate;
+      updateAdminTopBarInfo();
+      if (appState.activeAdminTab === 'records') {
+        initAdminRecordForm(newDate);
+      } else if (appState.activeAdminTab === 'outflows') {
+        const dInp = document.getElementById('adminOutflowFormFieldDate');
+        if (dInp) dInp.value = newDate;
+      }
+    }
+
+    function adminNavigateDate(offset) {
+      const parts = (appState.selectedDate || getTodayString()).split('-');
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      d.setDate(d.getDate() + offset);
+      const iso = formatISODate(d);
+      appState.selectedDate = iso;
+      onAdminSelectedDateChange(iso);
+    }
+
+    function adminGoToToday() {
+      const today = getTodayString();
+      appState.selectedDate = today;
+      onAdminSelectedDateChange(today);
+    }
+
+    /**
+     * SECTION 1: DASHBOARD & 7 KPI OVERRIDES
+     */
+    function renderAdminDashboard() {
+      const today = getTodayString();
+      const rec = appState.records[today];
+      const todaySale = rec ? (rec.dailySale || 0) : 0;
+      const todayOutflows = rec ? (rec.totalOutflows || 0) : 0;
+      const totalDays = Object.keys(appState.records).length;
+      const totalDebtors = (appState.customerAccounts || []).length;
+
+      const saleElem = document.getElementById('adminDashTodaySaleVal');
+      if (saleElem) saleElem.textContent = formatCurrency(todaySale);
+
+      const outElem = document.getElementById('adminDashTodayOutflowsVal');
+      if (outElem) outElem.textContent = formatCurrency(todayOutflows);
+
+      const daysElem = document.getElementById('adminDashTotalDaysVal');
+      if (daysElem) daysElem.textContent = `${totalDays} Days Recorded`;
+
+      const debtElem = document.getElementById('adminDashTotalDebtorsVal');
+      if (debtElem) debtElem.textContent = `${totalDebtors} Debtors`;
+
+      renderAdminDashboardKpiCards();
+    }
+
+    function renderAdminDashboardKpiCards() {
+      const container = document.getElementById('adminDashboardKpiCardsContainer');
+      if (!container) return;
+
+      const metrics = [
+        { key: 'openingCash', label: 'Opening Cash', desc: 'Rolled from previous day balance' },
+        { key: 'todaySales', label: "Today's Sales", desc: 'Cash sales recorded for selected day' },
+        { key: 'todayOutflows', label: 'Total Outflows', desc: 'All supplier & line-item expenses' },
+        { key: 'closingCash', label: 'Closing Cash', desc: 'Available funds minus total outflows' },
+        { key: 'marketCredit', label: 'Market Credit (Udhaar)', desc: 'Active customer receivables total' },
+        { key: 'currentMonthSales', label: 'Current Month Sales', desc: 'Cumulative sales for active month' },
+        { key: 'lastMonthSales', label: 'Last Month Sales / Profit', desc: 'Previous month performance' }
+      ];
+
+      container.innerHTML = metrics.map(m => {
+        const ovr = (appState.kpiOverrides && appState.kpiOverrides[m.key]) || { isManual: false, manualValue: 0 };
+        const isManual = !!ovr.isManual;
+        const manualVal = ovr.manualValue || 0;
+
+        return `
+          <div class="bg-white border ${isManual ? 'border-purple-300 ring-2 ring-purple-100' : 'border-slate-200'} rounded-2xl p-4 shadow-sm flex flex-col justify-between transition-all">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-800">${m.label}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isManual ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'}">
+                  ${isManual ? 'Manual Override' : 'Auto-Calculated'}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400 mb-3">${m.desc}</p>
+              
+              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 mb-3">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="text-slate-500 font-medium">Mode:</span>
+                  <div class="flex items-center gap-1">
+                    <button type="button" onclick="setAdminKpiOverrideMode('${m.key}', false)" class="px-2 py-0.5 rounded text-[10px] font-bold ${!isManual ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}">
+                      Auto
+                    </button>
+                    <button type="button" onclick="setAdminKpiOverrideMode('${m.key}', true)" class="px-2 py-0.5 rounded text-[10px] font-bold ${isManual ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-600'}">
+                      Override
+                    </button>
+                  </div>
+                </div>
+
+                ${isManual ? `
+                  <div class="mt-2 flex items-center gap-2">
+                    <input type="number" id="adminKpiInp-${m.key}" value="${manualVal}" placeholder="PKR Amount"
+                      class="w-full px-2.5 py-1.5 rounded-lg border border-purple-300 bg-white text-xs font-mono font-bold text-purple-900 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                    <button type="button" onclick="saveAdminKpiOverrideValue('${m.key}')" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shrink-0 shadow-sm cursor-pointer">
+                      Save
+                    </button>
+                  </div>
+                ` : `
+                  <div class="text-[11px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
+                    <i class="fa-solid fa-check text-[10px]"></i> Calculated from ledger records
+                  </div>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function setAdminKpiOverrideMode(metricKey, isManual) {
+      if (!appState.kpiOverrides) appState.kpiOverrides = {};
+      if (!appState.kpiOverrides[metricKey]) {
+        appState.kpiOverrides[metricKey] = { isManual: false, manualValue: 0 };
+      }
+      appState.kpiOverrides[metricKey].isManual = isManual;
+
+      renderAdminDashboardKpiCards();
+      refreshAllViews();
+      saveKpiOverridesToBackend();
+    }
+
+    async function saveAdminKpiOverrideValue(metricKey) {
+      const inp = document.getElementById('adminKpiInp-' + metricKey);
+      const val = inp ? (parseFloat(inp.value) || 0) : 0;
+
+      if (!appState.kpiOverrides) appState.kpiOverrides = {};
+      appState.kpiOverrides[metricKey] = {
+        isManual: true,
+        manualValue: val
+      };
+
+      renderAdminDashboardKpiCards();
+      refreshAllViews();
+      saveKpiOverridesToBackend();
+
+      showToastNotification('Metric Overridden', `${metricKey} override saved and synced live!`);
+    }
+
+    async function saveKpiOverridesToBackend() {
+      try {
+        localStorage.setItem('roznamcha_kpi_overrides', JSON.stringify(appState.kpiOverrides));
+        await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (appState.adminToken || '')
+          },
+          body: JSON.stringify({
+            action: 'save_kpi_overrides',
+            overrides: appState.kpiOverrides
+          })
+        });
+      } catch (e) {}
+    }
+
+    /**
+     * SECTION 2: DAILY RECORDS (FORM TOP, TABLE BOTTOM)
+     */
+    function initAdminRecordForm(dateIso) {
+      const dt = dateIso || appState.selectedDate || getTodayString();
+      const rec = appState.records[dt];
+      adminEditingRecordDate = rec ? dt : null;
+
+      const dateInp = document.getElementById('adminRecFormFieldDate');
+      const openInp = document.getElementById('adminRecFormFieldOpening');
+      const saleInp = document.getElementById('adminRecFormFieldSale');
+      const notesInp = document.getElementById('adminRecFormFieldNotes');
+      const manualToggle = document.getElementById('adminRecFormFieldManualOpeningToggle');
+      const heading = document.getElementById('adminRecordFormHeading');
+      const cancelBtn = document.getElementById('adminRecordCancelBtn');
+      const submitText = document.getElementById('adminRecordSubmitBtnText');
+
+      if (dateInp) dateInp.value = dt;
+
+      if (rec) {
+        if (openInp) openInp.value = rec.openingBalance || 0;
+        if (saleInp) saleInp.value = rec.dailySale || '';
+        if (notesInp) notesInp.value = rec.notes || '';
+        if (manualToggle) manualToggle.checked = !!rec.isManualOpeningOverride;
+        if (openInp) {
+          if (rec.isManualOpeningOverride) {
+            openInp.classList.remove('bg-slate-100');
+            openInp.classList.add('bg-white');
+          } else {
+            openInp.classList.add('bg-slate-100');
+            openInp.classList.remove('bg-white');
+          }
+        }
+        if (heading) heading.textContent = `Edit Daily Entry - ${formatDateDisplay(dt)}`;
+        if (cancelBtn) cancelBtn.classList.remove('hidden');
+        if (submitText) submitText.textContent = 'Update Record';
+      } else {
+        const derived = getDerivedOpeningBalance(dt);
+        if (openInp) {
+          openInp.value = derived;
+          openInp.classList.add('bg-slate-100');
+          openInp.classList.remove('bg-white');
+        }
+        if (saleInp) saleInp.value = '';
+        if (notesInp) notesInp.value = '';
+        if (manualToggle) manualToggle.checked = false;
+        if (heading) heading.textContent = 'Add / Edit Daily Entry';
+        if (cancelBtn) cancelBtn.classList.add('hidden');
+        if (submitText) submitText.textContent = '+ Add Record';
+      }
+
+      onAdminRecordFormInputChange();
+    }
+
+    function onAdminRecordFormDateChange(newDate) {
+      initAdminRecordForm(newDate);
+    }
+
+    function toggleAdminRecordManualOpening(isManual) {
+      const openInp = document.getElementById('adminRecFormFieldOpening');
+      if (openInp) {
+        if (isManual) {
+          openInp.classList.remove('bg-slate-100');
+          openInp.classList.add('bg-white');
+        } else {
+          openInp.classList.add('bg-slate-100');
+          openInp.classList.remove('bg-white');
+          const dt = document.getElementById('adminRecFormFieldDate')?.value || getTodayString();
+          openInp.value = getDerivedOpeningBalance(dt);
+        }
+      }
+      onAdminRecordFormInputChange();
+    }
+
+    function onAdminRecordFormInputChange() {
+      const openVal = parseFloat(document.getElementById('adminRecFormFieldOpening')?.value) || 0;
+      const saleVal = parseFloat(document.getElementById('adminRecFormFieldSale')?.value) || 0;
+      const avail = openVal + saleVal;
+
+      const availDisplay = document.getElementById('adminRecFormFieldAvailableDisplay');
+      if (availDisplay) availDisplay.textContent = formatCurrency(avail);
+    }
+
+    async function submitAdminRecordForm(e) {
+      if (e) e.preventDefault();
+      const dt = document.getElementById('adminRecFormFieldDate')?.value;
+      if (!dt) return;
+
+      const openVal = parseFloat(document.getElementById('adminRecFormFieldOpening')?.value) || 0;
+      const saleVal = parseFloat(document.getElementById('adminRecFormFieldSale')?.value) || 0;
+      const notesVal = (document.getElementById('adminRecFormFieldNotes')?.value || '').trim();
+      const isManualOpen = !!document.getElementById('adminRecFormFieldManualOpeningToggle')?.checked;
+
+      const existing = appState.records[dt] || {};
+      appState.records[dt] = {
+        date: dt,
+        dayName: getDayName(dt),
+        openingBalance: openVal,
+        manualOpening: openVal,
+        isManualOpeningOverride: isManualOpen,
+        dailySale: saleVal,
+        creditGiven: existing.creditGiven || 0,
+        creditRecovered: existing.creditRecovered || 0,
+        notes: notesVal,
+        outflows: Array.isArray(existing.outflows) ? existing.outflows : []
+      };
+
+      recalculateLedgerCascade();
+      saveRecordsToStorage();
+      pushStateToDatabase();
+      refreshAllViews();
+      renderAdminRecordsTable();
+
+      showToastNotification('Record Saved', `Daily record for ${formatDateDisplay(dt)} successfully saved and balances recalculated!`);
+      cancelEditAdminRecord();
+    }
+
+    function editAdminRecord(dateIso) {
+      initAdminRecordForm(dateIso);
+      const formCard = document.getElementById('adminDailyRecordForm');
+      if (formCard) formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function cancelEditAdminRecord() {
+      adminEditingRecordDate = null;
+      initAdminRecordForm(getTodayString());
+    }
+
+    function deleteAdminRecord(dateIso) {
+      if (!confirm(`Are you sure you want to permanently delete the entry for ${formatDateDisplay(dateIso)}?\nSubsequent days will automatically be recalculated.`)) {
+        return;
+      }
+      delete appState.records[dateIso];
+      recalculateLedgerCascade();
+      saveRecordsToStorage();
+      pushStateToDatabase();
+      refreshAllViews();
+      renderAdminRecordsTable();
+
+      showToastNotification('Record Deleted', `Entry for ${formatDateDisplay(dateIso)} removed.`);
+    }
+
+    function renderAdminRecordsTable() {
+      const tbody = document.getElementById('adminRecordsTableBody');
+      const searchVal = (document.getElementById('adminRecordsSearchInput')?.value || '').toLowerCase();
+      if (!tbody) return;
+
+      const dates = Object.keys(appState.records).sort().reverse();
+      let filtered = [...dates];
+
+      if (searchVal) {
+        filtered = filtered.filter(d => {
+          const r = appState.records[d];
+          const matchDate = d.includes(searchVal) || (r.dayName || '').toLowerCase().includes(searchVal);
+          const matchNotes = (r.notes || '').toLowerCase().includes(searchVal);
+          const matchOutflow = (r.outflows || []).some(o => (o.party || '').toLowerCase().includes(searchVal));
+          return matchDate || matchNotes || matchOutflow;
+        });
+      }
+
+      const countBadge = document.getElementById('adminRecordsCountBadge');
+      if (countBadge) countBadge.textContent = `${filtered.length} of ${dates.length} recorded`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-8 text-slate-400 font-sans">
+              <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
+              No records found. Use the form above to add a new record.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(dt => {
+        const r = appState.records[dt];
+        return `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-3 px-4 whitespace-nowrap">
+              <div class="font-bold text-slate-900 font-mono">${formatDateDisplay(r.date)}</div>
+              <div class="text-[11px] text-emerald-700 font-sans font-bold">${r.dayName || getDayName(r.date)}</div>
+              ${r.notes ? `<div class="text-[10px] text-slate-500 italic font-sans truncate max-w-[140px]">${escapeHtml(r.notes)}</div>` : ''}
+            </td>
+            <td class="py-3 px-3 text-right font-bold text-slate-700 whitespace-nowrap">${formatCurrency(r.openingBalance)}</td>
+            <td class="py-3 px-3 text-right font-black text-emerald-800 bg-emerald-50/30 whitespace-nowrap">${formatCurrency(r.dailySale)}</td>
+            <td class="py-3 px-3 text-right font-bold text-sky-800 whitespace-nowrap">${formatCurrency(r.totalAvailable)}</td>
+            <td class="py-3 px-3 text-right font-bold text-rose-700 whitespace-nowrap">${formatCurrency(r.totalOutflows)}</td>
+            <td class="py-3 px-3 text-right font-black text-sky-900 bg-sky-50/30 whitespace-nowrap">${formatCurrency(r.closingCash)}</td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              <div class="flex items-center justify-center gap-1.5 font-sans">
+                <button type="button" onclick="editAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 transition-colors cursor-pointer">
+                  <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                </button>
+                <button type="button" onclick="deleteAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+                  <i class="fa-solid fa-trash-can mr-1"></i> Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /**
+     * SECTION 3: PURCHASES & OUTFLOWS (FORM TOP, TABLE BOTTOM)
+     */
+    function initAdminOutflowForm() {
+      const dtInp = document.getElementById('adminOutflowFormFieldDate');
+      const partyInp = document.getElementById('adminOutflowFormFieldParty');
+      const catInp = document.getElementById('adminOutflowFormFieldCategory');
+      const amtInp = document.getElementById('adminOutflowFormFieldAmount');
+      const noteInp = document.getElementById('adminOutflowFormFieldNote');
+      const heading = document.getElementById('adminOutflowFormHeading');
+      const cancelBtn = document.getElementById('adminOutflowCancelBtn');
+      const submitText = document.getElementById('adminOutflowSubmitBtnText');
+
+      const activeDate = appState.selectedDate || getTodayString();
+      if (dtInp) dtInp.value = activeDate;
+      if (partyInp) partyInp.value = '';
+      if (catInp) catInp.value = 'Vendor';
+      if (amtInp) amtInp.value = '';
+      if (noteInp) noteInp.value = '';
+      if (heading) heading.textContent = 'Record Payment / Outflow';
+      if (cancelBtn) cancelBtn.classList.add('hidden');
+      if (submitText) submitText.textContent = '+ Record Payment';
+
+      adminEditingOutflow = null;
+    }
+
+    function selectOutflowTag(tagName, category) {
+      const partyInp = document.getElementById('adminOutflowFormFieldParty');
+      const catInp = document.getElementById('adminOutflowFormFieldCategory');
+      if (partyInp) partyInp.value = tagName;
+      if (catInp && category) catInp.value = category;
+    }
+
+    async function submitAdminOutflowForm(e) {
+      if (e) e.preventDefault();
+      const dt = document.getElementById('adminOutflowFormFieldDate')?.value || getTodayString();
+      const party = (document.getElementById('adminOutflowFormFieldParty')?.value || '').trim();
+      const cat = document.getElementById('adminOutflowFormFieldCategory')?.value || 'Vendor';
+      const amt = parseFloat(document.getElementById('adminOutflowFormFieldAmount')?.value) || 0;
+      const note = (document.getElementById('adminOutflowFormFieldNote')?.value || '').trim();
+
+      if (!party || amt <= 0) {
+        alert('Please provide a valid party name and amount.');
+        return;
+      }
+
+      if (!appState.records[dt]) {
+        appState.records[dt] = {
+          date: dt,
+          dayName: getDayName(dt),
+          openingBalance: getDerivedOpeningBalance(dt),
+          manualOpening: 0,
+          isManualOpeningOverride: false,
+          dailySale: 0,
+          creditGiven: 0,
+          creditRecovered: 0,
+          notes: '',
+          outflows: []
+        };
+      }
+
+      if (!Array.isArray(appState.records[dt].outflows)) {
+        appState.records[dt].outflows = [];
+      }
+
+      if (adminEditingOutflow && adminEditingOutflow.date === dt && adminEditingOutflow.index !== undefined) {
+        appState.records[dt].outflows[adminEditingOutflow.index] = { party, amount: amt, category: cat, note };
+      } else {
+        appState.records[dt].outflows.push({ party, amount: amt, category: cat, note });
+      }
+
+      recalculateLedgerCascade();
+      saveRecordsToStorage();
+      pushStateToDatabase();
+      refreshAllViews();
+      renderAdminOutflowsTable();
+
+      showToastNotification('Payment Recorded', `PKR ${amt.toLocaleString()} paid to ${party} recorded on ${formatDateDisplay(dt)}.`);
+      initAdminOutflowForm();
+    }
+
+    function editAdminOutflow(dateIso, index) {
+      const rec = appState.records[dateIso];
+      if (!rec || !rec.outflows || !rec.outflows[index]) return;
+      const item = rec.outflows[index];
+
+      adminEditingOutflow = { date: dateIso, index };
+      const dtInp = document.getElementById('adminOutflowFormFieldDate');
+      const partyInp = document.getElementById('adminOutflowFormFieldParty');
+      const catInp = document.getElementById('adminOutflowFormFieldCategory');
+      const amtInp = document.getElementById('adminOutflowFormFieldAmount');
+      const noteInp = document.getElementById('adminOutflowFormFieldNote');
+      const heading = document.getElementById('adminOutflowFormHeading');
+      const cancelBtn = document.getElementById('adminOutflowCancelBtn');
+      const submitText = document.getElementById('adminOutflowSubmitBtnText');
+
+      if (dtInp) dtInp.value = dateIso;
+      if (partyInp) partyInp.value = item.party || '';
+      if (catInp) catInp.value = item.category || 'Vendor';
+      if (amtInp) amtInp.value = item.amount || '';
+      if (noteInp) noteInp.value = item.note || '';
+      if (heading) heading.textContent = `Edit Payment (${escapeHtml(item.party)}) - ${formatDateDisplay(dateIso)}`;
+      if (cancelBtn) cancelBtn.classList.remove('hidden');
+      if (submitText) submitText.textContent = 'Update Payment';
+
+      const formCard = document.getElementById('adminOutflowForm');
+      if (formCard) formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function cancelEditAdminOutflow() {
+      initAdminOutflowForm();
+    }
+
+    function deleteAdminOutflow(dateIso, index) {
+      const rec = appState.records[dateIso];
+      if (!rec || !rec.outflows || !rec.outflows[index]) return;
+      const item = rec.outflows[index];
+
+      if (!confirm(`Remove outflow of PKR ${item.amount} to "${item.party}" on ${formatDateDisplay(dateIso)}?`)) {
+        return;
+      }
+
+      rec.outflows.splice(index, 1);
+      recalculateLedgerCascade();
+      saveRecordsToStorage();
+      pushStateToDatabase();
+      refreshAllViews();
+      renderAdminOutflowsTable();
+
+      showToastNotification('Outflow Removed', 'Line item deleted and ledger recalculated.');
+    }
+
+    function renderAdminOutflowsTable() {
+      const tbody = document.getElementById('adminOutflowsTableBody');
+      const searchVal = (document.getElementById('adminOutflowsSearchInput')?.value || '').toLowerCase();
+      if (!tbody) return;
+
+      const items = [];
+      Object.keys(appState.records).sort().reverse().forEach(dt => {
+        const r = appState.records[dt];
+        if (Array.isArray(r.outflows)) {
+          r.outflows.forEach((o, idx) => {
+            items.push({
+              date: dt,
+              index: idx,
+              party: o.party || 'General',
+              category: o.category || 'Vendor',
+              amount: parseFloat(o.amount) || 0,
+              note: o.note || ''
+            });
+          });
+        }
+      });
+
+      let filtered = [...items];
+      if (searchVal) {
+        filtered = filtered.filter(i => 
+          i.party.toLowerCase().includes(searchVal) || 
+          i.category.toLowerCase().includes(searchVal) ||
+          i.note.toLowerCase().includes(searchVal) ||
+          i.date.includes(searchVal)
+        );
+      }
+
+      const badge = document.getElementById('adminOutflowsCountBadge');
+      if (badge) badge.textContent = `${filtered.length} of ${items.length} items`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
+              <i class="fa-solid fa-receipt text-2xl mb-2 block text-slate-300"></i>
+              No payments recorded yet. Use the form above to add one.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(i => `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="py-3 px-4 font-mono font-bold whitespace-nowrap text-slate-800">${formatDateDisplay(i.date)}</td>
+          <td class="py-3 px-3 font-sans font-bold text-slate-900">${escapeHtml(i.party)}</td>
+          <td class="py-3 px-3 font-sans">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">${i.category}</span>
+          </td>
+          <td class="py-3 px-3 text-right font-mono font-black text-rose-700 whitespace-nowrap">${formatCurrency(i.amount)}</td>
+          <td class="py-3 px-4 font-sans text-slate-500 italic truncate max-w-[180px]">${escapeHtml(i.note) || '-'}</td>
+          <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
+            <div class="flex items-center justify-center gap-1.5">
+              <button type="button" onclick="editAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-900 transition-colors cursor-pointer">
+                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+              </button>
+              <button type="button" onclick="deleteAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+                <i class="fa-solid fa-trash-can mr-1"></i> Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /**
+     * SECTION 4: MARKET CREDIT / UDHAAR (FORM TOP, TABLE BOTTOM)
+     */
+    function initAdminUdhaarForm() {
+      const nameInp = document.getElementById('adminUdhaarFormFieldName');
+      const phoneInp = document.getElementById('adminUdhaarFormFieldPhone');
+      const amtInp = document.getElementById('adminUdhaarFormFieldAmount');
+      const dtInp = document.getElementById('adminUdhaarFormFieldDate');
+      const noteInp = document.getElementById('adminUdhaarFormFieldNote');
+
+      if (nameInp) nameInp.value = '';
+      if (phoneInp) phoneInp.value = '';
+      if (amtInp) amtInp.value = '';
+      if (dtInp) dtInp.value = appState.selectedDate || getTodayString();
+      if (noteInp) noteInp.value = '';
+
+      setAdminUdhaarType('given');
+    }
+
+    function setAdminUdhaarType(type) {
+      adminUdhaarTxnType = type;
+      const givenBtn = document.getElementById('adminUdhaarTypeGivenBtn');
+      const recBtn = document.getElementById('adminUdhaarTypeRecBtn');
+
+      if (type === 'given') {
+        if (givenBtn) givenBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition-all';
+        if (recBtn) recBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+      } else {
+        if (recBtn) recBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm transition-all';
+        if (givenBtn) givenBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+      }
+    }
+
+    async function submitAdminUdhaarForm(e) {
+      if (e) e.preventDefault();
+      const name = (document.getElementById('adminUdhaarFormFieldName')?.value || '').trim();
+      const phone = (document.getElementById('adminUdhaarFormFieldPhone')?.value || '').trim();
+      const amt = parseFloat(document.getElementById('adminUdhaarFormFieldAmount')?.value) || 0;
+      const dt = document.getElementById('adminUdhaarFormFieldDate')?.value || getTodayString();
+      const note = (document.getElementById('adminUdhaarFormFieldNote')?.value || '').trim();
+
+      if (!name || amt <= 0) {
+        alert('Please provide a valid debtor name and amount.');
+        return;
+      }
+
+      if (!Array.isArray(appState.customerAccounts)) {
+        appState.customerAccounts = [];
+      }
+
+      let cust = appState.customerAccounts.find(c => c.name.toLowerCase() === name.toLowerCase());
+      if (!cust) {
+        cust = {
+          name,
+          phone: phone || '',
+          balance: 0,
+          totalGiven: 0,
+          totalRecovered: 0,
+          lastDate: dt,
+          status: 'Active'
+        };
+        appState.customerAccounts.push(cust);
+      } else {
+        if (phone && !cust.phone) cust.phone = phone;
+      }
+
+      if (adminUdhaarTxnType === 'given') {
+        cust.balance += amt;
+        cust.totalGiven += amt;
+      } else {
+        cust.balance = Math.max(0, cust.balance - amt);
+        cust.totalRecovered += amt;
+      }
+      cust.lastDate = dt;
+
+      // Associate transaction with matching date record if exists
+      if (appState.records[dt]) {
+        if (adminUdhaarTxnType === 'given') {
+          appState.records[dt].creditGiven = (appState.records[dt].creditGiven || 0) + amt;
+        } else {
+          appState.records[dt].creditRecovered = (appState.records[dt].creditRecovered || 0) + amt;
+        }
+        recalculateLedgerCascade();
+      }
+
+      saveRecordsToStorage();
+      pushStateToDatabase();
+      refreshAllViews();
+      renderAdminUdhaarTable();
+
+      showToastNotification(
+        'Udhaar Updated',
+        adminUdhaarTxnType === 'given'
+          ? `Recorded PKR ${amt.toLocaleString()} credit extended to ${name}.`
+          : `Recorded PKR ${amt.toLocaleString()} cash recovered from ${name}.`
+      );
+      initAdminUdhaarForm();
+    }
+
+    function deleteUdhaarCustomer(custName) {
+      if (!confirm(`Remove debtor account for "${custName}"?`)) return;
+      appState.customerAccounts = (appState.customerAccounts || []).filter(c => c.name !== custName);
+      saveRecordsToStorage();
+      pushStateToDatabase();
+      refreshAllViews();
+      renderAdminUdhaarTable();
+
+      showToastNotification('Account Removed', `Debtor account for ${custName} removed.`);
+    }
+
+    function renderAdminUdhaarTable() {
+      const tbody = document.getElementById('adminUdhaarTableBody');
+      const searchVal = (document.getElementById('adminUdhaarSearchInput')?.value || '').toLowerCase();
+      if (!tbody) return;
+
+      let customers = appState.customerAccounts || [];
+      if (searchVal) {
+        customers = customers.filter(c => 
+          c.name.toLowerCase().includes(searchVal) || 
+          (c.phone && c.phone.includes(searchVal))
+        );
+      }
+
+      let sumBalance = 0;
+      let sumGiven = 0;
+      let sumRecovered = 0;
+      (appState.customerAccounts || []).forEach(c => {
+        sumBalance += (c.balance || 0);
+        sumGiven += (c.totalGiven || 0);
+        sumRecovered += (c.totalRecovered || 0);
+      });
+
+      const sumBalElem = document.getElementById('adminUdhaarSumBalance');
+      if (sumBalElem) sumBalElem.textContent = formatCurrency(sumBalance);
+      const sumGivElem = document.getElementById('adminUdhaarSumGiven');
+      if (sumGivElem) sumGivElem.textContent = formatCurrency(sumGiven);
+      const sumRecElem = document.getElementById('adminUdhaarSumRecovered');
+      if (sumRecElem) sumRecElem.textContent = formatCurrency(sumRecovered);
+
+      const countBadge = document.getElementById('adminUdhaarAccountsCountBadge');
+      if (countBadge) countBadge.textContent = `${customers.length} accounts`;
+
+      if (customers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
+              <i class="fa-solid fa-hand-holding-dollar text-2xl mb-2 block text-slate-300"></i>
+              No debtor accounts recorded. Use the form above to add an account.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = customers.map(c => `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="py-3 px-4 font-sans font-bold text-slate-900">${escapeHtml(c.name)}</td>
+          <td class="py-3 px-3 font-mono text-slate-500">${c.phone || '-'}</td>
+          <td class="py-3 px-3 text-right font-mono text-slate-700">${formatCurrency(c.totalGiven)}</td>
+          <td class="py-3 px-3 text-right font-mono text-emerald-700 font-bold">${formatCurrency(c.totalRecovered)}</td>
+          <td class="py-3 px-3 text-right font-mono font-black text-amber-800 text-sm whitespace-nowrap bg-amber-50/30">${formatCurrency(c.balance)}</td>
+          <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
+            <div class="flex items-center justify-center gap-1.5">
+              <button type="button" onclick="quickFillUdhaarRecovery('${escapeHtml(c.name)}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors cursor-pointer">
+                <i class="fa-solid fa-money-bill-transfer mr-1"></i> Recovery
+              </button>
+              <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="px-2 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function quickFillUdhaarRecovery(custName) {
+      const nameInp = document.getElementById('adminUdhaarFormFieldName');
+      if (nameInp) nameInp.value = custName;
+      setAdminUdhaarType('recovered');
+      const amtInp = document.getElementById('adminUdhaarFormFieldAmount');
+      if (amtInp) amtInp.focus();
+      const formCard = document.getElementById('adminUdhaarForm');
+      if (formCard) formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    /**
+     * SECTION 5: REPORTS & ANALYTICS
+     */
+    let adminSalesChartInstance = null;
+    let adminDoughnutChartInstance = null;
+
+    function renderAdminAnalytics() {
+      const ctxSales = document.getElementById('adminSalesOutflowsChart')?.getContext('2d');
+      const ctxDoughnut = document.getElementById('adminVendorDoughnutChart')?.getContext('2d');
+
+      if (!ctxSales || !ctxDoughnut) return;
+
+      const dates = Object.keys(appState.records).sort().slice(-14);
+      const labels = dates.map(d => formatDateDisplay(d));
+      const salesData = dates.map(d => appState.records[d]?.dailySale || 0);
+      const outflowsData = dates.map(d => appState.records[d]?.totalOutflows || 0);
+
+      if (adminSalesChartInstance) adminSalesChartInstance.destroy();
+      adminSalesChartInstance = new Chart(ctxSales, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: "Sales (PKR)", data: salesData, backgroundColor: '#059669', borderRadius: 6 },
+            { label: "Outflows (PKR)", data: outflowsData, backgroundColor: '#e11d48', borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+
+      // Category breakdown
+      const catTotals = { Vendor: 0, Operating: 0, Staff: 0 };
+      Object.keys(appState.records).forEach(dt => {
+        const r = appState.records[dt];
+        (r.outflows || []).forEach(o => {
+          const cat = o.category || 'Vendor';
+          catTotals[cat] = (catTotals[cat] || 0) + (parseFloat(o.amount) || 0);
+        });
+      });
+
+      if (adminDoughnutChartInstance) adminDoughnutChartInstance.destroy();
+      adminDoughnutChartInstance = new Chart(ctxDoughnut, {
+        type: 'doughnut',
+        data: {
+          labels: ['Vendor Stock', 'Operating / Fuel', 'Staff / Personal'],
+          datasets: [{
+            data: [catTotals.Vendor, catTotals.Operating, catTotals.Staff],
+            backgroundColor: ['#059669', '#f59e0b', '#6366f1']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    /**
+     * SECTION 6: SETTINGS & CMS
+     */
+    function initAdminSettingsForm() {
+      const s = appState.systemSettings || {};
+      const shopNameInp = document.getElementById('adminSettingShopName');
+      const phoneInp = document.getElementById('adminSettingPhone');
+      const waInp = document.getElementById('adminSettingWhatsapp');
+      const curInp = document.getElementById('adminSettingCurrency');
+
+      if (shopNameInp) shopNameInp.value = s.shopName || 'Daily Cash Book & Financial Management';
+      if (phoneInp) phoneInp.value = s.phone || '0300-0000000';
+      if (waInp) waInp.value = s.whatsapp || '923000000000';
+      if (curInp) curInp.value = s.currencySymbol || 'PKR';
+
+      const col1 = document.getElementById('adminCmsCol1');
+      const col2 = document.getElementById('adminCmsCol2');
+      const col3 = document.getElementById('adminCmsCol3');
+      const col4 = document.getElementById('adminCmsCol4');
+      const col5 = document.getElementById('adminCmsCol5');
+
+      if (col1) col1.value = s.col1Sale || 'Daily Sale / Cash Inflow';
+      if (col2) col2.value = s.col2TotalAvail || 'Total Balance / Available Funds';
+      if (col3) col3.value = s.col3Outflows || 'Purchase / Expenses / Outflows';
+      if (col4) col4.value = s.col4ClosingCash || 'Remaining Balance / Closing Cash';
+      if (col5) col5.value = s.col5MarketCredit || 'Market Credit / Udhaar';
+    }
+
+    async function saveAdminBusinessProfile(e) {
+      if (e) e.preventDefault();
+      if (!appState.systemSettings) appState.systemSettings = {};
+
+      appState.systemSettings.shopName = document.getElementById('adminSettingShopName')?.value || 'Daily Cash Book & Financial Management';
+      appState.systemSettings.phone = document.getElementById('adminSettingPhone')?.value || '';
+      appState.systemSettings.whatsapp = document.getElementById('adminSettingWhatsapp')?.value || '';
+      appState.systemSettings.currencySymbol = document.getElementById('adminSettingCurrency')?.value || 'PKR';
+
+      saveSettings();
+      applyDynamicCmsSettings();
+      saveSettingsToBackend();
+      showToastNotification('Profile Saved', 'Business profile updated across public and admin views.');
+    }
+
+    async function saveAdminColumnLabels(e) {
+      if (e) e.preventDefault();
+      if (!appState.systemSettings) appState.systemSettings = {};
+
+      appState.systemSettings.col1Sale = document.getElementById('adminCmsCol1')?.value || '';
+      appState.systemSettings.col2TotalAvail = document.getElementById('adminCmsCol2')?.value || '';
+      appState.systemSettings.col3Outflows = document.getElementById('adminCmsCol3')?.value || '';
+      appState.systemSettings.col4ClosingCash = document.getElementById('adminCmsCol4')?.value || '';
+      appState.systemSettings.col5MarketCredit = document.getElementById('adminCmsCol5')?.value || '';
+
+      saveSettings();
+      applyDynamicCmsSettings();
+      saveSettingsToBackend();
+      showToastNotification('Labels Saved', 'Column headers and terminology updated!');
+    }
+
+    async function saveSettingsToBackend() {
+      try {
+        await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (appState.adminToken || '')
+          },
+          body: JSON.stringify({
+            action: 'save_settings',
+            settings: appState.systemSettings
+          })
+        });
+      } catch (e) {}
+    }
+
+</script>
 </body>
 </html>
