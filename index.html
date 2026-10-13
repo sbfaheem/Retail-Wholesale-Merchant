@@ -157,17 +157,24 @@
           <!-- Controls: Month Selector, Language, Export, Print, Admin Gateway -->
           <div class="flex items-center space-x-2.5 rtl:space-x-reverse shrink-0">
             
-            <!-- Month & Period Selector -->
-            <div class="hidden md:flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold">
-              <button type="button" onclick="navigateDate(-30)" title="Previous Month" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer">
-                ◀
+            <!-- Date / Period Navigator Pill (◀ Prev | Current (Today) | Next ▶) -->
+            <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold shadow-sm">
+              <button type="button" onclick="navigateDate(-1)" title="Previous Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
+                <span>◀</span> <span data-i18n="btnPrevDay">Prev</span>
               </button>
-              <select id="publicMonthSelector" onchange="onPublicMonthSelectorChange(this.value)" class="bg-transparent font-bold text-slate-800 px-2 py-1 text-xs focus:outline-none cursor-pointer">
+              <button type="button" onclick="goToToday()" title="Jump to Today" class="px-3 py-1.5 rounded-lg text-emerald-700 hover:text-emerald-800 hover:bg-white transition-colors cursor-pointer font-bold">
+                <span data-i18n="btnCurrentToday">Current (Today)</span>
+              </button>
+              <button type="button" onclick="navigateDate(1)" title="Next Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
+                <span data-i18n="btnNextDay">Next</span> <span>▶</span>
+              </button>
+            </div>
+
+            <!-- Month & Period Selector Dropdown -->
+            <div class="hidden lg:flex items-center">
+              <select id="publicMonthSelector" onchange="onPublicMonthSelectorChange(this.value)" title="Select Month" class="bg-white border border-slate-300 rounded-xl font-bold text-slate-800 px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none cursor-pointer shadow-sm">
                 <!-- Dynamically populated months -->
               </select>
-              <button type="button" onclick="navigateDate(30)" title="Next Month" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer">
-                ▶
-              </button>
             </div>
 
             <!-- Bilingual English & Urdu Toggle -->
@@ -360,15 +367,15 @@
             </div>
 
             <!-- Quick Date Controls -->
-            <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5">
-              <button type="button" onclick="navigateDate(-1)" title="Previous Day" class="p-1.5 px-3 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white text-xs font-semibold transition-colors cursor-pointer">
-                <i class="fa-solid fa-chevron-left mr-1 rtl:mr-0 rtl:ml-1"></i> <span data-i18n="btnPrevDay">Prev</span>
+            <div class="flex items-center rounded-xl bg-slate-100 border border-slate-300 p-0.5 text-xs font-bold shadow-sm">
+              <button type="button" onclick="navigateDate(-1)" title="Previous Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
+                <span>◀</span> <span data-i18n="btnPrevDay">Prev</span>
               </button>
-              <button type="button" onclick="goToToday()" title="Jump to Today" class="p-1.5 px-3 rounded-lg text-emerald-700 hover:text-emerald-800 hover:bg-white text-xs font-bold transition-colors cursor-pointer" data-i18n="btnToday">
-                Today
+              <button type="button" onclick="goToToday()" title="Jump to Today" class="px-3 py-1.5 rounded-lg text-emerald-700 hover:text-emerald-800 hover:bg-white transition-colors cursor-pointer font-bold">
+                <span data-i18n="btnCurrentToday">Current (Today)</span>
               </button>
-              <button type="button" onclick="navigateDate(1)" title="Next Day" class="p-1.5 px-3 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white text-xs font-semibold transition-colors cursor-pointer">
-                <span data-i18n="btnNextDay">Next</span> <i class="fa-solid fa-chevron-right ml-1 rtl:ml-0 rtl:mr-1"></i>
+              <button type="button" onclick="navigateDate(1)" title="Next Day" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer flex items-center gap-1">
+                <span data-i18n="btnNextDay">Next</span> <span>▶</span>
               </button>
             </div>
           </div>
@@ -1990,6 +1997,7 @@
         kpiCreditSubtext: "Total Active Receivables",
         btnPrevDay: "Prev",
         btnToday: "Today",
+        btnCurrentToday: "Current (Today)",
         btnNextDay: "Next",
         statusDraft: "Draft Entry",
         statusLocked: "Day Locked & Balanced",
@@ -2192,6 +2200,7 @@
         kpiCreditSubtext: "کل واجب الوصول مارکیٹ ادھار",
         btnPrevDay: "پچھلا دن",
         btnToday: "آج",
+        btnCurrentToday: "آج (موجودہ)",
         btnNextDay: "اگلا دن",
         statusDraft: "غیر محفوظ اندراج (ڈرافٹ)",
         statusLocked: "محفوظ شدہ و متوازن دن",
@@ -2731,7 +2740,7 @@
     }
 
     function navigateDate(offset) {
-      const parts = appState.selectedDate.split('-');
+      const parts = (appState.selectedDate || getTodayString()).split('-');
       const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
       d.setDate(d.getDate() + offset);
       const newIso = formatISODate(d);
@@ -2739,7 +2748,13 @@
       const dateInp = document.getElementById('entryDate');
       if (dateInp) dateInp.value = newIso;
       updateDateDayDisplay();
+      renderDailyRoznamchaOverview(newIso);
       loadDayIntoTerminal(newIso);
+
+      const sel = document.getElementById('publicMonthSelector');
+      if (sel) {
+        sel.value = newIso.substring(0, 7);
+      }
     }
 
     function goToToday() {
@@ -2748,7 +2763,13 @@
       const dateInp = document.getElementById('entryDate');
       if (dateInp) dateInp.value = today;
       updateDateDayDisplay();
+      renderDailyRoznamchaOverview(today);
       loadDayIntoTerminal(today);
+
+      const sel = document.getElementById('publicMonthSelector');
+      if (sel) {
+        sel.value = today.substring(0, 7);
+      }
     }
 
     function updateDateDayDisplay() {
