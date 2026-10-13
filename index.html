@@ -299,9 +299,12 @@
 
         <!-- Card 5: Market Credit (Udhaar) -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
-          <div class="flex items-center justify-between text-amber-800 mb-2">
-            <span class="text-xs sm:text-sm font-bold tracking-tight truncate text-amber-900" data-i18n="kpiMarketCreditLabel">Market Credit</span>
-            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center text-xs shrink-0">
+          <div class="flex items-start justify-between text-amber-800 mb-2">
+            <div class="leading-tight text-amber-900 font-bold tracking-tight text-xs sm:text-sm">
+              <span class="block whitespace-nowrap" data-i18n="kpiMarketCreditLabelMain">Market Credit</span>
+              <span class="block text-[11px] sm:text-xs font-semibold text-amber-700/90 mt-0.5" data-i18n="kpiMarketCreditLabelSub">(Udhaar)</span>
+            </div>
+            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center text-xs shrink-0 mt-0.5">
               <i class="fa-solid fa-hand-holding-dollar"></i>
             </div>
           </div>
@@ -2111,6 +2114,8 @@
         kpiClosingCashLabel: "Closing Cash",
         kpiClosingSubtext: "(Avail. - Outflows)",
         kpiMarketCreditLabel: "Market Credit (Udhaar)",
+        kpiMarketCreditLabelMain: "Market Credit",
+        kpiMarketCreditLabelSub: "(Udhaar)",
         kpiCreditSubtext: "Total Active Receivables",
         btnPrevDay: "Prev",
         btnToday: "Today",
@@ -2315,7 +2320,9 @@
         kpiTodayOutflowsLabel: "آج کے کل اخراجات",
         kpiClosingCashLabel: "باقی کیش (روکڑ)",
         kpiClosingSubtext: "(دستیاب رقم منفی اخراجات)",
-        kpiMarketCreditLabel: "مارکیٹ ادھار (وصولیاں)",
+        kpiMarketCreditLabel: "مارکیٹ ادھار (ادھار)",
+        kpiMarketCreditLabelMain: "مارکیٹ ادھار",
+        kpiMarketCreditLabelSub: "(ادھار)",
         kpiCreditSubtext: "کل واجب الوصول مارکیٹ ادھار",
         btnPrevDay: "پچھلا دن",
         btnToday: "آج",
@@ -3334,6 +3341,19 @@
 
       const kpiCredit = document.querySelector('[data-i18n="kpiMarketCreditLabel"]');
       if (kpiCredit && s.kpiCredit) kpiCredit.textContent = s.kpiCredit;
+
+      const kpiCreditMain = document.querySelector('[data-i18n="kpiMarketCreditLabelMain"]');
+      const kpiCreditSub = document.querySelector('[data-i18n="kpiMarketCreditLabelSub"]');
+      if (kpiCreditMain && s.kpiCredit) {
+        if (s.kpiCredit.includes('(')) {
+          const parts = s.kpiCredit.split('(');
+          kpiCreditMain.textContent = parts[0].trim();
+          if (kpiCreditSub) kpiCreditSub.textContent = `(${parts[1]}`;
+        } else {
+          kpiCreditMain.textContent = s.kpiCredit;
+          if (kpiCreditSub) kpiCreditSub.textContent = appState.language === 'ur' ? '(ادھار)' : '(Udhaar)';
+        }
+      }
 
       // 5. Currency Symbol
       if (s.currencySymbol) {
