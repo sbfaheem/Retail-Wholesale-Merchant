@@ -310,7 +310,7 @@
           </div>
           <div class="mt-auto pt-1">
             <div id="kpiClosingMarketCredit" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-amber-800 tracking-tight tabular-nums">PKR 0</div>
-            <div id="kpiCreditSubtext" class="text-[11px] sm:text-xs text-amber-700 font-semibold leading-tight mt-1 break-words">Active Receivables</div>
+            <div id="kpiCreditSubtext" data-i18n="kpiCreditSubtext" class="text-[11px] sm:text-xs text-amber-700 font-semibold leading-tight mt-1 break-words">Active Receivables</div>
           </div>
         </div>
 
@@ -324,7 +324,7 @@
           </div>
           <div class="mt-auto pt-1">
             <div id="kpiCurrentMonthSales" class="text-2xl sm:text-2xl lg:text-xl font-black font-mono text-teal-800 tracking-tight tabular-nums">PKR 0</div>
-            <div id="kpiCurMonthProgressBadge" class="text-[11px] sm:text-xs text-teal-700 font-semibold leading-tight mt-1 break-words">Cumulative Total</div>
+            <div id="kpiCurMonthProgressBadge" data-i18n="kpiCurMonthSubtext" class="text-[11px] sm:text-xs text-teal-700 font-semibold leading-tight mt-1 break-words">Cumulative Total</div>
           </div>
         </div>
 
@@ -418,7 +418,7 @@
             </div>
             <button type="button" onclick="viewDailySlipModal(appState.selectedDate)" class="min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer shadow-sm">
               <i class="fa-solid fa-receipt text-indigo-600"></i>
-              <span>Print Day Slip</span>
+              <span data-i18n="btnDailySlip">Print Day Slip</span>
             </button>
           </div>
         </div>
@@ -436,7 +436,7 @@
                   </span>
                   <span data-i18n="sheetInflowHeading">1. Available Funds & Cash Inflow</span>
                 </h3>
-                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" data-i18n="sheetInflowTag">
                   Inflow
                 </span>
               </div>
@@ -450,7 +450,7 @@
                     </div>
                     <div>
                       <span class="text-[11px] font-bold text-slate-500 block" data-i18n="thOpeningCash">Opening Cash</span>
-                      <span class="text-[10px] text-slate-400 font-mono">Brought forward from yesterday</span>
+                      <span class="text-[10px] text-slate-400 font-mono" data-i18n="sheetBroughtForwardSub">Brought forward from yesterday</span>
                     </div>
                   </div>
                   <span id="publicSheetOpeningVal" class="text-base font-black font-mono text-slate-800 tabular-nums">PKR 0</span>
@@ -464,7 +464,7 @@
                     </div>
                     <div>
                       <span class="text-[11px] font-black text-emerald-900 block" data-i18n="thCol1Sale">Col 1: Today's Cash Sale</span>
-                      <span class="text-[10px] text-emerald-700 font-mono">Gross counter cash turnover</span>
+                      <span class="text-[10px] text-emerald-700 font-mono" data-i18n="sheetGrossSaleSub">Gross counter cash turnover</span>
                     </div>
                   </div>
                   <span id="publicSheetSaleVal" class="text-lg font-black font-mono text-emerald-800 tabular-nums">PKR 0</span>
@@ -476,7 +476,7 @@
             <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between p-4 rounded-2xl bg-sky-50 border border-sky-200">
               <div>
                 <span class="text-xs font-black text-sky-950 uppercase tracking-wider block" data-i18n="thCol2TotalAvail">Col 2: Total Available Funds</span>
-                <span class="text-[11px] text-sky-700 font-mono font-medium">(Opening Balance + Daily Sale)</span>
+                <span class="text-[11px] text-sky-700 font-mono font-medium" data-i18n="sheetCol2Formula">(Opening Balance + Daily Sale)</span>
               </div>
               <span id="publicSheetAvailableVal" class="text-2xl font-black font-mono text-sky-900 tabular-nums">PKR 0</span>
             </div>
@@ -496,7 +496,7 @@
                   <span id="publicSheetOutflowCountBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-slate-100 text-slate-600">
                     0 items
                   </span>
-                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200" data-i18n="sheetOutflowTag">
                     Outflows
                   </span>
                 </div>
@@ -512,7 +512,7 @@
             <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between p-4 rounded-2xl bg-rose-50 border border-rose-200">
               <div>
                 <span class="text-xs font-black text-rose-950 uppercase tracking-wider block" data-i18n="thCol3Outflows">Col 3: Total Outflows Today</span>
-                <span class="text-[11px] text-rose-700 font-mono font-medium">All recorded payouts & expense lines</span>
+                <span class="text-[11px] text-rose-700 font-mono font-medium" data-i18n="sheetCol3Formula">All recorded payouts & expense lines</span>
               </div>
               <span id="publicSheetTotalOutflowsVal" class="text-2xl font-black font-mono text-rose-700 tabular-nums">PKR 0</span>
             </div>
@@ -529,7 +529,7 @@
               </span>
               <span data-i18n="sheetSettlementHeading">3. Daily Closing Settlement & Net Cash-in-Hand</span>
             </h3>
-            <span class="text-xs text-slate-400 font-mono font-bold">Final Day Tally</span>
+            <span class="text-xs text-slate-400 font-mono font-bold" data-i18n="sheetFinalTallyTag">Final Day Tally</span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
@@ -538,11 +538,11 @@
             <div class="p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-emerald-50/50 border border-sky-200 flex flex-col justify-between shadow-sm">
               <div>
                 <span class="text-xs font-black text-sky-950 uppercase tracking-wider block" data-i18n="thCol4ClosingCash">Col 4: Net Closing Cash-in-Hand</span>
-                <span class="text-[11px] text-slate-500 font-mono block mt-0.5">Available Funds minus Total Outflows</span>
+                <span class="text-[11px] text-slate-500 font-mono block mt-0.5" data-i18n="sheetCol4Formula">Available Funds minus Total Outflows</span>
               </div>
               <div class="mt-4">
                 <span id="publicSheetClosingCashVal" class="text-3xl sm:text-4xl font-black font-mono text-sky-950 tracking-tight tabular-nums">PKR 0</span>
-                <span class="text-[11px] text-emerald-700 font-bold block mt-1 flex items-center gap-1">
+                <span class="text-[11px] text-emerald-700 font-bold block mt-1 flex items-center gap-1" data-i18n="sheetReconciledBadge">
                   <i class="fa-solid fa-circle-check text-[10px]"></i> Reconciled Cash Balance
                 </span>
               </div>
@@ -552,19 +552,19 @@
             <div class="p-5 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col justify-between">
               <div>
                 <span class="text-xs font-black text-amber-950 uppercase tracking-wider block" data-i18n="thCol5MarketCredit">Col 5: Market Credit (Udhaar) Today</span>
-                <span class="text-[11px] text-slate-500 font-mono block mt-0.5">Counter client debt activity</span>
+                <span class="text-[11px] text-slate-500 font-mono block mt-0.5" data-i18n="sheetCol5Sub">Counter client debt activity</span>
               </div>
               <div class="mt-4 space-y-2">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-slate-600 font-medium">+ Credit Given (ادھار دیا):</span>
+                  <span class="text-slate-600 font-medium" data-i18n="sheetCreditGivenLbl">+ Credit Given (Udhaar Diya):</span>
                   <span id="publicSheetCreditGivenVal" class="font-mono font-bold text-amber-800">PKR 0</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-slate-600 font-medium">- Cash Recovered (وصولی ہوئی):</span>
+                  <span class="text-slate-600 font-medium" data-i18n="sheetCreditRecoveredLbl">- Cash Recovered (Wapasi):</span>
                   <span id="publicSheetCreditRecoveredVal" class="font-mono font-bold text-emerald-700">PKR 0</span>
                 </div>
                 <div class="pt-2 border-t border-amber-200/60 flex items-center justify-between text-xs font-bold">
-                  <span class="text-amber-950">Active Market Receivables:</span>
+                  <span class="text-amber-950" data-i18n="sheetActiveReceivablesLbl">Active Market Receivables:</span>
                   <span id="publicSheetTotalReceivablesVal" class="font-mono text-amber-900 font-black">PKR 0</span>
                 </div>
               </div>
@@ -573,14 +573,14 @@
             <!-- Daily Operational Memo -->
             <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
               <div>
-                <span class="text-xs font-black text-slate-800 uppercase tracking-wider block">Daily Memo & Operational Notes</span>
-                <span class="text-[11px] text-slate-400 font-mono block mt-0.5">Audit log & day remarks</span>
+                <span class="text-xs font-black text-slate-800 uppercase tracking-wider block" data-i18n="sheetMemoTitle">Daily Memo & Operational Notes</span>
+                <span class="text-[11px] text-slate-400 font-mono block mt-0.5" data-i18n="sheetMemoSub">Audit log & day remarks</span>
               </div>
               <div class="mt-3">
-                <p id="publicSheetNotesVal" class="text-xs text-slate-700 italic bg-white p-3 rounded-xl border border-slate-200 min-h-[56px] flex items-center">
+                <p id="publicSheetNotesVal" data-i18n="sheetMemoEmpty" class="text-xs text-slate-700 italic bg-white p-3 rounded-xl border border-slate-200 min-h-[56px] flex items-center">
                   No memo recorded for this date.
                 </p>
-                <span class="text-[10px] text-slate-400 font-bold block mt-2 text-right">
+                <span class="text-[10px] text-slate-400 font-bold block mt-2 text-right" data-i18n="sheetMemoVerified">
                   Verified & Sealed Record
                 </span>
               </div>
@@ -883,29 +883,20 @@
     <!-- Public Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 no-print mt-auto">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center space-x-2 rtl:space-x-reverse">
-          <span class="font-bold text-slate-800" id="footerShopName">Daily Cash Book & Financial Management</span>
+        <div class="flex flex-wrap items-center gap-2 rtl:space-x-reverse">
+          <span class="font-bold text-slate-800" id="footerShopName" data-i18n="footerShopName">Daily Cash Book & Financial Management</span>
           <span>&bull;</span>
           <span data-i18n="footerAuditedText">Verified Cash Ledger & Management System</span>
+          <span class="hidden md:inline">&bull;</span>
+          <span data-i18n="footerBilingual" class="hidden md:inline">English & اردو Support</span>
         </div>
         <div class="flex items-center space-x-4 rtl:space-x-reverse">
-          <span class="font-mono text-[11px]">Last Synced: <span id="dbLastSyncTime">Live</span></span>
-          <button type="button" onclick="navigateToAdmin()" class="font-bold text-emerald-700 hover:text-emerald-900 underline cursor-pointer">Admin Portal</button>
+          <span class="font-mono text-[11px]"><span data-i18n="footerLastSynced">Last Synced:</span> <span id="dbLastSyncTime" data-i18n="footerLive">Live</span></span>
+          <button type="button" onclick="navigateToAdmin()" data-i18n="footerAdminPortal" class="font-bold text-emerald-700 hover:text-emerald-900 underline cursor-pointer">Admin Portal</button>
         </div>
       </div>
     </footer>
 
-  </div>
-
-
-<div class="flex items-center gap-4 text-[11px] text-slate-500">
-        <span data-i18n="footerPersistent">Persistent Local Storage</span>
-        <span>&bull;</span>
-        <span data-i18n="footerBilingual">English & اردو Support</span>
-
-      </div>
-    </div>
-  </footer>
   </div>
 
 
@@ -2123,7 +2114,7 @@
         btnNextDay: "Next",
         statusDraft: "Draft Entry",
         statusLocked: "Day Locked & Balanced",
-        btnDailySlip: "Daily Slip",
+        btnDailySlip: "Print Day Slip",
         headerInflowBalances: "Cash Inflow & Balances",
         tagCols12: "Cols 1 & 2",
         lblOpeningBalance: "Previous Closing Balance (Opening)",
@@ -2290,6 +2281,35 @@
         footerText: "Light Theme Single Page Cash Ledger & Admin System (PKR Only)",
         footerPersistent: "Persistent Local Storage",
         footerBilingual: "English & اردو Support",
+        kpiCurMonthLabel: "This Month Sale",
+        kpiCurMonthSubtext: "Cumulative Total",
+        kpiPriorMonthLabel: "Last Month Sale",
+        kpiPriorMonthSubtext: "0% Prior Baseline",
+        sheetInflowHeading: "1. Available Funds & Cash Inflow",
+        sheetInflowTag: "Inflow",
+        sheetBroughtForwardSub: "Brought forward from yesterday",
+        sheetGrossSaleSub: "Gross counter cash turnover",
+        sheetCol2Formula: "(Opening Balance + Daily Sale)",
+        sheetOutflowsHeading: "2. Purchases & Outflow Disbursements",
+        sheetOutflowTag: "Outflows",
+        sheetCol3Formula: "All recorded payouts & expense lines",
+        sheetSettlementHeading: "3. Daily Closing Settlement & Net Cash-in-Hand",
+        sheetFinalTallyTag: "Final Day Tally",
+        sheetCol4Formula: "Available Funds minus Total Outflows",
+        sheetReconciledBadge: '<i class="fa-solid fa-circle-check text-[10px]"></i> Reconciled Cash Balance',
+        sheetCol5Sub: "Counter client debt activity",
+        sheetCreditGivenLbl: "+ Credit Given (Udhaar Diya):",
+        sheetCreditRecoveredLbl: "- Cash Recovered (Wapasi):",
+        sheetActiveReceivablesLbl: "Active Market Receivables:",
+        sheetMemoTitle: "Daily Memo & Operational Notes",
+        sheetMemoSub: "Audit log & day remarks",
+        sheetMemoEmpty: "No memo recorded for this date.",
+        sheetMemoVerified: "Verified & Sealed Record",
+        footerShopName: "Daily Cash Book & Financial Management",
+        footerAuditedText: "Verified Cash Ledger & Management System",
+        footerLastSynced: "Last Synced:",
+        footerLive: "Live",
+        footerAdminPortal: "Admin Portal",
       },
       ur: {
         appTitle: "ڈیلی کیش بک و فنانشل مینجمنٹ",
@@ -2330,7 +2350,7 @@
         btnNextDay: "اگلا دن",
         statusDraft: "غیر محفوظ اندراج (ڈرافٹ)",
         statusLocked: "محفوظ شدہ و متوازن دن",
-        btnDailySlip: "کچا پرچہ / سلپ",
+        btnDailySlip: "کچا پرچہ / سلپ پرنٹ کریں",
         headerInflowBalances: "کیش آمدنی و کل دستیاب رقم",
         tagCols12: "کالم ۱ و ۲",
         lblOpeningBalance: "پچھلا بقایا کیش (ابتدائی رقم)",
@@ -2497,6 +2517,35 @@
         footerText: "لائٹ تھیم سنگل پیج کیش بک و ایڈمن مینجمنٹ سسٹم (صرف پاکستانی روپیہ)",
         footerPersistent: "مستقل براؤزر اسٹوریج",
         footerBilingual: "انگریزی و اردو زبان کی سہولت",
+        kpiCurMonthLabel: "اس ماہ کی فروخت",
+        kpiCurMonthSubtext: "مجموعی فروخت",
+        kpiPriorMonthLabel: "گزشتہ ماہ فروخت",
+        kpiPriorMonthSubtext: "۰٪ سابقہ بنیاد",
+        sheetInflowHeading: "۱. دستیاب فنڈز اور یومیہ کیش آمدنی",
+        sheetInflowTag: "آمدنی",
+        sheetBroughtForwardSub: "پچھلے دن سے منتقل شدہ کیش",
+        sheetGrossSaleSub: "کاؤنٹر کی کل یومیہ فروخت",
+        sheetCol2Formula: "(ابتدائی رقم + یومیہ فروخت)",
+        sheetOutflowsHeading: "۲. خریداری اور اخراجات کی تفصیلات",
+        sheetOutflowTag: "اخراجات",
+        sheetCol3Formula: "تمام ریکارڈ شدہ اخراجات اور ادائیگیاں",
+        sheetSettlementHeading: "۳. یومیہ اختتامی حساب و خالص کیش ان ہینڈ",
+        sheetFinalTallyTag: "یومیہ حتمی میزان",
+        sheetCol4Formula: "دستیاب رقم منفی کل اخراجات",
+        sheetReconciledBadge: '<i class="fa-solid fa-circle-check text-[10px]"></i> متوازن و تصدیق شدہ کیش',
+        sheetCol5Sub: "کسٹمر و مارکیٹ ادھار کی تفصیل",
+        sheetCreditGivenLbl: "+ نیا ادھار دیا گیا:",
+        sheetCreditRecoveredLbl: "- وصولی و واپسی:",
+        sheetActiveReceivablesLbl: "کل واجب الوصول مارکیٹ ادھار:",
+        sheetMemoTitle: "روزنامچہ یادداشت و انتظامی نوٹس",
+        sheetMemoSub: "آڈٹ لاگ اور یومیہ ریمارکس",
+        sheetMemoEmpty: "اس تاریخ کا کوئی میمو یا نوٹ درج نہیں۔",
+        sheetMemoVerified: "تصدیق شدہ اور محفوظ ریکارڈ",
+        footerShopName: "روزنامچہ کیش بک اور مالیاتی نظام",
+        footerAuditedText: "تصدیق شدہ کیش لیجر اور منیجمنٹ سسٹم",
+        footerLastSynced: "آخری ہم آہنگی:",
+        footerLive: "لائیو",
+        footerAdminPortal: "ایڈمن پورٹل",
       }
     };
 
@@ -2703,7 +2752,11 @@
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (dict[key]) {
-          el.textContent = dict[key];
+          if (dict[key].includes('<i class=') || dict[key].includes('<span') || dict[key].includes('<br>')) {
+            el.innerHTML = dict[key];
+          } else {
+            el.textContent = dict[key];
+          }
         }
       });
 
@@ -3294,69 +3347,75 @@
 
     function applyDynamicCmsSettings() {
       const s = appState.systemSettings || DEFAULT_CMS_SETTINGS;
+      const isUr = appState.language === 'ur';
 
       // 1. Browser Title
       if (s.browserTitle) {
         document.title = s.browserTitle;
       }
 
-      // 2. Main Header Title & Subtitle
+      // If user selected Urdu, default CMS strings in English must NOT clobber Urdu translations
+      const isCustomTitle = s.headerTitle && s.headerTitle !== DEFAULT_CMS_SETTINGS.headerTitle;
       const titleSpan = document.querySelector('[data-i18n="appTitle"]');
-      if (titleSpan && s.headerTitle) {
+      if (titleSpan && (!isUr || isCustomTitle)) {
         titleSpan.textContent = s.headerTitle;
       }
+
+      const isCustomSub = s.headerSubtitle && s.headerSubtitle !== DEFAULT_CMS_SETTINGS.headerSubtitle;
       const subtitleP = document.querySelector('[data-i18n="appSubtitle"]');
-      if (subtitleP && s.headerSubtitle) {
+      if (subtitleP && (!isUr || isCustomSub)) {
         subtitleP.textContent = s.headerSubtitle;
       }
 
-      // 3. 5-Column Core Register Headers in public table
-      const th1 = document.querySelector('th[data-i18n="thCol1Sale"]');
-      if (th1 && s.col1Name) th1.textContent = s.col1Name;
+      if (!isUr) {
+        // 3. 5-Column Core Register Headers in public table
+        const th1 = document.querySelector('th[data-i18n="thCol1Sale"]');
+        if (th1 && s.col1Name) th1.textContent = s.col1Name;
 
-      const th2 = document.querySelector('th[data-i18n="thCol2TotalAvail"]');
-      if (th2 && s.col2Name) th2.textContent = s.col2Name;
+        const th2 = document.querySelector('th[data-i18n="thCol2TotalAvail"]');
+        if (th2 && s.col2Name) th2.textContent = s.col2Name;
 
-      const th3 = document.querySelector('th[data-i18n="thCol3Outflows"]');
-      if (th3 && s.col3Name) th3.textContent = s.col3Name;
+        const th3 = document.querySelector('th[data-i18n="thCol3Outflows"]');
+        if (th3 && s.col3Name) th3.textContent = s.col3Name;
 
-      const th4 = document.querySelector('th[data-i18n="thCol4ClosingCash"]');
-      if (th4 && s.col4Name) th4.textContent = s.col4Name;
+        const th4 = document.querySelector('th[data-i18n="thCol4ClosingCash"]');
+        if (th4 && s.col4Name) th4.textContent = s.col4Name;
 
-      const th5 = document.querySelector('th[data-i18n="thCol5MarketCredit"]');
-      if (th5 && s.col5Name) th5.textContent = s.col5Name;
+        const th5 = document.querySelector('th[data-i18n="thCol5MarketCredit"]');
+        if (th5 && s.col5Name) th5.textContent = s.col5Name;
 
-      // 4. Top KPI Card Labels
-      const kpiOpening = document.querySelector('[data-i18n="kpiOpeningCashLabel"]');
-      if (kpiOpening && s.kpiOpening) kpiOpening.textContent = s.kpiOpening;
+        // 4. Top KPI Card Labels
+        const kpiOpening = document.querySelector('[data-i18n="kpiOpeningCashLabel"]');
+        if (kpiOpening && s.kpiOpening) kpiOpening.textContent = s.kpiOpening;
 
-      const kpiSales = document.querySelector('[data-i18n="kpiTodaySalesLabel"]');
-      if (kpiSales && s.kpiSales) kpiSales.textContent = s.kpiSales;
+        const kpiSales = document.querySelector('[data-i18n="kpiTodaySalesLabel"]');
+        if (kpiSales && s.kpiSales) kpiSales.textContent = s.kpiSales;
 
-      const kpiOutflows = document.querySelector('[data-i18n="kpiTodayOutflowsLabel"]');
-      if (kpiOutflows && s.kpiOutflows) kpiOutflows.textContent = s.kpiOutflows;
+        const kpiOutflows = document.querySelector('[data-i18n="kpiTodayOutflowsLabel"]');
+        if (kpiOutflows && s.kpiOutflows) kpiOutflows.textContent = s.kpiOutflows;
 
-      const kpiClosing = document.querySelector('[data-i18n="kpiClosingCashLabel"]');
-      if (kpiClosing && s.kpiClosing) kpiClosing.textContent = s.kpiClosing;
+        const kpiClosing = document.querySelector('[data-i18n="kpiClosingCashLabel"]');
+        if (kpiClosing && s.kpiClosing) kpiClosing.textContent = s.kpiClosing;
 
-      const kpiCredit = document.querySelector('[data-i18n="kpiMarketCreditLabel"]');
-      if (kpiCredit && s.kpiCredit) kpiCredit.textContent = s.kpiCredit;
+        const kpiCredit = document.querySelector('[data-i18n="kpiMarketCreditLabel"]');
+        if (kpiCredit && s.kpiCredit) kpiCredit.textContent = s.kpiCredit;
 
-      const kpiCreditMain = document.querySelector('[data-i18n="kpiMarketCreditLabelMain"]');
-      const kpiCreditSub = document.querySelector('[data-i18n="kpiMarketCreditLabelSub"]');
-      if (kpiCreditMain && s.kpiCredit) {
-        if (s.kpiCredit.includes('(')) {
-          const parts = s.kpiCredit.split('(');
-          kpiCreditMain.textContent = parts[0].trim();
-          if (kpiCreditSub) kpiCreditSub.textContent = `(${parts[1]}`;
-        } else {
-          kpiCreditMain.textContent = s.kpiCredit;
-          if (kpiCreditSub) kpiCreditSub.textContent = appState.language === 'ur' ? '(ادھار)' : '(Udhaar)';
+        const kpiCreditMain = document.querySelector('[data-i18n="kpiMarketCreditLabelMain"]');
+        const kpiCreditSub = document.querySelector('[data-i18n="kpiMarketCreditLabelSub"]');
+        if (kpiCreditMain && s.kpiCredit) {
+          if (s.kpiCredit.includes('(')) {
+            const parts = s.kpiCredit.split('(');
+            kpiCreditMain.textContent = parts[0].trim();
+            if (kpiCreditSub) kpiCreditSub.textContent = `(${parts[1]}`;
+          } else {
+            kpiCreditMain.textContent = s.kpiCredit;
+            if (kpiCreditSub) kpiCreditSub.textContent = '(Udhaar)';
+          }
         }
       }
 
       // 5. Currency Symbol
-      if (s.currencySymbol) {
+      if (s.currencySymbol && !isUr) {
         appState.currency = s.currencySymbol;
         const curBadge = document.querySelector('[data-i18n="currencyPKRBadge"]');
         if (curBadge) curBadge.textContent = `${s.currencySymbol} Only`;
@@ -3364,7 +3423,7 @@
 
       // 6. Footer Text
       const footerSpan = document.querySelector('[data-i18n="footerText"]');
-      if (footerSpan && s.footerText) {
+      if (footerSpan && s.footerText && !isUr) {
         footerSpan.textContent = s.footerText;
       }
     }
@@ -4091,6 +4150,7 @@
     function refreshAllViews() {
       updateTopKPIBadges();
       loadDayIntoTerminal(appState.selectedDate);
+      renderDailyRoznamchaOverview(appState.selectedDate);
       renderRegisterTable();
       renderAnalyticsTab();
       renderVendorDirectory();
@@ -4357,7 +4417,7 @@
       }
 
       // 5. Market Credit (Auto vs Override)
-      const credElem = document.getElementById('kpiMarketCredit');
+      const credElem = document.getElementById('kpiClosingMarketCredit') || document.getElementById('kpiMarketCredit');
       if (credElem) {
         const val = (ovr.marketCredit && ovr.marketCredit.enabled) 
           ? ovr.marketCredit.value 
@@ -4368,19 +4428,22 @@
       if (targetRecord) {
 
         const isUr = appState.language === 'ur';
-        document.getElementById('kpiSalesCount').textContent = `${formatDateDisplay(targetRecord.date)} (${getShortDayName(targetRecord.date)})`;
-        document.getElementById('kpiOutflowCount').textContent = isUr 
+        const salesCount = document.getElementById('kpiSalesCount');
+        if (salesCount) salesCount.textContent = `${formatDateDisplay(targetRecord.date)} (${getShortDayName(targetRecord.date)})`;
+        const outflowCount = document.getElementById('kpiOutflowCount');
+        if (outflowCount) outflowCount.textContent = isUr 
           ? `${(targetRecord.outflows || []).length} لائن اندراجات` 
           : `${(targetRecord.outflows || []).length} payment line(s)`;
-        document.getElementById('kpiOpeningSubtext').textContent = isUr
+        const opSub = document.getElementById('kpiOpeningSubtext');
+        if (opSub) opSub.textContent = isUr
           ? `${getShortDayName(targetRecord.date)} کا ابتدائی کیش`
           : `Rolled into ${getShortDayName(targetRecord.date)}`;
       } else {
-        document.getElementById('kpiOpeningCash').textContent = formatCurrency(0);
-        document.getElementById('kpiTodaySales').textContent = formatCurrency(0);
-        document.getElementById('kpiTodayOutflows').textContent = formatCurrency(0);
-        document.getElementById('kpiClosingCash').textContent = formatCurrency(0);
-        document.getElementById('kpiMarketCredit').textContent = formatCurrency(0);
+        const op = document.getElementById('kpiOpeningCash'); if (op) op.textContent = formatCurrency(0);
+        const sl = document.getElementById('kpiTodaySales'); if (sl) sl.textContent = formatCurrency(0);
+        const ot = document.getElementById('kpiTodayOutflows'); if (ot) ot.textContent = formatCurrency(0);
+        const cl = document.getElementById('kpiClosingCash'); if (cl) cl.textContent = formatCurrency(0);
+        const cr = document.getElementById('kpiClosingMarketCredit') || document.getElementById('kpiMarketCredit'); if (cr) cr.textContent = formatCurrency(0);
       }
 
       // Update Metric 6 (Current Month Sales) and Metric 7 (Last Month Sales & Profit/Loss)
@@ -4521,7 +4584,7 @@
         curMonthDaysElem.textContent = isUr ? `${m.curMonthDays} دن` : `${m.curMonthDays} day(s)`;
       }
 
-      const priorSalesElem = document.getElementById('kpiLastMonthSales');
+      const priorSalesElem = document.getElementById('kpiPriorMonthSales') || document.getElementById('kpiLastMonthSales');
       if (priorSalesElem) {
         const val = (ovr.lastMonthSales && ovr.lastMonthSales.enabled) 
           ? ovr.lastMonthSales.value 
@@ -4539,6 +4602,13 @@
         deltaBadgeElem.className = m.isProfit 
           ? 'font-mono text-emerald-700 font-black' 
           : 'font-mono text-rose-700 font-black';
+      }
+
+      const monthGrowthBadge = document.getElementById('kpiMonthGrowthBadge');
+      if (monthGrowthBadge) {
+        const sign = m.isProfit ? '+' : '';
+        const baselineText = isUr ? 'سابقہ بنیاد' : 'Prior Baseline';
+        monthGrowthBadge.textContent = `${sign}${m.deltaPercentage}% ${baselineText}`;
       }
 
       const statusPillElem = document.getElementById('kpiMonthlyStatusPill');
@@ -4753,12 +4823,12 @@
                 <div class="flex items-center gap-1.5">
                   <button type="button" onclick="viewDailySlipModal('${r.date}')" title="Print Slip" class="min-h-[44px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-200 shadow-sm">
                     <i class="fa-solid fa-receipt text-indigo-600"></i>
-                    <span>Slip</span>
+                    <span>${isUr ? 'پرچہ' : 'Slip'}</span>
                   </button>
                   ${appState.isAdminLoggedIn ? `
                     <button type="button" onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="min-h-[44px] px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer border border-emerald-200 shadow-sm">
                       <i class="fa-solid fa-pen-to-square"></i>
-                      <span>Edit</span>
+                      <span>${isUr ? 'ترمیم' : 'Edit'}</span>
                     </button>
                   ` : ''}
                 </div>
@@ -4822,7 +4892,7 @@
 
               ${r.notes ? `
                 <div class="text-xs text-slate-700 italic bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
-                  <span class="font-bold text-slate-900 not-italic">Memo:</span> ${escapeHtml(r.notes)}
+                  <span class="font-bold text-slate-900 not-italic">${isUr ? 'یادداشت' : 'Memo'}:</span> ${escapeHtml(r.notes)}
                 </div>
               ` : ''}
             </div>
@@ -7752,14 +7822,14 @@
       if (dateInp) dateInp.value = dt;
 
       const dayBadge = document.getElementById('dayNameDisplay');
-      if (dayBadge) dayBadge.textContent = getDayName(dt).toUpperCase();
+      if (dayBadge) dayBadge.textContent = isUr ? getDayName(dt) : getDayName(dt).toUpperCase();
 
       const statusBadge = document.getElementById('publicDayStatusBadge');
       const statusText = document.getElementById('publicDayStatusText');
       if (statusBadge && statusText) {
         if (r) {
           statusBadge.className = 'text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200';
-          statusText.textContent = isUr ? 'دن محفوظ اور متوازن ہے' : 'Balanced & Closed Register';
+          statusText.textContent = isUr ? 'محفوظ شدہ و متوازن دن' : 'Balanced & Closed Register';
         } else {
           statusBadge.className = 'text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-300';
           statusText.textContent = isUr ? 'غیر ریکارڈ شدہ تاریخ' : 'No Transactions Recorded';
@@ -7788,7 +7858,7 @@
       const outflows = (r && Array.isArray(r.outflows)) ? r.outflows : [];
       let sumOutflows = 0;
 
-      if (outflowsCountBadge) outflowsCountBadge.textContent = `${outflows.length} ${isUr ? 'اندراج' : 'items'}`;
+      if (outflowsCountBadge) outflowsCountBadge.textContent = `${outflows.length} ${isUr ? 'اندراجات' : 'items'}`;
 
       if (outflowsList) {
         if (outflows.length === 0) {
@@ -7804,19 +7874,28 @@
             sumOutflows += amt;
             const cat = o.category || 'Vendor';
             let catPill = 'bg-rose-50 text-rose-800 border-rose-200';
-            if (cat === 'Operating') catPill = 'bg-amber-50 text-amber-800 border-amber-200';
-            else if (cat === 'Staff') catPill = 'bg-indigo-50 text-indigo-800 border-indigo-200';
+            let catLabel = cat;
+            if (cat === 'Operating') {
+              catPill = 'bg-amber-50 text-amber-800 border-amber-200';
+              catLabel = isUr ? 'کاروباری اخراجات' : 'Operating';
+            } else if (cat === 'Staff') {
+              catPill = 'bg-indigo-50 text-indigo-800 border-indigo-200';
+              catLabel = isUr ? 'ملازمین تنخواہ' : 'Staff';
+            } else if (cat === 'Vendor') {
+              catLabel = isUr ? 'وینڈر ادائیگی' : 'Vendor';
+            }
+            const partyName = o.party || (isUr ? 'عام ادائیگی' : 'General Payment');
 
             return `
               <div class="p-3 rounded-2xl bg-slate-50 hover:bg-rose-50/40 border border-slate-200 transition-colors flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 text-rose-600 flex items-center justify-center font-bold text-xs shadow-sm">
-                    ${(o.party || 'P').substring(0, 2).toUpperCase()}
+                    ${(partyName).substring(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <span class="text-xs font-bold text-slate-900 block">${escapeHtml(o.party || 'General Payment')}</span>
+                    <span class="text-xs font-bold text-slate-900 block">${escapeHtml(partyName)}</span>
                     <div class="flex items-center gap-1.5 mt-0.5">
-                      <span class="text-[10px] px-2 py-0.2 rounded-full font-bold border ${catPill}">${cat}</span>
+                      <span class="text-[10px] px-2 py-0.2 rounded-full font-bold border ${catPill}">${catLabel}</span>
                       ${o.note ? `<span class="text-[10px] text-slate-400 italic truncate max-w-[150px]">${escapeHtml(o.note)}</span>` : ''}
                     </div>
                   </div>
@@ -7856,7 +7935,7 @@
           notesElem.classList.remove('text-slate-400', 'italic');
           notesElem.classList.add('text-slate-800', 'font-medium');
         } else {
-          notesElem.textContent = isUr ? 'کوئی نوٹس درج نہیں ہے۔' : 'No memo recorded for this date.';
+          notesElem.textContent = isUr ? 'اس تاریخ کا کوئی میمو یا نوٹ درج نہیں۔' : 'No memo recorded for this date.';
           notesElem.classList.add('text-slate-400', 'italic');
           notesElem.classList.remove('text-slate-800', 'font-medium');
         }
