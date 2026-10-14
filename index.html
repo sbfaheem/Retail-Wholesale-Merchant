@@ -926,30 +926,23 @@
         </div>
 
         <div>
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5">USERNAME</label>
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5" data-i18n="lblUsername">USERNAME</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="adminGatewayUsername" required placeholder="admin or superadmin" value="admin"
+            <input type="text" id="adminGatewayUsername" required placeholder="Enter username" autocomplete="username"
               class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-sm font-semibold placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
-          </div>
-          <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium px-1 pt-1.5">
-            <span>Roles:</span>
-            <div class="flex items-center gap-1.5">
-              <button type="button" onclick="setLoginQuickFill('admin')" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-[10px] font-bold cursor-pointer transition-colors" title="Quick fill Admin">admin</button>
-              <button type="button" onclick="setLoginQuickFill('superadmin')" class="px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold cursor-pointer transition-colors" title="Quick fill Super Admin">👑 superadmin</button>
-            </div>
           </div>
         </div>
 
         <div>
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5">PASSWORD</label>
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5" data-i18n="lblPassword">PASSWORD</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">
               <i class="fa-solid fa-key"></i>
             </span>
-            <input type="password" id="adminGatewayPassword" required placeholder="••••••••" value="admin123"
+            <input type="password" id="adminGatewayPassword" required placeholder="••••••••" autocomplete="current-password"
               class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-sm font-semibold placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
             <button type="button" onclick="toggleAdminGatewayPasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">
               <i id="adminGatewayPasswordEye" class="fa-regular fa-eye text-sm"></i>
@@ -2219,6 +2212,8 @@
         lblTotalCreditExtended: "Total Credit Extended:",
         lblTotalRecoveredCash: "Total Recovered Cash:",
         adminBadge: "Admin Control Center",
+        lblUsername: "USERNAME",
+        lblPassword: "PASSWORD",
         lblRoleSuperAdmin: "Super Admin",
         lblRoleStaffAdmin: "Staff Admin",
         btnChangePassword: "Change Password",
@@ -2455,6 +2450,8 @@
         lblTotalCreditExtended: "کل ادھار دیا گیا:",
         lblTotalRecoveredCash: "کل وصول شدہ کیش:",
         adminBadge: "ایڈمن کنٹرول سنٹر",
+        lblUsername: "یوزر نام",
+        lblPassword: "پاس ورڈ",
         lblRoleSuperAdmin: "سپر ایڈمن (مالک)",
         lblRoleStaffAdmin: "اسٹاف ایڈمن",
         btnChangePassword: "پاس ورڈ تبدیل کریں",
@@ -6524,7 +6521,13 @@
         } else {
           if (publicApp) publicApp.classList.add('hidden');
           if (adminApp) adminApp.classList.add('hidden');
-          if (adminLoginScreen) adminLoginScreen.classList.remove('hidden');
+          if (adminLoginScreen) {
+            adminLoginScreen.classList.remove('hidden');
+            const uInp = document.getElementById('adminGatewayUsername');
+            const pInp = document.getElementById('adminGatewayPassword');
+            if (uInp) uInp.value = '';
+            if (pInp) pInp.value = '';
+          }
         }
       } else {
         if (adminLoginScreen) adminLoginScreen.classList.add('hidden');
@@ -6545,6 +6548,10 @@
     }
 
     function returnToPublicView() {
+      const uInp = document.getElementById('adminGatewayUsername');
+      const pInp = document.getElementById('adminGatewayPassword');
+      if (uInp) uInp.value = '';
+      if (pInp) pInp.value = '';
       try {
         window.history.pushState({ view: 'public' }, '', window.location.pathname.replace(/\/admin$/, '') || '/');
       } catch (e) {
@@ -6628,6 +6635,11 @@
           localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(sessionPayload));
         } catch (e) {}
 
+        const uInp = document.getElementById('adminGatewayUsername');
+        const pInp = document.getElementById('adminGatewayPassword');
+        if (uInp) uInp.value = '';
+        if (pInp) pInp.value = '';
+
         routeApp();
         showToastNotification(
           isUr ? 'ایڈمن لاگ ان کامیاب' : 'Admin Authenticated',
@@ -6649,6 +6661,11 @@
         localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
         sessionStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
       } catch (e) {}
+
+      const uInp = document.getElementById('adminGatewayUsername');
+      const pInp = document.getElementById('adminGatewayPassword');
+      if (uInp) uInp.value = '';
+      if (pInp) pInp.value = '';
 
       routeApp();
       const isUr = appState.language === 'ur';
@@ -7971,19 +7988,8 @@
     }
 
 
-    /**
-     * SUPER ADMIN SECURITY & PASSWORD MANAGEMENT FUNCTIONS
-     */
     function setLoginQuickFill(role) {
-      const uInp = document.getElementById('adminGatewayUsername');
-      const pInp = document.getElementById('adminGatewayPassword');
-      if (role === 'superadmin') {
-        if (uInp) uInp.value = 'superadmin';
-        if (pInp) pInp.value = 'superadmin123';
-      } else {
-        if (uInp) uInp.value = 'admin';
-        if (pInp) pInp.value = 'admin123';
-      }
+      // Intentionally empty - public quick fill removed for security
     }
 
     function togglePassField(fieldId, btnElem) {
