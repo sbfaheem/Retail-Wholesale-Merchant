@@ -2670,7 +2670,8 @@
       loadKpiOverrides();
       checkExistingAdminSession();
 
-      // Clean zero-state initialized from database/storage
+      // Automatically purge any dummy demo data while keeping all admin-entered records
+      purgeLegacyDummyData();
 
       initDatePickers();
       renderQuickVendorChips();
@@ -2827,6 +2828,71 @@
       pushStateToDatabase();
     }
 
+    /**
+     * AUTOMATED DATA SANITIZER: PURGES ALL DUMMY / DEMO RECORDS & ACCOUNTS
+     * WHILE STRICTLY PRESERVING ALL ADMIN CREATED & MODIFIED DATA
+     */
+    function purgeLegacyDummyData() {
+      let dataChanged = false;
+      const DEMO_SIGNATURE_NOTES = [
+        'Saturday Counter Opened by Aslam',
+        'Busy Sunday market counter',
+        'Wholesale deliveries to city center',
+        'Major vendor clearing day (Basit consignment clearance)',
+        'Mid-week inventory replenishment',
+        'Peak Thursday wholesale bulk billing',
+        'Current active terminal session'
+      ];
+
+      const DEMO_CUSTOMER_IDS = ['cust-1', 'cust-2', 'cust-3', 'cust-4', 'cust-5'];
+      const DEMO_CUSTOMER_NAMES = [
+        'M/S Khan Cloth Store',
+        'Rahim Garments',
+        'Bismillah Boutique',
+        'Master Tailors & Drapers',
+        'Star Wholesale Fabrics'
+      ];
+
+      // 1. Purge legacy dummy day records from memory and storage
+      if (appState.records && typeof appState.records === 'object') {
+        const cleanedRecords = {};
+        for (const [dateKey, record] of Object.entries(appState.records)) {
+          if (!record) continue;
+          const isExplicitDemo = record.isDemo === true || record.isSample === true;
+          const hasDemoNote = DEMO_SIGNATURE_NOTES.some(sig => (record.notes || '').includes(sig));
+
+          if (isExplicitDemo || hasDemoNote) {
+            dataChanged = true;
+          } else {
+            cleanedRecords[dateKey] = record;
+          }
+        }
+        appState.records = cleanedRecords;
+      }
+
+      // 2. Purge legacy dummy customer debtor accounts
+      if (Array.isArray(appState.customerAccounts)) {
+        const initialCount = appState.customerAccounts.length;
+        appState.customerAccounts = appState.customerAccounts.filter(c => {
+          if (!c) return false;
+          const isDemoId = DEMO_CUSTOMER_IDS.includes(c.id);
+          const isDemoName = DEMO_CUSTOMER_NAMES.some(name => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+          return !isDemoId && !isDemoName;
+        });
+        if (appState.customerAccounts.length !== initialCount) {
+          dataChanged = true;
+        }
+      }
+
+      // 3. If any dummy data was found and pruned, re-persist cleaned state
+      if (dataChanged) {
+        saveRecordsToStorage();
+        recalculateLedgerCascade();
+      }
+
+      return dataChanged;
+    }
+
     function loadStoredRecords() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -2837,6 +2903,7 @@
         if (rawCust) {
           appState.customerAccounts = JSON.parse(rawCust) || [];
         }
+        purgeLegacyDummyData();
       } catch (e) {
         console.error('Failed to parse stored records', e);
         appState.records = {};
@@ -3654,10 +3721,12 @@
             if (serverRecords && Object.keys(serverRecords).length > 0) {
               appState.records = serverRecords;
               if (serverCust) appState.customerAccounts = serverCust;
+              purgeLegacyDummyData();
               saveRecordsToStorage();
               recalculateLedgerCascade();
               refreshAllViews();
             } else if (Object.keys(appState.records).length > 0) {
+              purgeLegacyDummyData();
               // Server is empty, seed it with current records
               await pushStateToDatabase();
             }
@@ -7044,7 +7113,9 @@
         creditGiven: existing.creditGiven || 0,
         creditRecovered: existing.creditRecovered || 0,
         notes: notesVal,
-        outflows: Array.isArray(existing.outflows) ? existing.outflows : []
+        outflows: Array.isArray(existing.outflows) ? existing.outflows : [],
+        lastModifiedByAdmin: true,
+        adminSavedAt: new Date().toISOString()
       };
 
       recalculateLedgerCascade();
@@ -7287,6 +7358,9 @@
       } else {
         appState.records[dt].outflows.push({ party, amount: amt, category: cat, note });
       }
+
+      appState.records[dt].lastModifiedByAdmin = true;
+      appState.records[dt].adminSavedAt = new Date().toISOString();
 
       recalculateLedgerCascade();
       saveRecordsToStorage();
@@ -7543,9 +7617,12 @@
         cust.totalRecovered += amt;
       }
       cust.lastDate = dt;
+      cust.lastModifiedByAdmin = true;
+      cust.adminSavedAt = new Date().toISOString();
 
       // Associate transaction with matching date record if exists
       if (appState.records[dt]) {
+        appState.records[dt].lastModifiedByAdmin = true;
         if (adminUdhaarTxnType === 'given') {
           appState.records[dt].creditGiven = (appState.records[dt].creditGiven || 0) + amt;
         } else {

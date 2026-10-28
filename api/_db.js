@@ -27,6 +27,55 @@ let memoryCache = {
   lastUpdated: new Date().toISOString()
 };
 
+// Known legacy demo template signatures
+const DEMO_SIGNATURE_NOTES = [
+  'Saturday Counter Opened by Aslam',
+  'Busy Sunday market counter',
+  'Wholesale deliveries to city center',
+  'Major vendor clearing day (Basit consignment clearance)',
+  'Mid-week inventory replenishment',
+  'Peak Thursday wholesale bulk billing',
+  'Current active terminal session'
+];
+
+const DEMO_CUSTOMER_IDS = ['cust-1', 'cust-2', 'cust-3', 'cust-4', 'cust-5'];
+const DEMO_CUSTOMER_NAMES = [
+  'M/S Khan Cloth Store',
+  'Rahim Garments',
+  'Bismillah Boutique',
+  'Master Tailors & Drapers',
+  'Star Wholesale Fabrics'
+];
+
+// Purge any dummy demo records while strictly preserving genuine admin records
+function sanitizeState(state) {
+  if (!state || typeof state !== 'object') return state;
+
+  if (state.records && typeof state.records === 'object') {
+    const cleanedRecords = {};
+    for (const [dt, rec] of Object.entries(state.records)) {
+      if (!rec) continue;
+      const isExplicitDemo = rec.isDemo === true || rec.isSample === true;
+      const hasDemoNote = DEMO_SIGNATURE_NOTES.some(sig => (rec.notes || '').includes(sig));
+      if (!isExplicitDemo && !hasDemoNote) {
+        cleanedRecords[dt] = rec;
+      }
+    }
+    state.records = cleanedRecords;
+  }
+
+  if (Array.isArray(state.customerAccounts)) {
+    state.customerAccounts = state.customerAccounts.filter(c => {
+      if (!c) return false;
+      const isDemoId = DEMO_CUSTOMER_IDS.includes(c.id);
+      const isDemoName = DEMO_CUSTOMER_NAMES.some(n => (c.name || '').trim().toLowerCase() === n.toLowerCase());
+      return !isDemoId && !isDemoName;
+    });
+  }
+
+  return state;
+}
+
 // Check if PostgreSQL (Vercel Postgres, Neon, Supabase, Railway) is configured
 const hasPostgres = !!(process.env.POSTGRES_URL || process.env.DATABASE_URL);
 
@@ -82,7 +131,7 @@ async function getRoznamchaState() {
     try {
       const res = await pgPool.query('SELECT data FROM roznamcha_state WHERE id = $1', ['main_store']);
       if (res.rows.length > 0 && res.rows[0].data) {
-        return res.rows[0].data;
+        return sanitizeState(res.rows[0].data);
       }
     } catch (err) {
       console.warn('Postgres query failed, falling back to local file/memory:', err.message);
@@ -94,25 +143,25 @@ async function getRoznamchaState() {
     const filePath = fs.existsSync(DB_FILE) ? DB_FILE : (fs.existsSync('/tmp/roznamcha.json') ? '/tmp/roznamcha.json' : null);
     if (filePath) {
       const content = fs.readFileSync(filePath, 'utf8');
-      return JSON.parse(content);
+      return sanitizeState(JSON.parse(content));
     }
   } catch (e) {
     // Return memory cache
   }
 
-  return memoryCache;
+  return sanitizeState(memoryCache);
 }
 
 async function saveRoznamchaState(data) {
   const currentState = await getRoznamchaState().catch(() => ({}));
-  const payload = {
+  const payload = sanitizeState({
     records: data.records !== undefined ? data.records : (currentState.records || {}),
     kpiOverrides: data.kpiOverrides !== undefined ? data.kpiOverrides : (currentState.kpiOverrides || {}),
     customerAccounts: data.customerAccounts !== undefined ? data.customerAccounts : (currentState.customerAccounts || {}),
     systemSettings: data.systemSettings !== undefined ? data.systemSettings : (currentState.systemSettings || {}),
     authCredentials: data.authCredentials !== undefined ? data.authCredentials : (currentState.authCredentials || memoryCache.authCredentials || {}),
     lastUpdated: new Date().toISOString()
-  };
+  });
 
   memoryCache = { ...memoryCache, ...payload };
 
