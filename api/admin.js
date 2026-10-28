@@ -120,6 +120,99 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ success: true, settings: state.systemSettings });
       }
 
+      // Save / Update Branches Master (Admin & Super Admin)
+      if (action === 'save_branches') {
+        const state = await getRoznamchaState();
+        if (Array.isArray(body.branches)) {
+          state.branches = body.branches;
+          await saveRoznamchaState(state);
+          return res.status(200).json({ success: true, branches: state.branches });
+        }
+        return res.status(400).json({ success: false, error: 'Invalid branches payload' });
+      }
+
+      // Record Inter-Branch Cash Transfer (Admin & Super Admin)
+      if (action === 'record_transfer') {
+        const { fromBranchId, toBranchId, amount, date, notes } = body;
+        const amt = parseFloat(amount) || 0;
+        if (!fromBranchId || !toBranchId || amt <= 0 || !date) {
+          return res.status(400).json({ success: false, error: 'Invalid transfer details' });
+        }
+
+        const state = await getRoznamchaState();
+        if (!Array.isArray(state.branchTransfers)) state.branchTransfers = [];
+
+        const transferId = 'xfer_' + Date.now();
+        const transferObj = {
+          id: transferId,
+          fromBranchId,
+          toBranchId,
+          amount: amt,
+          date,
+          notes: notes || '',
+          recordedBy: session.username,
+          createdAt: new Date().toISOString()
+        };
+
+        state.branchTransfers.unshift(transferObj);
+
+        // Adjust Source Branch Record: add internal cash transfer disbursement
+        const srcKey = `${fromBranchId}__${date}`;
+        if (!state.records[srcKey]) {
+          state.records[srcKey] = {
+            id: srcKey,
+            branchId: fromBranchId,
+            date,
+            openingBalance: 0,
+            dailySale: 0,
+            totalAvailable: 0,
+            outflows: [],
+            totalOutflows: 0,
+            closingCash: 0,
+            priorMarketCredit: 0,
+            creditGiven: 0,
+            creditRecovered: 0,
+            closingMarketCredit: 0
+          };
+        }
+        state.records[srcKey].outflows = state.records[srcKey].outflows || [];
+        const toBranch = (state.branches || []).find(b => b.id === toBranchId);
+        const toName = toBranch ? `${toBranch.code} (${toBranch.name})` : toBranchId;
+        state.records[srcKey].outflows.push({
+          party: `Transfer Out: ${toName}`,
+          amount: amt,
+          category: 'Logistics',
+          note: `Internal transfer [${notes || 'Cash Movement'}]`
+        });
+
+        // Adjust Destination Branch Record: add internal cash transfer inflow
+        const dstKey = `${toBranchId}__${date}`;
+        if (!state.records[dstKey]) {
+          state.records[dstKey] = {
+            id: dstKey,
+            branchId: toBranchId,
+            date,
+            openingBalance: 0,
+            dailySale: 0,
+            totalAvailable: 0,
+            outflows: [],
+            totalOutflows: 0,
+            closingCash: 0,
+            priorMarketCredit: 0,
+            creditGiven: 0,
+            creditRecovered: 0,
+            closingMarketCredit: 0
+          };
+        }
+        const fromBranch = (state.branches || []).find(b => b.id === fromBranchId);
+        const fromName = fromBranch ? `${fromBranch.code} (${fromBranch.name})` : fromBranchId;
+        state.records[dstKey].dailySale = (parseFloat(state.records[dstKey].dailySale) || 0) + amt;
+        state.records[dstKey].notes = ((state.records[dstKey].notes || '') + ` | Cash Transfer In: PKR ${amt} from ${fromName}`).trim();
+
+        await saveRoznamchaState(state);
+        return res.status(200).json({ success: true, transfer: transferObj, state });
+      }
+
       // Factory Reset (STRICTLY SUPER ADMIN ONLY)
       if (action === 'factory_reset') {
         if (session.role !== 'superadmin') {

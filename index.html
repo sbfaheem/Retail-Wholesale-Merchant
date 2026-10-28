@@ -2814,12 +2814,51 @@
     }
 
     /**
-     * LOCAL STORAGE PERSISTENCE
+     * =========================================================================
+     * MULTI-BRANCH CONTEXT, ISOLATION & STORAGE PERSISTENCE ENGINE
+     * =========================================================================
      */
+    const STORAGE_KEY_BRANCHES = 'roznamcha_branches_v1';
+    const STORAGE_KEY_TRANSFERS = 'roznamcha_transfers_v1';
+    const STORAGE_KEY_ACTIVE_BRANCH = 'roznamcha_active_branch_v1';
+
+    function initBranchContextFromUrlOrStorage() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const branchParam = urlParams.get('branch');
+        if (branchParam) {
+          const lower = branchParam.trim().toLowerCase();
+          if (lower === 'all') {
+            appState.activeBranchId = 'all';
+          } else {
+            const found = (appState.branches || []).find(b => 
+              b.id.toLowerCase() === lower || 
+              (b.code && b.code.toLowerCase() === lower)
+            );
+            if (found) {
+              appState.activeBranchId = found.id;
+            }
+          }
+        } else {
+          const savedBranch = localStorage.getItem(STORAGE_KEY_ACTIVE_BRANCH);
+          if (savedBranch) {
+            if (savedBranch === 'all' || (appState.branches || []).some(b => b.id === savedBranch)) {
+              appState.activeBranchId = savedBranch;
+            }
+          }
+        }
+      } catch (e) {
+        appState.activeBranchId = 'all';
+      }
+    }
+
     function saveRecordsToStorage() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.records));
         localStorage.setItem(STORAGE_KEY + '_customers', JSON.stringify(appState.customerAccounts));
+        localStorage.setItem(STORAGE_KEY_BRANCHES, JSON.stringify(appState.branches));
+        localStorage.setItem(STORAGE_KEY_TRANSFERS, JSON.stringify(appState.branchTransfers));
+        localStorage.setItem(STORAGE_KEY_ACTIVE_BRANCH, appState.activeBranchId || 'all');
       } catch (e) {
         console.error('Storage full or unavailable', e);
       }
@@ -2828,10 +2867,40 @@
       pushStateToDatabase();
     }
 
-    /**
-     * AUTOMATED DATA SANITIZER: PURGES ALL DUMMY / DEMO RECORDS & ACCOUNTS
-     * WHILE STRICTLY PRESERVING ALL ADMIN CREATED & MODIFIED DATA
-     */
+    function normalizeAndMigrateRecords() {
+      if (!appState.records || typeof appState.records !== 'object') {
+        appState.records = {};
+      }
+      if (!Array.isArray(appState.branches) || appState.branches.length === 0) {
+        appState.branches = [ ...DEFAULT_BRANCHES ];
+      }
+      const primaryBranchId = (appState.branches && appState.branches[0]) ? appState.branches[0].id : 'branch-khi-01';
+
+      const migrated = {};
+      for (const [key, rec] of Object.entries(appState.records)) {
+        if (!rec) continue;
+        const branchId = rec.branchId || rec.branch_id || primaryBranchId;
+        const date = rec.date || (key.includes('__') ? key.split('__')[1] : key);
+        const compoundKey = `${branchId}__${date}`;
+
+        rec.id = compoundKey;
+        rec.branchId = branchId;
+        rec.date = date;
+        if (!rec.dayName) rec.dayName = getDayName(date);
+
+        migrated[compoundKey] = rec;
+      }
+      appState.records = migrated;
+
+      // Normalize Customer Accounts
+      if (Array.isArray(appState.customerAccounts)) {
+        appState.customerAccounts = appState.customerAccounts.map(c => {
+          if (!c.branchId) c.branchId = 'all';
+          return c;
+        });
+      }
+    }
+
     function purgeLegacyDummyData() {
       let dataChanged = false;
       const DEMO_SIGNATURE_NOTES = [
@@ -2856,7 +2925,7 @@
       // 1. Purge legacy dummy day records from memory and storage
       if (appState.records && typeof appState.records === 'object') {
         const cleanedRecords = {};
-        for (const [dateKey, record] of Object.entries(appState.records)) {
+        for (const [key, record] of Object.entries(appState.records)) {
           if (!record) continue;
           const isExplicitDemo = record.isDemo === true || record.isSample === true;
           const hasDemoNote = DEMO_SIGNATURE_NOTES.some(sig => (record.notes || '').includes(sig));
@@ -2864,7 +2933,7 @@
           if (isExplicitDemo || hasDemoNote) {
             dataChanged = true;
           } else {
-            cleanedRecords[dateKey] = record;
+            cleanedRecords[key] = record;
           }
         }
         appState.records = cleanedRecords;
@@ -2884,7 +2953,6 @@
         }
       }
 
-      // 3. If any dummy data was found and pruned, re-persist cleaned state
       if (dataChanged) {
         saveRecordsToStorage();
         recalculateLedgerCascade();
@@ -2895,6 +2963,28 @@
 
     function loadStoredRecords() {
       try {
+        const rawBranches = localStorage.getItem(STORAGE_KEY_BRANCHES);
+        if (rawBranches) {
+          try {
+            const parsedBranches = JSON.parse(rawBranches);
+            if (Array.isArray(parsedBranches) && parsedBranches.length > 0) {
+              appState.branches = parsedBranches;
+            }
+          } catch (e) {}
+        }
+        if (!Array.isArray(appState.branches) || appState.branches.length === 0) {
+          appState.branches = [ ...DEFAULT_BRANCHES ];
+        }
+
+        const rawTransfers = localStorage.getItem(STORAGE_KEY_TRANSFERS);
+        if (rawTransfers) {
+          try {
+            appState.branchTransfers = JSON.parse(rawTransfers) || [];
+          } catch (e) {}
+        }
+
+        initBranchContextFromUrlOrStorage();
+
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           appState.records = JSON.parse(raw) || {};
@@ -2903,6 +2993,8 @@
         if (rawCust) {
           appState.customerAccounts = JSON.parse(rawCust) || [];
         }
+
+        normalizeAndMigrateRecords();
         purgeLegacyDummyData();
       } catch (e) {
         console.error('Failed to parse stored records', e);
@@ -2911,16 +3003,23 @@
     }
 
     /**
-     * CASCADE RE-CALCULATION ENGINE
+     * CASCADE RE-CALCULATION ENGINE (PER-BRANCH PHYSICAL ISOLATION)
      */
-    function recalculateLedgerCascade() {
-      const dates = Object.keys(appState.records).sort();
+    function recalculateBranchLedgerCascade(branchId) {
+      if (!branchId || branchId === 'all') return;
+
+      const branchEntries = Object.entries(appState.records).filter(([k, r]) => {
+        return r && (r.branchId === branchId || k.startsWith(branchId + '__'));
+      });
+
+      // Sort chronological by date
+      branchEntries.sort((a, b) => a[1].date.localeCompare(b[1].date));
+
       let lastClosingCash = null;
       let lastMarketCredit = null;
 
-      for (let i = 0; i < dates.length; i++) {
-        const dt = dates[i];
-        const record = appState.records[dt];
+      for (let i = 0; i < branchEntries.length; i++) {
+        const [k, record] = branchEntries[i];
         
         // 1. Opening Balance Resolution
         if (i === 0) {
@@ -2937,7 +3036,7 @@
 
         // 2. Col 2: Total Balance (Available Funds) = Opening + Daily Sale
         const sale = parseFloat(record.dailySale) || 0;
-        record.totalAvailable = record.openingBalance + sale;
+        record.totalAvailable = (parseFloat(record.openingBalance) || 0) + sale;
 
         // 3. Col 3: Outflows Sum
         let totalOutflows = 0;
@@ -2954,8 +3053,8 @@
 
         // 5. Col 5: Market Credit Running Balance
         const priorCredit = (i === 0) 
-          ? (record.baseMarketCredit !== undefined ? record.baseMarketCredit : 240000)
-          : (lastMarketCredit !== null ? lastMarketCredit : 240000);
+          ? (record.baseMarketCredit !== undefined ? parseFloat(record.baseMarketCredit) : 0)
+          : (lastMarketCredit !== null ? lastMarketCredit : 0);
 
         record.priorMarketCredit = priorCredit;
         const creditGiven = parseFloat(record.creditGiven) || 0;
@@ -2963,38 +3062,572 @@
         record.closingMarketCredit = priorCredit + creditGiven - creditRecovered;
         lastMarketCredit = record.closingMarketCredit;
       }
+    }
 
+    function recalculateLedgerCascade(targetBranchId = null) {
+      if (targetBranchId && targetBranchId !== 'all') {
+        recalculateBranchLedgerCascade(targetBranchId);
+      } else {
+        const branches = appState.branches || DEFAULT_BRANCHES;
+        branches.forEach(b => recalculateBranchLedgerCascade(b.id));
+      }
       saveRecordsToStorage();
     }
 
-    function getDerivedOpeningBalance(targetDate) {
-      const dates = Object.keys(appState.records).sort();
-      const priorDates = dates.filter(d => d < targetDate);
-      if (priorDates.length > 0) {
-        const latestPrior = priorDates[priorDates.length - 1];
-        return appState.records[latestPrior].closingCash || 0;
+    function getBranchRecord(date, branchId) {
+      if (!branchId || branchId === 'all') return null;
+      const compoundKey = `${branchId}__${date}`;
+      if (appState.records[compoundKey]) return appState.records[compoundKey];
+      // Fallback check
+      return Object.values(appState.records).find(r => r && r.date === date && r.branchId === branchId) || null;
+    }
+
+    function getConsolidatedRecord(date) {
+      let openingBalance = 0;
+      let dailySale = 0;
+      let totalOutflows = 0;
+      let outflows = [];
+      let priorMarketCredit = 0;
+      let creditGiven = 0;
+      let creditRecovered = 0;
+      let hasAnyRecord = false;
+
+      const activeBranches = (appState.branches || []).filter(b => b.is_active !== false);
+
+      activeBranches.forEach(b => {
+        const r = getBranchRecord(date, b.id);
+        if (r) {
+          hasAnyRecord = true;
+          openingBalance += (parseFloat(r.openingBalance) || 0);
+          dailySale += (parseFloat(r.dailySale) || 0);
+          totalOutflows += (parseFloat(r.totalOutflows) || 0);
+          if (Array.isArray(r.outflows)) {
+            r.outflows.forEach(o => {
+              outflows.push({
+                ...o,
+                branchId: b.id,
+                branchName: b.name,
+                branchCode: b.code
+              });
+            });
+          }
+          priorMarketCredit += (parseFloat(r.priorMarketCredit) || 0);
+          creditGiven += (parseFloat(r.creditGiven) || 0);
+          creditRecovered += (parseFloat(r.creditRecovered) || 0);
+        } else {
+          openingBalance += getDerivedOpeningBalance(date, b.id);
+          priorMarketCredit += getDerivedPriorCredit(date, b.id);
+        }
+      });
+
+      const totalAvailable = openingBalance + dailySale;
+      const closingCash = totalAvailable - totalOutflows;
+      const closingMarketCredit = priorMarketCredit + creditGiven - creditRecovered;
+
+      return {
+        id: `consolidated__${date}`,
+        branchId: 'all',
+        date,
+        dayName: getDayName(date),
+        hasAnyRecord,
+        openingBalance,
+        dailySale,
+        totalAvailable,
+        outflows,
+        totalOutflows,
+        closingCash,
+        priorMarketCredit,
+        creditGiven,
+        creditRecovered,
+        closingMarketCredit,
+        notes: hasAnyRecord ? 'Consolidated Overview across active branches' : ''
+      };
+    }
+
+    function getActiveRecord(date) {
+      if (appState.activeBranchId === 'all') {
+        return getConsolidatedRecord(date);
+      }
+      return getBranchRecord(date, appState.activeBranchId);
+    }
+
+    function getDerivedOpeningBalance(targetDate, branchId = null) {
+      const targetB = (branchId && branchId !== 'all') ? branchId : appState.activeBranchId;
+      if (targetB === 'all') {
+        let sum = 0;
+        const activeBranches = (appState.branches || []).filter(b => b.is_active !== false);
+        activeBranches.forEach(b => {
+          sum += getDerivedOpeningBalance(targetDate, b.id);
+        });
+        return sum;
+      }
+
+      const branchEntries = Object.values(appState.records).filter(r => r && r.branchId === targetB && r.date < targetDate);
+      branchEntries.sort((a, b) => a.date.localeCompare(b.date));
+      if (branchEntries.length > 0) {
+        return branchEntries[branchEntries.length - 1].closingCash || 0;
       }
       return 0;
     }
 
-    function getDerivedPriorCredit(targetDate) {
-      const dates = Object.keys(appState.records).sort();
-      const priorDates = dates.filter(d => d < targetDate);
-      if (priorDates.length > 0) {
-        const latestPrior = priorDates[priorDates.length - 1];
-        return appState.records[latestPrior].closingMarketCredit || 0;
+    function getDerivedPriorCredit(targetDate, branchId = null) {
+      const targetB = (branchId && branchId !== 'all') ? branchId : appState.activeBranchId;
+      if (targetB === 'all') {
+        let sum = 0;
+        const activeBranches = (appState.branches || []).filter(b => b.is_active !== false);
+        activeBranches.forEach(b => {
+          sum += getDerivedPriorCredit(targetDate, b.id);
+        });
+        return sum;
+      }
+
+      const branchEntries = Object.values(appState.records).filter(r => r && r.branchId === targetB && r.date < targetDate);
+      branchEntries.sort((a, b) => a.date.localeCompare(b.date));
+      if (branchEntries.length > 0) {
+        return branchEntries[branchEntries.length - 1].closingMarketCredit || 0;
       }
       return 0;
     }
 
     /**
-     * PRELOAD DEMO REGISTER DATA MATCHING SAMPLE NOTEBOOK
+     * MULTI-BRANCH SELECTORS & CONTEXT SWITCHING
      */
-    
+    function onGlobalBranchChange(branchId) {
+      appState.activeBranchId = branchId || 'all';
+      try {
+        localStorage.setItem(STORAGE_KEY_ACTIVE_BRANCH, appState.activeBranchId);
+        const url = new URL(window.location.href);
+        if (appState.activeBranchId === 'all') {
+          url.searchParams.set('branch', 'all');
+        } else {
+          const bObj = (appState.branches || []).find(b => b.id === appState.activeBranchId);
+          url.searchParams.set('branch', bObj ? bObj.code : appState.activeBranchId);
+        }
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
 
-    
+      renderBranchSelectors();
+      updateBranchContextBadges();
+      refreshAllViews();
 
-    
+      // If in admin, re-render tables
+      if (appState.isAdminLoggedIn) {
+        renderAdminRecordsTable();
+        renderAdminOutflowsTable();
+        renderAdminUdhaarTable();
+        if (appState.activeAdminTab === 'branches') {
+          renderAdminBranchesTab();
+        }
+      }
+    }
+
+    function renderBranchSelectors() {
+      const branches = (appState.branches || []).filter(b => b.is_active !== false);
+      const isUr = appState.language === 'ur';
+
+      // Group by city
+      const cityGroups = {};
+      branches.forEach(b => {
+        const city = b.city || 'Other';
+        if (!cityGroups[city]) cityGroups[city] = [];
+        cityGroups[city].push(b);
+      });
+
+      // Options generator
+      const generateOptions = (includeAll = true, allLabel = null) => {
+        let html = '';
+        if (includeAll) {
+          const lbl = allLabel || (isUr ? '🌐 تمام برانچز (مشترکہ جائزہ)' : '🌐 All Branches (Consolidated View)');
+          html += `<option value="all">${lbl}</option>`;
+        }
+        for (const [city, list] of Object.entries(cityGroups)) {
+          html += `<optgroup label="📍 ${city}">`;
+          list.forEach(b => {
+            html += `<option value="${b.id}">${b.name} (${b.code})</option>`;
+          });
+          html += `</optgroup>`;
+        }
+        return html;
+      };
+
+      // 1. Public Header Selector
+      const pubSel = document.getElementById('publicBranchSelector');
+      if (pubSel) {
+        pubSel.innerHTML = generateOptions(true);
+        pubSel.value = appState.activeBranchId || 'all';
+      }
+
+      // 2. Admin Top Bar Selector
+      const admSel = document.getElementById('adminTopBranchSelector');
+      if (admSel) {
+        admSel.innerHTML = generateOptions(true);
+        admSel.value = appState.activeBranchId || 'all';
+      }
+
+      // 3. Admin Daily Record Form Branch Select
+      const recBranchSel = document.getElementById('adminRecordBranchSelect');
+      if (recBranchSel) {
+        recBranchSel.innerHTML = generateOptions(false);
+        if (appState.activeBranchId !== 'all') {
+          recBranchSel.value = appState.activeBranchId;
+        } else if (branches.length > 0) {
+          recBranchSel.value = branches[0].id;
+        }
+      }
+
+      // 4. Admin Outflow Form Branch Select
+      const outBranchSel = document.getElementById('adminOutflowBranchSelect');
+      if (outBranchSel) {
+        outBranchSel.innerHTML = generateOptions(false);
+        if (appState.activeBranchId !== 'all') {
+          outBranchSel.value = appState.activeBranchId;
+        } else if (branches.length > 0) {
+          outBranchSel.value = branches[0].id;
+        }
+      }
+
+      // 5. Admin Udhaar Form Branch Select
+      const udhBranchSel = document.getElementById('adminUdhaarBranchSelect');
+      if (udhBranchSel) {
+        udhBranchSel.innerHTML = generateOptions(true, isUr ? '🌐 مرکزی کھاتہ (تمام برانچز)' : '🌐 Centralized (All Branches)');
+        udhBranchSel.value = appState.activeBranchId || 'all';
+      }
+
+      // 6. Transfer From & To Branch Selectors
+      const trFrom = document.getElementById('transferFromBranch');
+      if (trFrom) {
+        trFrom.innerHTML = generateOptions(false);
+        if (branches.length > 0) trFrom.value = branches[0].id;
+      }
+      const trTo = document.getElementById('transferToBranch');
+      if (trTo) {
+        trTo.innerHTML = `<option value="head-office">🏢 Head Office / Main Safe</option>` + generateOptions(false);
+        if (branches.length > 1) trTo.value = branches[1].id;
+      }
+    }
+
+    function updateBranchContextBadges() {
+      const isUr = appState.language === 'ur';
+      const isConsolidated = appState.activeBranchId === 'all';
+      const branches = appState.branches || [];
+      const currentBranch = branches.find(b => b.id === appState.activeBranchId);
+
+      // 1. Public Branch Context Banner
+      const pubBanner = document.getElementById('branchContextIndicator');
+      if (pubBanner) {
+        if (isConsolidated) {
+          pubBanner.innerHTML = `
+            <div class="rounded-2xl p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 border border-emerald-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg font-bold shadow-sm shrink-0">
+                  <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-black uppercase tracking-wider text-emerald-800">${isUr ? 'مشترکہ جائزہ' : 'CONSOLIDATED OVERVIEW'}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">${branches.filter(b => b.is_active !== false).length} ${isUr ? 'فعال دکانیں' : 'Active Outlets'}</span>
+                  </div>
+                  <p class="text-xs sm:text-sm font-semibold text-slate-700 mt-0.5">
+                    ${isUr ? 'کمپنی کی تمام دکانوں اور کاؤنٹرز کا مجموعی کیش بیلنس، روزانہ سیل اور اخراجات کا مشترکہ ریکارڈ دکھایا جا رہا ہے۔' : 'Displaying aggregated company-wide cash balance, total sales, and outflows across all active outlets.'}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <button type="button" onclick="openMobileBranchPickerModal()" class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-store"></i>
+                  <span>${isUr ? 'برانچ منتخب کریں' : 'Switch Outlet'}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        } else if (currentBranch) {
+          pubBanner.innerHTML = `
+            <div class="rounded-2xl p-4 bg-white border border-slate-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 border border-purple-200 flex items-center justify-center text-lg font-bold shadow-sm shrink-0">
+                  <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-black uppercase tracking-wider text-purple-900 font-mono">${currentBranch.code}</span>
+                    <span class="text-sm font-black text-slate-900">${currentBranch.name}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">📍 ${currentBranch.city}</span>
+                  </div>
+                  <p class="text-xs font-semibold text-slate-500 mt-0.5">
+                    ${currentBranch.address ? `${currentBranch.address} • ` : ''}${currentBranch.manager_name ? `${isUr ? 'مینیجر' : 'Manager'}: ${currentBranch.manager_name}` : ''}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <button type="button" onclick="onGlobalBranchChange('all')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all border border-slate-300 flex items-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-globe"></i>
+                  <span>${isUr ? 'مشترکہ نظارہ' : 'All Branches'}</span>
+                </button>
+                <button type="button" onclick="openMobileBranchPickerModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-repeat"></i>
+                  <span>${isUr ? 'تبدیل' : 'Change'}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // 2. Admin Context Banner
+      const admBanner = document.getElementById('adminBranchContextBanner');
+      if (admBanner) {
+        if (isConsolidated) {
+          admBanner.innerHTML = `
+            <div class="rounded-2xl p-4 bg-amber-50 border border-amber-300 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center font-bold shrink-0">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                  <div class="font-black text-xs uppercase tracking-wider text-amber-900 flex items-center gap-2">
+                    <span>${isUr ? 'مشترکہ موڈ فعال' : 'CONSOLIDATED VIEW ACTIVE'}</span>
+                    <span class="text-[11px] font-normal text-amber-800">(${branches.length} ${isUr ? 'دکانیں' : 'Outlets'})</span>
+                  </div>
+                  <p class="text-xs sm:text-sm font-bold text-amber-900 mt-0.5">
+                    ${isUr ? 'آپ تمام برانچز کا مجموعی جائزہ دیکھ رہے ہیں۔ انفرادی روزنامچہ یا اخراجات کے اندراج کے لیے برانچ منتخب کریں۔' : 'Viewing company-wide rollup across all branches. Forms will scope transactions to the outlet you choose.'}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button type="button" onclick="openMobileBranchPickerModal()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-store"></i>
+                  <span>${isUr ? 'برانچ منتخب کریں' : 'Choose Branch'}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        } else if (currentBranch) {
+          admBanner.innerHTML = `
+            <div class="rounded-2xl p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">
+                  <i class="fa-solid fa-cash-register"></i>
+                </div>
+                <div>
+                  <div class="font-black text-xs uppercase tracking-wider text-emerald-900 flex items-center gap-2">
+                    <span class="font-mono bg-emerald-200/80 px-1.5 py-0.5 rounded text-emerald-950 font-black">${currentBranch.code}</span>
+                    <span>${currentBranch.name}</span>
+                    <span class="text-slate-600 font-semibold">• 📍 ${currentBranch.city}</span>
+                  </div>
+                  <p class="text-xs font-bold text-emerald-800 mt-0.5">
+                    ${isUr ? 'اس برانچ کا انفرادی کیش ڈراور اور روزنامچہ کھاتہ منتخب ہے۔' : 'Physical cash drawer isolated. All new entries and balance cascade apply to this outlet.'}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button type="button" onclick="onGlobalBranchChange('all')" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-xs flex items-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-globe text-emerald-600"></i>
+                  <span>${isUr ? 'مشترکہ نظارہ' : 'Consolidated View'}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function renderBranchComparisonMatrix(containerId = 'branchPerformanceMatrixContainer') {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      const isUr = appState.language === 'ur';
+      const dateIso = appState.selectedDate || getTodayString();
+      const branches = (appState.branches || []).filter(b => b.is_active !== false);
+
+      // Only show matrix in public view when Consolidated View ('all') is selected!
+      if (containerId === 'branchPerformanceMatrixContainer' && appState.activeBranchId !== 'all') {
+        container.innerHTML = '';
+        return;
+      }
+
+      // Compute stats for each branch on selected date
+      let companyTotalSales = 0;
+      let companyTotalOutflows = 0;
+      let companyTotalClosing = 0;
+      let companyTotalUdhaar = 0;
+
+      const rowsData = branches.map(b => {
+        const r = getBranchRecord(dateIso, b.id);
+        const sales = r ? (parseFloat(r.dailySale) || 0) : 0;
+        const outflows = r ? (parseFloat(r.totalOutflows) || 0) : 0;
+        const closing = r ? (parseFloat(r.closingCash) || 0) : getDerivedOpeningBalance(dateIso, b.id);
+        const udhaar = r ? (parseFloat(r.closingMarketCredit) || 0) : getDerivedPriorCredit(dateIso, b.id);
+
+        companyTotalSales += sales;
+        companyTotalOutflows += outflows;
+        companyTotalClosing += closing;
+        companyTotalUdhaar += udhaar;
+
+        return { branch: b, sales, outflows, closing, udhaar };
+      });
+
+      container.innerHTML = `
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-100 gap-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-lg shadow-sm">
+                <i class="fa-solid fa-table-cells"></i>
+              </div>
+              <div>
+                <h3 class="text-base sm:text-lg font-black text-slate-900">${isUr ? 'برانچ کارکردگی تقابلی جدول' : 'Branch Performance Comparison Matrix'}</h3>
+                <p class="text-xs font-bold text-slate-500">${formatDateDisplay(dateIso)} (${getDayName(dateIso)}) • ${isUr ? 'تمام دکانوں کی روزانہ کارکردگی کا موازنہ' : 'Operational overview and sales contribution across all outlets'}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black px-3 py-1.5 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 font-mono">
+                ${isUr ? 'کل سیلز' : 'Total Sales'}: ${formatCurrency(companyTotalSales)}
+              </span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left rtl:text-right text-xs sm:text-sm text-slate-800">
+              <thead class="bg-slate-100 text-slate-800 font-black uppercase tracking-wider text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-3.5">${isUr ? 'برانچ نام و کوڈ' : 'Branch Name & Code'}</th>
+                  <th class="py-3 px-3">${isUr ? 'شہر' : 'City'}</th>
+                  <th class="py-3 px-3.5 text-right rtl:text-left">${isUr ? 'آج کی سیل' : "Today's Sales"}</th>
+                  <th class="py-3 px-3.5 text-right rtl:text-left">${isUr ? 'اخراجات' : 'Outflows'}</th>
+                  <th class="py-3 px-3.5 text-right rtl:text-left">${isUr ? 'اختتامی کیش' : 'Closing Cash'}</th>
+                  <th class="py-3 px-3.5 text-right rtl:text-left">${isUr ? 'مارکیٹ ادھار' : 'Active Udhaar'}</th>
+                  <th class="py-3 px-3.5 text-right rtl:text-left min-w-[130px]">${isUr ? 'حصہ داری %' : 'Contribution %'}</th>
+                  <th class="py-3 px-3 text-center no-print">${isUr ? 'کارروائی' : 'Action'}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${rowsData.map(row => {
+                  const contribPct = companyTotalSales > 0 ? ((row.sales / companyTotalSales) * 100).toFixed(1) : 0;
+                  return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                      <td class="py-3 px-3.5 font-bold whitespace-nowrap">
+                        <div class="flex items-center gap-2">
+                          <span class="font-mono text-xs px-2 py-0.5 rounded-md bg-purple-50 text-purple-900 border border-purple-200 font-black">${row.branch.code}</span>
+                          <span class="text-slate-900 font-black">${row.branch.name}</span>
+                        </div>
+                        ${row.branch.manager_name ? `<div class="text-[11px] text-slate-500 font-medium">${row.branch.manager_name}</div>` : ''}
+                      </td>
+                      <td class="py-3 px-3 whitespace-nowrap font-semibold text-slate-600">
+                        📍 ${row.branch.city}
+                      </td>
+                      <td class="py-3 px-3.5 text-right rtl:text-left font-mono font-black text-emerald-800 whitespace-nowrap bg-emerald-50/30">
+                        ${formatCurrency(row.sales)}
+                      </td>
+                      <td class="py-3 px-3.5 text-right rtl:text-left font-mono font-bold text-rose-700 whitespace-nowrap">
+                        ${formatCurrency(row.outflows)}
+                      </td>
+                      <td class="py-3 px-3.5 text-right rtl:text-left font-mono font-black text-sky-900 whitespace-nowrap bg-sky-50/30">
+                        ${formatCurrency(row.closing)}
+                      </td>
+                      <td class="py-3 px-3.5 text-right rtl:text-left font-mono font-bold text-amber-800 whitespace-nowrap">
+                        ${formatCurrency(row.udhaar)}
+                      </td>
+                      <td class="py-3 px-3.5 text-right rtl:text-left whitespace-nowrap font-mono font-bold text-xs">
+                        <div class="flex items-center justify-end gap-2">
+                          <div class="w-16 h-2 rounded-full bg-slate-200 overflow-hidden">
+                            <div class="h-full bg-emerald-600 rounded-full" style="width: ${contribPct}%"></div>
+                          </div>
+                          <span>${contribPct}%</span>
+                        </div>
+                      </td>
+                      <td class="py-3 px-3 text-center whitespace-nowrap no-print">
+                        <button type="button" onclick="onGlobalBranchChange('${row.branch.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-bold transition-all cursor-pointer">
+                          ${isUr ? 'دیکھیں' : 'View'}
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+              <tfoot class="bg-slate-100/90 font-black text-slate-900 border-t-2 border-slate-300">
+                <tr>
+                  <td colspan="2" class="py-3 px-3.5 uppercase tracking-wider text-xs">
+                    ${isUr ? 'کل کمپنی مجموعہ' : 'Total Company Consolidated'}
+                  </td>
+                  <td class="py-3 px-3.5 text-right rtl:text-left font-mono text-emerald-900 text-sm">
+                    ${formatCurrency(companyTotalSales)}
+                  </td>
+                  <td class="py-3 px-3.5 text-right rtl:text-left font-mono text-rose-900 text-sm">
+                    ${formatCurrency(companyTotalOutflows)}
+                  </td>
+                  <td class="py-3 px-3.5 text-right rtl:text-left font-mono text-sky-900 text-sm">
+                    ${formatCurrency(companyTotalClosing)}
+                  </td>
+                  <td class="py-3 px-3.5 text-right rtl:text-left font-mono text-amber-900 text-sm">
+                    ${formatCurrency(companyTotalUdhaar)}
+                  </td>
+                  <td class="py-3 px-3.5 text-right rtl:text-left font-mono text-xs">100.0%</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function openMobileBranchPickerModal() {
+      renderMobileBranchPicker();
+      const modal = document.getElementById('mobileBranchPickerModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeMobileBranchPickerModal() {
+      const modal = document.getElementById('mobileBranchPickerModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderMobileBranchPicker() {
+      const container = document.getElementById('mobileBranchPickerCardsContainer');
+      if (!container) return;
+
+      const isUr = appState.language === 'ur';
+      const branches = (appState.branches || []).filter(b => b.is_active !== false);
+      const isConsolidated = appState.activeBranchId === 'all';
+
+      let html = `
+        <button type="button" onclick="onGlobalBranchChange('all'); closeMobileBranchPickerModal();" 
+          class="w-full text-left rtl:text-right p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${isConsolidated ? 'bg-emerald-50 border-emerald-500 shadow-md ring-2 ring-emerald-500/20' : 'bg-slate-50 border-slate-200 hover:border-emerald-300'}">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl ${isConsolidated ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700 border border-slate-300'} flex items-center justify-center text-xl font-bold shadow-sm shrink-0">
+              <i class="fa-solid fa-globe"></i>
+            </div>
+            <div>
+              <div class="font-black text-slate-900 text-base">${isUr ? 'تمام برانچز (مشترکہ جائزہ)' : 'All Branches (Consolidated View)'}</div>
+              <div class="text-xs font-semibold text-slate-500 mt-0.5">${branches.length} ${isUr ? 'فعال دکانوں کا مشترکہ کھاتہ' : 'Aggregated cash book across all outlets'}</div>
+            </div>
+          </div>
+          ${isConsolidated ? `<span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-check"></i></span>` : ''}
+        </button>
+      `;
+
+      branches.forEach(b => {
+        const isSelected = appState.activeBranchId === b.id;
+        html += `
+          <button type="button" onclick="onGlobalBranchChange('${b.id}'); closeMobileBranchPickerModal();" 
+            class="w-full text-left rtl:text-right p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${isSelected ? 'bg-purple-50 border-purple-500 shadow-md ring-2 ring-purple-500/20' : 'bg-white border-slate-200 hover:border-purple-300'}">
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-2xl ${isSelected ? 'bg-purple-700 text-white' : 'bg-slate-100 text-slate-800 border border-slate-300'} flex items-center justify-center text-base font-black font-mono shadow-sm shrink-0">
+                ${b.code}
+              </div>
+              <div>
+                <div class="font-black text-slate-900 text-base">${b.name}</div>
+                <div class="text-xs font-semibold text-slate-500 mt-0.5">
+                  📍 ${b.city} ${b.manager_name ? `• ${b.manager_name}` : ''}
+                </div>
+              </div>
+            </div>
+            ${isSelected ? `<span class="w-6 h-6 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-check"></i></span>` : ''}
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
 
     /**
      * UI SYNC & INITIALIZATION
@@ -3684,6 +4317,8 @@
       if (!appState.isAdminLoggedIn) return; // Strict RBAC: No unauthenticated mutations
       try {
         const payload = {
+          branches: appState.branches,
+          branchTransfers: appState.branchTransfers,
           records: appState.records,
           customerAccounts: appState.customerAccounts,
           kpiOverrides: appState.kpiOverrides
@@ -3716,6 +4351,12 @@
             const serverCust = json.data.customerAccounts;
             const serverKpis = json.data.kpiOverrides;
             if (serverKpis) appState.kpiOverrides = serverKpis;
+            if (Array.isArray(json.data.branches) && json.data.branches.length > 0) {
+              appState.branches = json.data.branches;
+            }
+            if (Array.isArray(json.data.branchTransfers)) {
+              appState.branchTransfers = json.data.branchTransfers;
+            }
 
             // Update local memory if server has data
             if (serverRecords && Object.keys(serverRecords).length > 0) {
@@ -4237,6 +4878,9 @@
      * REFRESH ALL VIEWS ACROSS ALL TABS
      */
     function refreshAllViews() {
+      renderBranchSelectors();
+      updateBranchContextBadges();
+      renderBranchComparisonMatrix('branchPerformanceMatrixContainer');
       updateTopKPIBadges();
       loadDayIntoTerminal(appState.selectedDate);
       renderDailyRoznamchaOverview(appState.selectedDate);
@@ -4244,6 +4888,9 @@
       renderAnalyticsTab();
       renderVendorDirectory();
       renderAdminTable();
+      if (appState.activeAdminTab === 'branches') {
+        renderAdminBranchesTab();
+      }
 
       const dates = Object.keys(appState.records);
       const regBadge = document.getElementById('badgeRegisterCount');
@@ -4460,11 +5107,19 @@
     }
 
     function updateTopKPIBadges() {
-      const dates = Object.keys(appState.records).sort();
-      let targetRecord = appState.records[appState.selectedDate];
-      
-      if (!targetRecord && dates.length > 0) {
-        targetRecord = appState.records[dates[dates.length - 1]];
+      const isUr = appState.language === 'ur';
+      const isConsolidated = appState.activeBranchId === 'all';
+      const targetDate = appState.selectedDate || getTodayString();
+      let targetRecord = getActiveRecord(targetDate);
+
+      // If no active record for selected date, find latest available
+      if (!targetRecord || (!targetRecord.hasAnyRecord && targetRecord.dailySale === 0 && targetRecord.totalOutflows === 0)) {
+        const recordsList = Object.values(appState.records).filter(r => r && (isConsolidated || r.branchId === appState.activeBranchId));
+        if (recordsList.length > 0) {
+          recordsList.sort((a, b) => a.date.localeCompare(b.date));
+          const latestDate = recordsList[recordsList.length - 1].date;
+          targetRecord = getActiveRecord(latestDate);
+        }
       }
 
       const ovr = appState.kpiOverrides || {};
@@ -4577,8 +5232,15 @@
       let priorMonthDays = 0;
       const priorMonthVendors = {};
 
-      dates.forEach(d => {
-        const r = appState.records[d];
+      const isConsolidated = appState.activeBranchId === 'all';
+      const recordsToInclude = Object.values(appState.records).filter(r => {
+        if (!r) return false;
+        if (!isConsolidated && r.branchId !== appState.activeBranchId) return false;
+        return true;
+      });
+
+      recordsToInclude.forEach(r => {
+        const d = r.date;
         const s = parseFloat(r.dailySale) || 0;
         const out = parseFloat(r.totalOutflows) || 0;
 
@@ -4816,54 +5478,59 @@
       const searchVal = (document.getElementById('registerSearch')?.value || '').toLowerCase();
       const rangeFilter = document.getElementById('registerRangeFilter')?.value || 'all';
       const isUr = appState.language === 'ur';
+      const isConsolidated = appState.activeBranchId === 'all';
 
       if (!tbody) return;
 
-      const dates = Object.keys(appState.records).sort();
-      let filteredDates = [...dates];
+      let recordsList = Object.values(appState.records).filter(r => r && r.date);
+      if (!isConsolidated) {
+        recordsList = recordsList.filter(r => r.branchId === appState.activeBranchId);
+      }
+      recordsList.sort((a, b) => b.date.localeCompare(a.date));
 
       if (rangeFilter === '7days') {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - 7);
         const cutoffStr = formatISODate(cutoff);
-        filteredDates = filteredDates.filter(d => d >= cutoffStr);
+        recordsList = recordsList.filter(r => r.date >= cutoffStr);
       } else if (rangeFilter === '30days') {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - 30);
         const cutoffStr = formatISODate(cutoff);
-        filteredDates = filteredDates.filter(d => d >= cutoffStr);
+        recordsList = recordsList.filter(r => r.date >= cutoffStr);
       } else if (rangeFilter === 'thisMonth') {
         const curPrefix = getTodayString().substring(0, 7);
-        filteredDates = filteredDates.filter(d => d.startsWith(curPrefix));
+        recordsList = recordsList.filter(r => r.date.startsWith(curPrefix));
       }
 
       if (searchVal) {
-        filteredDates = filteredDates.filter(d => {
-          const r = appState.records[d];
-          const matchesDate = d.includes(searchVal) || (r.dayName || '').toLowerCase().includes(searchVal);
-          const matchesNotes = (r.notes || '').toLowerCase().includes(searchVal);
-          const matchesVendor = (r.outflows || []).some(o => 
+        recordsList = recordsList.filter(r => {
+          const matchDate = r.date.includes(searchVal) || (r.dayName || '').toLowerCase().includes(searchVal);
+          const matchNotes = (r.notes || '').toLowerCase().includes(searchVal);
+          const matchOutflow = (r.outflows || []).some(o => 
             (o.party || '').toLowerCase().includes(searchVal) || 
             (o.category || '').toLowerCase().includes(searchVal)
           );
-          return matchesDate || matchesNotes || matchesVendor;
+          const bObj = (appState.branches || []).find(b => b.id === r.branchId);
+          const matchBranch = bObj ? (bObj.name.toLowerCase().includes(searchVal) || bObj.code.toLowerCase().includes(searchVal) || bObj.city.toLowerCase().includes(searchVal)) : false;
+          return matchDate || matchNotes || matchOutflow || matchBranch;
         });
       }
 
+      const totalCount = Object.values(appState.records).filter(r => r && (isConsolidated || r.branchId === appState.activeBranchId)).length;
       const countDisplay = document.getElementById('registerRecordCountDisplay');
       if (countDisplay) {
         countDisplay.textContent = isUr
-          ? `${dates.length} میں سے ${filteredDates.length} دن دکھائے جا رہے ہیں`
-          : `${filteredDates.length} of ${dates.length} days shown`;
+          ? `${totalCount} میں سے ${recordsList.length} اندراجات دکھائے جا رہے ہیں`
+          : `${recordsList.length} of ${totalCount} records shown`;
       }
 
-      // Default view mode: 'cards' on mobile, 'table' on desktop if not yet chosen
       if (!appState.registerViewMode) {
         appState.registerViewMode = (window.innerWidth < 768) ? 'cards' : 'table';
       }
       setRegisterViewMode(appState.registerViewMode);
 
-      if (filteredDates.length === 0) {
+      if (recordsList.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="8" class="text-center py-10 text-slate-500 font-bold">
@@ -4888,78 +5555,67 @@
       let sumOutflows = 0;
       let sumClosing = 0;
 
-      // Render 1: Mobile Passbook Cards View
+      // 1. Mobile Passbook Cards View
       if (cardsContainer) {
-        cardsContainer.innerHTML = filteredDates.map(dt => {
-          const r = appState.records[dt];
+        cardsContainer.innerHTML = recordsList.map(r => {
           const creditGiven = r.creditGiven || 0;
           const creditRecovered = r.creditRecovered || 0;
           const hasOutflows = Array.isArray(r.outflows) && r.outflows.length > 0;
+          const bObj = (appState.branches || []).find(b => b.id === r.branchId);
 
           return `
             <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all space-y-4">
-              <!-- Top Row: Date, Day Badge & Quick Action -->
               <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 gap-2">
                 <div class="flex items-center gap-3">
                   <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base shrink-0 shadow-sm">
                     <i class="fa-solid fa-calendar-day"></i>
                   </div>
                   <div>
-                    <div class="text-base sm:text-lg font-black font-mono text-slate-900">${formatDateDisplay(r.date)}</div>
-                    <div class="text-xs sm:text-sm font-black text-emerald-800">${r.dayName || getDayName(r.date)}</div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-base sm:text-lg font-black text-slate-900">${formatDateDisplay(r.date)}</span>
+                      <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 font-sans">${r.dayName || getDayName(r.date)}</span>
+                      ${isConsolidated && bObj ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-purple-100 text-purple-900 border border-purple-200">${bObj.code}</span>` : ''}
+                    </div>
+                    ${isConsolidated && bObj ? `<div class="text-[11px] font-semibold text-slate-500">${bObj.name} • 📍 ${bObj.city}</div>` : ''}
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button type="button" onclick="viewDailySlipModal('${r.date}')" title="Print Slip" class="min-h-[48px] px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-black flex items-center gap-2 transition-colors cursor-pointer border border-slate-300 shadow-sm">
-                    <i class="fa-solid fa-receipt text-indigo-700"></i>
-                    <span>${isUr ? 'پرچہ' : 'Slip'}</span>
-                  </button>
-                  ${appState.isAdminLoggedIn ? `
-                    <button type="button" onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="min-h-[48px] px-4 py-2.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-sm font-black flex items-center gap-2 transition-colors cursor-pointer border border-emerald-300 shadow-sm">
-                      <i class="fa-solid fa-pen-to-square"></i>
-                      <span>${isUr ? 'ترمیم' : 'Edit'}</span>
-                    </button>
-                  ` : ''}
+                <button type="button" onclick="editDayEntry('${r.date}')" class="min-h-[44px] min-w-[44px] px-3 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-eye text-sm"></i>
+                  <span class="hidden sm:inline">${isUr ? 'جائزہ' : 'View'}</span>
+                </button>
+              </div>
+
+              <!-- Available Funds Grid -->
+              <div class="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  <span class="text-slate-500 block font-bold text-[11px]">${isUr ? 'ابتدائی کیش' : 'Col 1: Opening'}</span>
+                  <span class="text-sm sm:text-base font-black font-mono text-slate-900 tabular-nums">${formatCurrency(r.openingBalance)}</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+                  <span class="text-emerald-800 block font-bold text-[11px]">${isUr ? 'آج کی نقد سیل' : 'Col 2: Daily Sale'}</span>
+                  <span class="text-sm sm:text-base font-black font-mono text-emerald-800 tabular-nums">${formatCurrency(r.dailySale)}</span>
                 </div>
               </div>
 
-              <!-- Middle: Primary Sales & Opening Grid -->
-              <div class="grid grid-cols-2 gap-3">
-                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-                  <span class="text-xs sm:text-sm font-black text-slate-700 block">${isUr ? 'ابتدائی کیش' : 'Opening Cash'}</span>
-                  <span class="text-base sm:text-lg font-black font-mono text-slate-900 tabular-nums">${formatCurrency(r.openingBalance)}</span>
-                </div>
-                <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-                  <span class="text-xs sm:text-sm font-black text-emerald-950 block">${isUr ? 'کالم ۱: یومیہ سیل' : 'Col 1: Sale'}</span>
-                  <span class="text-lg sm:text-xl font-black font-mono text-emerald-800 tabular-nums">${formatCurrency(r.dailySale)}</span>
-                </div>
-              </div>
-
-              <!-- Available Funds Banner -->
-              <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between">
-                <span class="text-xs sm:text-sm font-black text-sky-950">${isUr ? 'کالم ۲: کل دستیاب رقم' : 'Col 2: Total Available'}</span>
-                <span class="text-base sm:text-lg font-black font-mono text-sky-950 tabular-nums">${formatCurrency(r.totalAvailable)}</span>
-              </div>
-
-              <!-- Outflows Breakdown -->
-              <div class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200">
-                <div class="flex items-center justify-between text-xs sm:text-sm font-black text-rose-950 mb-2">
-                  <span>${isUr ? 'کالم ۳: خریداریاں و اخراجات' : 'Col 3: Purchases & Outflows'}</span>
-                  <span class="text-sm sm:text-base font-black font-mono text-rose-700">${formatCurrency(r.totalOutflows)}</span>
+              <!-- Col 3: Outflow Payments -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-700 px-1">
+                  <span>${isUr ? 'کالم ۳: ادائیگیاں و اخراجات' : 'Col 3: Outflow Disbursements'}</span>
+                  <span class="font-mono text-rose-700 font-black">${formatCurrency(r.totalOutflows)}</span>
                 </div>
                 ${hasOutflows ? `
-                  <div class="flex flex-wrap gap-2 pt-1">
+                  <div class="flex flex-wrap gap-1.5 pt-1">
                     ${r.outflows.map(o => `
-                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-mono bg-white text-rose-950 border border-rose-300 shadow-sm font-bold">
-                        <span class="font-black text-slate-950">${escapeHtml(o.party)}:</span>
-                        <span>${formatNumberOnly(o.amount)}</span>
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono bg-rose-50 text-rose-900 border border-rose-200">
+                        <span>${escapeHtml(o.party)}:</span>
+                        <span class="font-black">${formatNumberOnly(o.amount)}</span>
                       </span>
                     `).join('')}
                   </div>
                 ` : `<span class="text-xs sm:text-sm text-slate-600 italic font-medium">${isUr ? 'کوئی اخراجات نہیں' : 'No outflows recorded'}</span>`}
               </div>
 
-              <!-- Closing Cash (Receipt Bottom Banner) -->
+              <!-- Col 4: Closing Cash -->
               <div class="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-md">
                 <div>
                   <span class="text-xs sm:text-sm font-black text-sky-300 uppercase tracking-wider block">${isUr ? 'کالم ۴: اختتامی کیش (روکڑ)' : 'Col 4: Closing Cash'}</span>
@@ -4968,7 +5624,7 @@
                 <span class="text-2xl sm:text-3xl font-black font-mono text-emerald-400 tracking-tight tabular-nums">${formatCurrency(r.closingCash)}</span>
               </div>
 
-              <!-- Col 5: Market Credit Activity (if any) -->
+              <!-- Col 5: Market Credit Activity -->
               ${(creditGiven > 0 || creditRecovered > 0 || r.closingMarketCredit > 0) ? `
                 <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs sm:text-sm flex items-center justify-between font-black text-amber-950">
                   <span>${isUr ? 'مارکیٹ ادھار' : 'Market Credit'}:</span>
@@ -4989,12 +5645,12 @@
         }).join('');
       }
 
-      // Render 2: Horizontal Scrollable Table with Sticky Date Column
-      tbody.innerHTML = filteredDates.map(dt => {
-        const r = appState.records[dt];
-        sumSales += (r.dailySale || 0);
-        sumOutflows += (r.totalOutflows || 0);
-        sumClosing = r.closingCash || 0;
+      // 2. Horizontal Scrollable Table View
+      tbody.innerHTML = recordsList.map(r => {
+        sumSales += (parseFloat(r.dailySale) || 0);
+        sumOutflows += (parseFloat(r.totalOutflows) || 0);
+        sumClosing += (parseFloat(r.closingCash) || 0);
+        const bObj = (appState.branches || []).find(b => b.id === r.branchId);
 
         let outflowsHtml = `<span class="text-slate-500 italic text-[11px]">${isUr ? 'کوئی اخراجات نہیں' : 'No outflows'}</span>`;
         if (Array.isArray(r.outflows) && r.outflows.length > 0) {
@@ -5019,9 +5675,11 @@
 
         return `
           <tr class="hover:bg-slate-50 transition-colors group">
-            
             <td class="py-3 px-4 font-mono whitespace-nowrap sticky-col-date bg-white group-hover:bg-slate-50 border-r border-slate-200 shadow-sm">
-              <div class="font-black text-slate-900">${formatDateDisplay(r.date)}</div>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-slate-900">${formatDateDisplay(r.date)}</span>
+                ${isConsolidated && bObj ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-purple-100 text-purple-900 border border-purple-200">${bObj.code}</span>` : ''}
+              </div>
               <div class="text-[11px] text-emerald-700 font-sans font-bold">${r.dayName || getDayName(r.date)}</div>
               ${r.notes ? `<div class="text-[10px] text-slate-600 italic truncate max-w-[140px]" title="${escapeHtml(r.notes)}">${escapeHtml(r.notes)}</div>` : ''}
             </td>
@@ -5054,43 +5712,32 @@
             </td>
 
             <td class="py-3 px-3 text-center whitespace-nowrap no-print">
-              <div class="flex items-center justify-center gap-1">
-                ${appState.isAdminLoggedIn ? `
-                  <button onclick="editDayEntry('${r.date}')" title="Edit in Daily Terminal" class="p-2 rounded-xl bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 transition-colors">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                  </button>
-                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-2 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 transition-colors">
-                    <i class="fa-solid fa-receipt"></i>
-                  </button>
-                  <button onclick="openAdminEditModalForDate('${r.date}')" title="Admin Full Edit" class="p-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
-                    <i class="fa-solid fa-sliders"></i>
-                  </button>
-                  <button onclick="adminDeleteDayEntry('${r.date}')" title="Admin Delete Entry" class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors">
-                    <i class="fa-solid fa-trash-can"></i>
-                  </button>
-                ` : `
-                  <button onclick="viewDailySlipModal('${r.date}')" title="View Printable Slip" class="p-2 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 transition-colors">
-                    <i class="fa-solid fa-receipt"></i>
-                  </button>
-                `}
-              </div>
+              <button type="button" onclick="editDayEntry('${r.date}')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-sm cursor-pointer">
+                ${isUr ? 'جائزہ' : 'View'}
+              </button>
             </td>
-
           </tr>
         `;
       }).join('');
 
       if (tfoot) {
         tfoot.innerHTML = `
-          <tr>
-            <td class="py-3 px-4 font-black uppercase text-slate-900 sticky-col-date bg-slate-100 border-r border-slate-200">${isUr ? 'مجموعی ٹوٹل' : 'Period Totals'}</td>
-            <td class="py-3 px-3 text-right rtl:text-left text-slate-500">&mdash;</td>
-            <td class="py-3 px-3 text-right rtl:text-left text-emerald-800 font-black">${formatCurrency(sumSales)}</td>
-            <td class="py-3 px-3 text-right rtl:text-left text-sky-800">&mdash;</td>
-            <td class="py-3 px-4 text-rose-800 font-black">${isUr ? 'کل اخراجات' : 'Total Outflow'}: ${formatCurrency(sumOutflows)}</td>
-            <td class="py-3 px-3 text-right rtl:text-left text-sky-900 font-black">${formatCurrency(sumClosing)}</td>
-            <td class="py-3 px-3 text-right rtl:text-left text-amber-800">&mdash;</td>
-            <td class="py-3 px-3 no-print"></td>
+          <tr class="bg-slate-100/90 font-black text-slate-900 border-t-2 border-slate-300">
+            <td class="py-3 px-4 uppercase tracking-wider text-xs sticky-col-date bg-slate-100 border-r border-slate-200">
+              ${isUr ? 'مجموعہ' : 'Summary Total'}
+            </td>
+            <td></td>
+            <td class="py-3 px-3 text-right rtl:text-left font-mono text-emerald-900 text-sm">
+              ${formatCurrency(sumSales)}
+            </td>
+            <td></td>
+            <td class="py-3 px-4 text-right rtl:text-left font-mono text-rose-900 text-sm">
+              ${formatCurrency(sumOutflows)}
+            </td>
+            <td class="py-3 px-3 text-right rtl:text-left font-mono text-sky-900 text-sm">
+              ${formatCurrency(sumClosing)}
+            </td>
+            <td colspan="2"></td>
           </tr>
         `;
       }
@@ -5248,6 +5895,8 @@
       renderSalesOutflowsChart(dates);
       renderVendorDoughnutChart(sortedVendors, categoryMap);
       renderCreditTrendChart(dates);
+      renderBranchComparisonChart();
+      renderCityBreakdown();
     }
 
     function setDoughnutMode(mode) {
@@ -6499,23 +7148,32 @@
      * CSV EXPORT (PKR DATA)
      */
     function exportToCSV() {
-      const dates = Object.keys(appState.records).sort();
-      if (dates.length === 0) {
+      const isConsolidated = appState.activeBranchId === 'all';
+      let recordsList = Object.values(appState.records).filter(r => r && r.date);
+      if (!isConsolidated) {
+        recordsList = recordsList.filter(r => r.branchId === appState.activeBranchId);
+      }
+      recordsList.sort((a, b) => a.date.localeCompare(b.date));
+
+      if (recordsList.length === 0) {
         showToastNotification('No Data', 'No cash register records to export.');
         return;
       }
 
-      let csv = 'Date,Day,Opening Cash (PKR),Daily Sale (PKR),Total Available (PKR),Total Outflows (PKR),Closing Cash (PKR),Market Credit (PKR),Outflow Details,Notes\n';
+      let csv = 'Date,Day,Branch Code,Branch Name,City,Opening Cash (PKR),Daily Sale (PKR),Total Available (PKR),Total Outflows (PKR),Closing Cash (PKR),Market Credit (PKR),Outflow Details,Notes\n';
 
-      dates.forEach(d => {
-        const r = appState.records[d];
+      recordsList.forEach(r => {
+        const bObj = (appState.branches || []).find(b => b.id === r.branchId);
+        const bCode = bObj ? bObj.code : (r.branchId || '');
+        const bName = bObj ? bObj.name : '';
+        const bCity = bObj ? bObj.city : '';
+
         const outflowStr = (r.outflows || [])
           .map(o => `${o.party} (${o.category}): ${o.amount}`)
           .join('; ');
 
-        csv += `"${r.date}","${r.dayName || getDayName(r.date)}",${r.openingBalance},${r.dailySale},${r.totalAvailable},${r.totalOutflows},${r.closingCash},${r.closingMarketCredit},"${outflowStr.replace(/"/g, '""')}","${(r.notes || '').replace(/"/g, '""')}"\n`;
+        csv += `"${r.date}","${r.dayName || getDayName(r.date)}","${bCode}","${bName}","${bCity}",${r.openingBalance || 0},${r.dailySale || 0},${r.totalAvailable || 0},${r.totalOutflows || 0},${r.closingCash || 0},${r.closingMarketCredit || 0},"${outflowStr.replace(/"/g, '""')}","${(r.notes || '').replace(/"/g, '""')}"\n`;
       });
-
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -6526,6 +7184,10 @@
       document.body.removeChild(link);
 
       showToastNotification('CSV Exported', 'Roznamcha register exported to CSV in PKR.');
+    }
+
+    function exportDataToCSV() {
+      exportToCSV();
     }
 
     /**
@@ -6769,7 +7431,7 @@
 
     function switchAdminTab(tabName) {
       appState.activeAdminTab = tabName;
-      const tabs = ['dashboard', 'records', 'outflows', 'udhaar', 'analytics', 'settings'];
+      const tabs = ['dashboard', 'records', 'outflows', 'udhaar', 'branches', 'analytics', 'settings'];
 
       tabs.forEach(t => {
         const panel = document.getElementById('adminSection-' + t);
@@ -6803,6 +7465,8 @@
 
       if (tabName === 'dashboard') {
         renderAdminDashboard();
+      } else if (tabName === 'branches') {
+        renderAdminBranchesTab();
       } else if (tabName === 'records') {
         initAdminRecordForm();
         renderAdminRecordsTable();
@@ -6825,6 +7489,7 @@
         records: 'Daily Cash Book Records (Core Roznamcha)',
         outflows: 'Purchases & Outflow Disbursements',
         udhaar: 'Market Credit & Customer Receivables (Udhaar)',
+        branches: 'Outlet & Branch Management Hub',
         analytics: 'Reports & Comparative Analytics',
         settings: 'Settings, Dynamic CMS & Database Backup'
       };
@@ -7012,10 +7677,20 @@
     /**
      * SECTION 2: DAILY RECORDS (FORM TOP, TABLE BOTTOM)
      */
-    function initAdminRecordForm(dateIso) {
+    function initAdminRecordForm(dateIso, targetBranchId = null) {
       const dt = dateIso || appState.selectedDate || getTodayString();
-      const rec = appState.records[dt];
-      adminEditingRecordDate = rec ? dt : null;
+      const branchSel = document.getElementById('adminRecordBranchSelect');
+      const branchId = targetBranchId || (branchSel ? branchSel.value : null) || (appState.activeBranchId !== 'all' ? appState.activeBranchId : (appState.branches[0]?.id || 'branch-khi-01'));
+      if (branchSel && branchId) branchSel.value = branchId;
+
+      const rec = getBranchRecord(dt, branchId);
+      adminEditingRecordDate = rec ? rec.id : null;
+
+      const warnBanner = document.getElementById('adminRecordConsolidatedWarning');
+      if (warnBanner) {
+        if (appState.activeBranchId === 'all') warnBanner.classList.remove('hidden');
+        else warnBanner.classList.add('hidden');
+      }
 
       const dateInp = document.getElementById('adminRecFormFieldDate');
       const openInp = document.getElementById('adminRecFormFieldOpening');
@@ -7042,11 +7717,12 @@
             openInp.classList.remove('bg-white');
           }
         }
-        if (heading) heading.textContent = `Edit Daily Entry - ${formatDateDisplay(dt)}`;
+        const bObj = (appState.branches || []).find(b => b.id === branchId);
+        if (heading) heading.textContent = `Edit Daily Entry - ${formatDateDisplay(dt)} (${bObj ? bObj.code : branchId})`;
         if (cancelBtn) cancelBtn.classList.remove('hidden');
         if (submitText) submitText.textContent = 'Update Record';
       } else {
-        const derived = getDerivedOpeningBalance(dt);
+        const derived = getDerivedOpeningBalance(dt, branchId);
         if (openInp) {
           openInp.value = derived;
           openInp.classList.add('bg-slate-100');
@@ -7077,7 +7753,9 @@
           openInp.classList.add('bg-slate-100');
           openInp.classList.remove('bg-white');
           const dt = document.getElementById('adminRecFormFieldDate')?.value || getTodayString();
-          openInp.value = getDerivedOpeningBalance(dt);
+          const branchSel = document.getElementById('adminRecordBranchSelect');
+          const branchId = branchSel ? branchSel.value : (appState.activeBranchId !== 'all' ? appState.activeBranchId : 'branch-khi-01');
+          openInp.value = getDerivedOpeningBalance(dt, branchId);
         }
       }
       onAdminRecordFormInputChange();
@@ -7097,13 +7775,20 @@
       const dt = document.getElementById('adminRecFormFieldDate')?.value;
       if (!dt) return;
 
+      const branchSel = document.getElementById('adminRecordBranchSelect');
+      const branchId = branchSel ? branchSel.value : (appState.activeBranchId !== 'all' ? appState.activeBranchId : 'branch-khi-01');
+
       const openVal = parseFloat(document.getElementById('adminRecFormFieldOpening')?.value) || 0;
       const saleVal = parseFloat(document.getElementById('adminRecFormFieldSale')?.value) || 0;
       const notesVal = (document.getElementById('adminRecFormFieldNotes')?.value || '').trim();
       const isManualOpen = !!document.getElementById('adminRecFormFieldManualOpeningToggle')?.checked;
 
-      const existing = appState.records[dt] || {};
-      appState.records[dt] = {
+      const compoundKey = `${branchId}__${dt}`;
+      const existing = appState.records[compoundKey] || {};
+
+      appState.records[compoundKey] = {
+        id: compoundKey,
+        branchId: branchId,
         date: dt,
         dayName: getDayName(dt),
         openingBalance: openVal,
@@ -7118,18 +7803,23 @@
         adminSavedAt: new Date().toISOString()
       };
 
-      recalculateLedgerCascade();
+      recalculateBranchLedgerCascade(branchId);
       saveRecordsToStorage();
       pushStateToDatabase();
       refreshAllViews();
       renderAdminRecordsTable();
 
-      showToastNotification('Record Saved', `Daily record for ${formatDateDisplay(dt)} successfully saved and balances recalculated!`);
+      const bObj = (appState.branches || []).find(b => b.id === branchId);
+      const bName = bObj ? `${bObj.name} (${bObj.code})` : branchId;
+      showToastNotification('Record Saved', `Daily record for ${formatDateDisplay(dt)} at ${bName} successfully saved!`);
       cancelEditAdminRecord();
     }
 
-    function editAdminRecord(dateIso) {
-      initAdminRecordForm(dateIso);
+    function editAdminRecord(recordKey) {
+      const rec = appState.records[recordKey] || Object.values(appState.records).find(r => r.id === recordKey || r.date === recordKey);
+      if (rec) {
+        initAdminRecordForm(rec.date, rec.branchId);
+      }
       const formCard = document.getElementById('adminDailyRecordForm');
       if (formCard) formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -7139,18 +7829,23 @@
       initAdminRecordForm(getTodayString());
     }
 
-    function deleteAdminRecord(dateIso) {
-      if (!confirm(`Are you sure you want to permanently delete the entry for ${formatDateDisplay(dateIso)}?\nSubsequent days will automatically be recalculated.`)) {
+    function deleteAdminRecord(recordKey) {
+      const rec = appState.records[recordKey] || Object.values(appState.records).find(r => r.id === recordKey || r.date === recordKey);
+      if (!rec) return;
+
+      if (!confirm(`Are you sure you want to permanently delete the entry for ${formatDateDisplay(rec.date)} (${rec.branchId})?\nSubsequent days for this outlet will automatically be recalculated.`)) {
         return;
       }
-      delete appState.records[dateIso];
-      recalculateLedgerCascade();
+
+      const branchId = rec.branchId;
+      delete appState.records[rec.id || recordKey];
+      recalculateBranchLedgerCascade(branchId);
       saveRecordsToStorage();
       pushStateToDatabase();
       refreshAllViews();
       renderAdminRecordsTable();
 
-      showToastNotification('Record Deleted', `Entry for ${formatDateDisplay(dateIso)} removed.`);
+      showToastNotification('Record Deleted', `Entry for ${formatDateDisplay(rec.date)} removed.`);
     }
 
     function renderAdminRecordsTable() {
@@ -7159,27 +7854,33 @@
       const searchVal = (document.getElementById('adminRecordsSearchInput')?.value || '').toLowerCase();
       if (!tbody && !mobileList) return;
 
-      const dates = Object.keys(appState.records).sort().reverse();
-      let filtered = [...dates];
+      const isConsolidated = appState.activeBranchId === 'all';
+      let recordsList = Object.values(appState.records).filter(r => r && r.date);
+      if (!isConsolidated) {
+        recordsList = recordsList.filter(r => r.branchId === appState.activeBranchId);
+      }
+      recordsList.sort((a, b) => b.date.localeCompare(a.date));
 
       if (searchVal) {
-        filtered = filtered.filter(d => {
-          const r = appState.records[d];
-          const matchDate = d.includes(searchVal) || (r.dayName || '').toLowerCase().includes(searchVal);
+        recordsList = recordsList.filter(r => {
+          const matchDate = r.date.includes(searchVal) || (r.dayName || '').toLowerCase().includes(searchVal);
           const matchNotes = (r.notes || '').toLowerCase().includes(searchVal);
           const matchOutflow = (r.outflows || []).some(o => (o.party || '').toLowerCase().includes(searchVal));
-          return matchDate || matchNotes || matchOutflow;
+          const bObj = (appState.branches || []).find(b => b.id === r.branchId);
+          const matchBranch = bObj ? (bObj.name.toLowerCase().includes(searchVal) || bObj.code.toLowerCase().includes(searchVal)) : false;
+          return matchDate || matchNotes || matchOutflow || matchBranch;
         });
       }
 
+      const totalCount = Object.values(appState.records).filter(r => r && (isConsolidated || r.branchId === appState.activeBranchId)).length;
       const countBadge = document.getElementById('adminRecordsCountBadge');
-      if (countBadge) countBadge.textContent = `${filtered.length} of ${dates.length} recorded`;
+      if (countBadge) countBadge.textContent = `${recordsList.length} of ${totalCount} recorded`;
 
-      if (filtered.length === 0) {
+      if (recordsList.length === 0) {
         if (tbody) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="7" class="text-center py-8 text-slate-400 font-sans">
+              <td colspan="8" class="text-center py-8 text-slate-400 font-sans">
                 <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
                 No records found. Use the form above to add a new record.
               </td>
@@ -7199,12 +7900,15 @@
       }
 
       if (tbody) {
-        tbody.innerHTML = filtered.map(dt => {
-          const r = appState.records[dt];
+        tbody.innerHTML = recordsList.map(r => {
+          const bObj = (appState.branches || []).find(b => b.id === r.branchId);
           return `
             <tr class="hover:bg-slate-50 transition-colors">
               <td class="py-3 px-4 whitespace-nowrap">
-                <div class="font-bold text-slate-900 font-mono">${formatDateDisplay(r.date)}</div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-900 font-mono">${formatDateDisplay(r.date)}</span>
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-purple-50 text-purple-900 border border-purple-200">${bObj ? bObj.code : r.branchId}</span>
+                </div>
                 <div class="text-[11px] text-emerald-700 font-sans font-bold">${r.dayName || getDayName(r.date)}</div>
                 ${r.notes ? `<div class="text-[10px] text-slate-500 italic font-sans truncate max-w-[140px]">${escapeHtml(r.notes)}</div>` : ''}
               </td>
@@ -7214,12 +7918,12 @@
               <td class="py-3 px-3 text-right font-bold text-rose-700 whitespace-nowrap">${formatCurrency(r.totalOutflows)}</td>
               <td class="py-3 px-3 text-right font-black text-sky-900 bg-sky-50/30 whitespace-nowrap">${formatCurrency(r.closingCash)}</td>
               <td class="py-3 px-4 text-center whitespace-nowrap">
-                <div class="flex items-center justify-center gap-1.5 font-sans">
-                  <button type="button" onclick="editAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 transition-colors cursor-pointer">
-                    <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                <div class="flex items-center justify-center gap-1.5">
+                  <button type="button" onclick="editAdminRecord('${r.id || r.date}')" class="p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors cursor-pointer" title="Edit Record">
+                    <i class="fa-solid fa-pen-to-square"></i>
                   </button>
-                  <button type="button" onclick="deleteAdminRecord('${r.date}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
-                    <i class="fa-solid fa-trash-can mr-1"></i> Delete
+                  <button type="button" onclick="deleteAdminRecord('${r.id || r.date}')" class="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 transition-colors cursor-pointer" title="Delete Record">
+                    <i class="fa-solid fa-trash-can"></i>
                   </button>
                 </div>
               </td>
@@ -7229,53 +7933,33 @@
       }
 
       if (mobileList) {
-        mobileList.innerHTML = filtered.map(dt => {
-          const r = appState.records[dt];
+        mobileList.innerHTML = recordsList.map(r => {
+          const bObj = (appState.branches || []).find(b => b.id === r.branchId);
           return `
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
-              <div class="flex items-start justify-between pb-3.5 border-b border-slate-100">
-                <div>
-                  <div class="flex items-center gap-2.5">
-                    <span class="font-mono font-black text-slate-900 text-lg">${formatDateDisplay(r.date)}</span>
-                    <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">${r.dayName || getDayName(r.date)}</span>
-                  </div>
-                  ${r.notes ? `<p class="text-xs sm:text-sm text-slate-700 italic mt-1.5 font-bold"><i class="fa-solid fa-note-sticky text-slate-500 mr-1.5"></i>${escapeHtml(r.notes)}</p>` : ''}
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="font-black text-slate-900 text-base font-mono">${formatDateDisplay(r.date)}</span>
+                  <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-purple-100 text-purple-900">${bObj ? bObj.code : r.branchId}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="editAdminRecord('${r.id || r.date}')" class="p-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button type="button" onclick="deleteAdminRecord('${r.id || r.date}')" class="p-2 rounded-xl bg-slate-100 text-rose-600 text-xs font-bold cursor-pointer">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
                 </div>
               </div>
-
-              <div class="grid grid-cols-2 gap-3 text-xs sm:text-sm">
-                <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-                  <span class="text-emerald-950 font-black block text-xs">Col 1: Daily Sale</span>
-                  <span class="font-mono font-black text-emerald-800 text-xl tabular-nums">${formatCurrency(r.dailySale)}</span>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="p-2 rounded-xl bg-emerald-50 font-mono">
+                  <span class="text-emerald-800 text-[10px] block font-bold">Daily Sale</span>
+                  <span class="font-black text-emerald-900 text-sm">${formatCurrency(r.dailySale)}</span>
                 </div>
-                <div class="p-3 rounded-2xl bg-sky-50/70 border border-sky-200">
-                  <span class="text-sky-950 font-black block text-xs">Col 4: Closing Cash</span>
-                  <span class="font-mono font-black text-sky-950 text-xl tabular-nums">${formatCurrency(r.closingCash)}</span>
+                <div class="p-2 rounded-xl bg-sky-50 font-mono">
+                  <span class="text-sky-800 text-[10px] block font-bold">Closing Cash</span>
+                  <span class="font-black text-sky-900 text-sm">${formatCurrency(r.closingCash)}</span>
                 </div>
-                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span class="text-slate-700 font-bold block text-xs">Opening Cash</span>
-                  <span class="font-mono font-black text-slate-900 text-base tabular-nums">${formatCurrency(r.openingBalance)}</span>
-                </div>
-                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span class="text-slate-700 font-bold block text-xs">Total Available</span>
-                  <span class="font-mono font-black text-sky-950 text-base tabular-nums">${formatCurrency(r.totalAvailable)}</span>
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-rose-50/70 border border-rose-200 text-xs sm:text-sm">
-                <span class="text-rose-950 font-black">Col 3: Outflow Expenses</span>
-                <span class="font-mono font-black text-rose-700 text-base tabular-nums">${formatCurrency(r.totalOutflows)}</span>
-              </div>
-
-              <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-                <button type="button" onclick="editAdminRecord('${r.date}')" class="min-h-[50px] px-4 py-2.5 rounded-2xl text-sm font-black bg-slate-100 hover:bg-emerald-100 text-slate-900 hover:text-emerald-950 border border-slate-300 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                  <i class="fa-solid fa-pen-to-square"></i>
-                  <span>Edit Record</span>
-                </button>
-                <button type="button" onclick="deleteAdminRecord('${r.date}')" class="min-h-[50px] px-4 py-2.5 rounded-2xl text-sm font-black bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                  <i class="fa-solid fa-trash-can"></i>
-                  <span>Delete</span>
-                </button>
               </div>
             </div>
           `;
@@ -7283,33 +7967,33 @@
       }
     }
 
-    /**
-     * SECTION 3: PURCHASES & OUTFLOWS (FORM TOP, TABLE BOTTOM)
-     */
     function initAdminOutflowForm() {
+      adminEditingOutflow = null;
       const dtInp = document.getElementById('adminOutflowFormFieldDate');
       const partyInp = document.getElementById('adminOutflowFormFieldParty');
       const catInp = document.getElementById('adminOutflowFormFieldCategory');
       const amtInp = document.getElementById('adminOutflowFormFieldAmount');
       const noteInp = document.getElementById('adminOutflowFormFieldNote');
+      const branchSel = document.getElementById('adminOutflowBranchSelect');
       const heading = document.getElementById('adminOutflowFormHeading');
       const cancelBtn = document.getElementById('adminOutflowCancelBtn');
       const submitText = document.getElementById('adminOutflowSubmitBtnText');
 
-      const activeDate = appState.selectedDate || getTodayString();
-      if (dtInp) dtInp.value = activeDate;
+      if (dtInp) dtInp.value = appState.selectedDate || getTodayString();
       if (partyInp) partyInp.value = '';
       if (catInp) catInp.value = 'Vendor';
       if (amtInp) amtInp.value = '';
       if (noteInp) noteInp.value = '';
-      if (heading) heading.textContent = 'Record Payment / Outflow';
+      if (branchSel) {
+        if (appState.activeBranchId !== 'all') branchSel.value = appState.activeBranchId;
+        else if (appState.branches.length > 0) branchSel.value = appState.branches[0].id;
+      }
+      if (heading) heading.textContent = 'Record Outflow Disbursement';
       if (cancelBtn) cancelBtn.classList.add('hidden');
       if (submitText) submitText.textContent = '+ Record Payment';
-
-      adminEditingOutflow = null;
     }
 
-    function selectOutflowTag(tagName, category) {
+    function quickFillAdminOutflow(tagName, category) {
       const partyInp = document.getElementById('adminOutflowFormFieldParty');
       const catInp = document.getElementById('adminOutflowFormFieldCategory');
       const amtInp = document.getElementById('adminOutflowFormFieldAmount');
@@ -7324,6 +8008,8 @@
     async function submitAdminOutflowForm(e) {
       if (e) e.preventDefault();
       const dt = document.getElementById('adminOutflowFormFieldDate')?.value || getTodayString();
+      const branchSel = document.getElementById('adminOutflowBranchSelect');
+      const branchId = branchSel ? branchSel.value : (appState.activeBranchId !== 'all' ? appState.activeBranchId : 'branch-khi-01');
       const party = (document.getElementById('adminOutflowFormFieldParty')?.value || '').trim();
       const cat = document.getElementById('adminOutflowFormFieldCategory')?.value || 'Vendor';
       const amt = parseFloat(document.getElementById('adminOutflowFormFieldAmount')?.value) || 0;
@@ -7334,11 +8020,14 @@
         return;
       }
 
-      if (!appState.records[dt]) {
-        appState.records[dt] = {
+      const compoundKey = `${branchId}__${dt}`;
+      if (!appState.records[compoundKey]) {
+        appState.records[compoundKey] = {
+          id: compoundKey,
+          branchId: branchId,
           date: dt,
           dayName: getDayName(dt),
-          openingBalance: getDerivedOpeningBalance(dt),
+          openingBalance: getDerivedOpeningBalance(dt, branchId),
           manualOpening: 0,
           isManualOpeningOverride: false,
           dailySale: 0,
@@ -7349,20 +8038,20 @@
         };
       }
 
-      if (!Array.isArray(appState.records[dt].outflows)) {
-        appState.records[dt].outflows = [];
+      if (!Array.isArray(appState.records[compoundKey].outflows)) {
+        appState.records[compoundKey].outflows = [];
       }
 
-      if (adminEditingOutflow && adminEditingOutflow.date === dt && adminEditingOutflow.index !== undefined) {
-        appState.records[dt].outflows[adminEditingOutflow.index] = { party, amount: amt, category: cat, note };
+      if (adminEditingOutflow && adminEditingOutflow.recordKey === compoundKey && adminEditingOutflow.index !== undefined) {
+        appState.records[compoundKey].outflows[adminEditingOutflow.index] = { party, amount: amt, category: cat, note, branchId };
       } else {
-        appState.records[dt].outflows.push({ party, amount: amt, category: cat, note });
+        appState.records[compoundKey].outflows.push({ party, amount: amt, category: cat, note, branchId });
       }
 
-      appState.records[dt].lastModifiedByAdmin = true;
-      appState.records[dt].adminSavedAt = new Date().toISOString();
+      appState.records[compoundKey].lastModifiedByAdmin = true;
+      appState.records[compoundKey].adminSavedAt = new Date().toISOString();
 
-      recalculateLedgerCascade();
+      recalculateBranchLedgerCascade(branchId);
       saveRecordsToStorage();
       pushStateToDatabase();
       refreshAllViews();
@@ -7372,13 +8061,14 @@
       initAdminOutflowForm();
     }
 
-    function editAdminOutflow(dateIso, index) {
-      const rec = appState.records[dateIso];
+    function editAdminOutflow(recordKey, index) {
+      const rec = appState.records[recordKey] || Object.values(appState.records).find(r => r.id === recordKey || r.date === recordKey);
       if (!rec || !rec.outflows || !rec.outflows[index]) return;
       const item = rec.outflows[index];
 
-      adminEditingOutflow = { date: dateIso, index };
+      adminEditingOutflow = { recordKey: rec.id || recordKey, date: rec.date, index };
       const dtInp = document.getElementById('adminOutflowFormFieldDate');
+      const branchSel = document.getElementById('adminOutflowBranchSelect');
       const partyInp = document.getElementById('adminOutflowFormFieldParty');
       const catInp = document.getElementById('adminOutflowFormFieldCategory');
       const amtInp = document.getElementById('adminOutflowFormFieldAmount');
@@ -7387,12 +8077,13 @@
       const cancelBtn = document.getElementById('adminOutflowCancelBtn');
       const submitText = document.getElementById('adminOutflowSubmitBtnText');
 
-      if (dtInp) dtInp.value = dateIso;
+      if (dtInp) dtInp.value = rec.date;
+      if (branchSel && rec.branchId) branchSel.value = rec.branchId;
       if (partyInp) partyInp.value = item.party || '';
       if (catInp) catInp.value = item.category || 'Vendor';
       if (amtInp) amtInp.value = item.amount || '';
       if (noteInp) noteInp.value = item.note || '';
-      if (heading) heading.textContent = `Edit Payment (${escapeHtml(item.party)}) - ${formatDateDisplay(dateIso)}`;
+      if (heading) heading.textContent = `Edit Payment (${escapeHtml(item.party)}) - ${formatDateDisplay(rec.date)}`;
       if (cancelBtn) cancelBtn.classList.remove('hidden');
       if (submitText) submitText.textContent = 'Update Payment';
 
@@ -7404,23 +8095,24 @@
       initAdminOutflowForm();
     }
 
-    function deleteAdminOutflow(dateIso, index) {
-      const rec = appState.records[dateIso];
+    function deleteAdminOutflow(recordKey, index) {
+      const rec = appState.records[recordKey] || Object.values(appState.records).find(r => r.id === recordKey || r.date === recordKey);
       if (!rec || !rec.outflows || !rec.outflows[index]) return;
-      const item = rec.outflows[index];
 
-      if (!confirm(`Remove outflow of PKR ${item.amount} to "${item.party}" on ${formatDateDisplay(dateIso)}?`)) {
-        return;
-      }
+      const item = rec.outflows[index];
+      if (!confirm(`Remove outflow of PKR ${item.amount} to ${item.party}?`)) return;
 
       rec.outflows.splice(index, 1);
-      recalculateLedgerCascade();
+      rec.lastModifiedByAdmin = true;
+      rec.adminSavedAt = new Date().toISOString();
+
+      recalculateBranchLedgerCascade(rec.branchId);
       saveRecordsToStorage();
       pushStateToDatabase();
       refreshAllViews();
       renderAdminOutflowsTable();
 
-      showToastNotification('Outflow Removed', 'Line item deleted and ledger recalculated.');
+      showToastNotification('Outflow Removed', 'Line item deleted and branch physical cash balance recalculated.');
     }
 
     function renderAdminOutflowsTable() {
@@ -7429,53 +8121,57 @@
       const searchVal = (document.getElementById('adminOutflowsSearchInput')?.value || '').toLowerCase();
       if (!tbody && !mobileList) return;
 
+      const isConsolidated = appState.activeBranchId === 'all';
       const items = [];
-      Object.keys(appState.records).sort().reverse().forEach(dt => {
-        const r = appState.records[dt];
-        if (Array.isArray(r.outflows)) {
-          r.outflows.forEach((o, idx) => {
-            items.push({
-              date: dt,
-              index: idx,
-              party: o.party || 'General',
-              category: o.category || 'Vendor',
-              amount: parseFloat(o.amount) || 0,
-              note: o.note || ''
-            });
+
+      Object.values(appState.records).sort((a, b) => b.date.localeCompare(a.date)).forEach(r => {
+        if (!r || !Array.isArray(r.outflows)) return;
+        if (!isConsolidated && r.branchId !== appState.activeBranchId) return;
+
+        r.outflows.forEach((o, idx) => {
+          items.push({
+            recordKey: r.id || r.date,
+            branchId: r.branchId,
+            date: r.date,
+            dayName: r.dayName || getDayName(r.date),
+            index: idx,
+            party: o.party || 'Vendor',
+            amount: parseFloat(o.amount) || 0,
+            category: o.category || 'Vendor',
+            note: o.note || ''
           });
-        }
+        });
       });
 
       let filtered = [...items];
       if (searchVal) {
         filtered = filtered.filter(i => 
           i.party.toLowerCase().includes(searchVal) || 
-          i.category.toLowerCase().includes(searchVal) ||
-          i.note.toLowerCase().includes(searchVal) ||
+          i.category.toLowerCase().includes(searchVal) || 
+          i.note.toLowerCase().includes(searchVal) || 
           i.date.includes(searchVal)
         );
       }
 
-      const badge = document.getElementById('adminOutflowsCountBadge');
-      if (badge) badge.textContent = `${filtered.length} of ${items.length} items`;
+      const countBadge = document.getElementById('adminOutflowsCountBadge');
+      if (countBadge) countBadge.textContent = `${filtered.length} disbursements`;
 
       if (filtered.length === 0) {
         if (tbody) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
+              <td colspan="7" class="text-center py-8 text-slate-400 font-sans">
                 <i class="fa-solid fa-receipt text-2xl mb-2 block text-slate-300"></i>
-                No payments recorded yet. Use the form above to add one.
+                No outflows recorded for this filter.
               </td>
             </tr>
           `;
         }
         if (mobileList) {
           mobileList.innerHTML = `
-            <div class="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 p-6">
-              <i class="fa-solid fa-receipt text-3xl mb-3 text-slate-300 block"></i>
-              <p class="font-bold text-base text-slate-700">No payments found</p>
-              <p class="text-xs text-slate-400 mt-1">Record purchases, supplier payments, or shop expenses using the form above.</p>
+            <div class="text-center py-8 bg-white rounded-2xl border border-slate-200 text-slate-500 p-6">
+              <i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300 block"></i>
+              No outflows found.
             </div>
           `;
         }
@@ -7483,96 +8179,108 @@
       }
 
       if (tbody) {
-        tbody.innerHTML = filtered.map(i => `
-          <tr class="hover:bg-slate-50 transition-colors">
-            <td class="py-3 px-4 font-mono font-bold whitespace-nowrap text-slate-800">${formatDateDisplay(i.date)}</td>
-            <td class="py-3 px-3 font-sans font-bold text-slate-900">${escapeHtml(i.party)}</td>
-            <td class="py-3 px-3 font-sans">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">${i.category}</span>
-            </td>
-            <td class="py-3 px-3 text-right font-mono font-black text-rose-700 whitespace-nowrap">${formatCurrency(i.amount)}</td>
-            <td class="py-3 px-4 font-sans text-slate-500 italic truncate max-w-[180px]">${escapeHtml(i.note) || '-'}</td>
-            <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
-              <div class="flex items-center justify-center gap-1.5">
-                <button type="button" onclick="editAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-900 transition-colors cursor-pointer">
-                  <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
-                </button>
-                <button type="button" onclick="deleteAdminOutflow('${i.date}', ${i.index})" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
-                  <i class="fa-solid fa-trash-can mr-1"></i> Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = filtered.map(item => {
+          const bObj = (appState.branches || []).find(b => b.id === item.branchId);
+          return `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="py-3 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                <div class="flex items-center gap-2">
+                  <span>${formatDateDisplay(item.date)}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 text-purple-900 border border-purple-200">${bObj ? bObj.code : item.branchId}</span>
+                </div>
+              </td>
+              <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">${escapeHtml(item.party)}</td>
+              <td class="py-3 px-3">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold ${item.category === 'Operating' ? 'bg-amber-100 text-amber-800' : (item.category === 'Staff' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800')}">
+                  ${item.category}
+                </span>
+              </td>
+              <td class="py-3 px-3 text-right font-black font-mono text-rose-700 whitespace-nowrap">
+                ${formatCurrency(item.amount)}
+              </td>
+              <td class="py-3 px-4 text-xs text-slate-500 font-sans">${escapeHtml(item.note || '—')}</td>
+              <td class="py-3 px-4 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button type="button" onclick="editAdminOutflow('${item.recordKey}', ${item.index})" class="p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors cursor-pointer" title="Edit Outflow">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button type="button" onclick="deleteAdminOutflow('${item.recordKey}', ${item.index})" class="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 transition-colors cursor-pointer" title="Delete Outflow">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
       }
 
       if (mobileList) {
-        mobileList.innerHTML = filtered.map(i => `
-          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <h4 class="font-black text-slate-900 text-lg leading-tight">${escapeHtml(i.party)}</h4>
-                <div class="flex items-center gap-2 mt-1.5">
-                  <span class="px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-800 border border-slate-300">${i.category}</span>
-                  <span class="font-mono text-xs font-black text-slate-700">${formatDateDisplay(i.date)}</span>
+        mobileList.innerHTML = filtered.map(item => {
+          const bObj = (appState.branches || []).find(b => b.id === item.branchId);
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-2 shadow-sm">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div>
+                  <span class="font-black text-slate-900 text-sm block">${escapeHtml(item.party)}</span>
+                  <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                    <span class="font-mono">${formatDateDisplay(item.date)}</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-100 text-purple-900">${bObj ? bObj.code : item.branchId}</span>
+                  </div>
+                </div>
+                <span class="font-black font-mono text-rose-700 text-base">${formatCurrency(item.amount)}</span>
+              </div>
+              <div class="flex items-center justify-between text-xs pt-1">
+                <span class="px-2 py-0.5 rounded font-bold ${item.category === 'Operating' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}">${item.category}</span>
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="editAdminOutflow('${item.recordKey}', ${item.index})" class="p-1.5 rounded-lg bg-slate-100 text-slate-700 cursor-pointer">
+                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                  </button>
+                  <button type="button" onclick="deleteAdminOutflow('${item.recordKey}', ${item.index})" class="p-1.5 rounded-lg bg-slate-100 text-rose-600 cursor-pointer">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                  </button>
                 </div>
               </div>
-              <div class="text-right">
-                <span class="font-mono font-black text-rose-700 text-2xl tabular-nums">${formatCurrency(i.amount)}</span>
-              </div>
             </div>
-
-            ${i.note ? `
-              <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700 italic font-bold">
-                <i class="fa-solid fa-note-sticky text-slate-500 mr-1.5"></i> ${escapeHtml(i.note)}
-              </div>
-            ` : ''}
-
-            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-              <button type="button" onclick="editAdminOutflow('${i.date}', ${i.index})" class="min-h-[50px] px-4 py-2.5 rounded-2xl text-sm font-black bg-slate-100 hover:bg-rose-100 text-slate-900 hover:text-rose-950 border border-slate-300 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                <i class="fa-solid fa-pen-to-square"></i>
-                <span>Edit Payment</span>
-              </button>
-              <button type="button" onclick="deleteAdminOutflow('${i.date}', ${i.index})" class="min-h-[50px] px-4 py-2.5 rounded-2xl text-sm font-black bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                <i class="fa-solid fa-trash-can"></i>
-                <span>Delete</span>
-              </button>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 
-    /**
-     * SECTION 4: MARKET CREDIT / UDHAAR (FORM TOP, TABLE BOTTOM)
-     */
     function initAdminUdhaarForm() {
       const nameInp = document.getElementById('adminUdhaarFormFieldName');
       const phoneInp = document.getElementById('adminUdhaarFormFieldPhone');
       const amtInp = document.getElementById('adminUdhaarFormFieldAmount');
       const dtInp = document.getElementById('adminUdhaarFormFieldDate');
       const noteInp = document.getElementById('adminUdhaarFormFieldNote');
+      const branchSel = document.getElementById('adminUdhaarBranchSelect');
 
       if (nameInp) nameInp.value = '';
       if (phoneInp) phoneInp.value = '';
       if (amtInp) amtInp.value = '';
       if (dtInp) dtInp.value = appState.selectedDate || getTodayString();
       if (noteInp) noteInp.value = '';
+      if (branchSel) branchSel.value = appState.activeBranchId || 'all';
 
-      setAdminUdhaarType('given');
+      setAdminUdhaarTxnType('given');
     }
 
-    function setAdminUdhaarType(type) {
+    function setAdminUdhaarTxnType(type) {
       adminUdhaarTxnType = type;
-      const givenBtn = document.getElementById('adminUdhaarTypeGivenBtn');
-      const recBtn = document.getElementById('adminUdhaarTypeRecBtn');
+      const btnGiven = document.getElementById('adminUdhaarTypeGivenBtn');
+      const btnRec = document.getElementById('adminUdhaarTypeRecBtn');
+      const submitBtn = document.getElementById('adminUdhaarSubmitBtn');
+      const submitText = document.getElementById('adminUdhaarSubmitBtnText');
 
       if (type === 'given') {
-        if (givenBtn) givenBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition-all';
-        if (recBtn) recBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+        if (btnGiven) btnGiven.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-amber-600 text-white shadow-sm cursor-pointer';
+        if (btnRec) btnRec.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
+        if (submitBtn) submitBtn.className = 'w-full py-3.5 rounded-2xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-black text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2';
+        if (submitText) submitText.textContent = '+ Extend Market Credit (Udhaar)';
       } else {
-        if (recBtn) recBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm transition-all';
-        if (givenBtn) givenBtn.className = 'py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+        if (btnGiven) btnGiven.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
+        if (btnRec) btnRec.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 text-white shadow-sm cursor-pointer';
+        if (submitBtn) submitBtn.className = 'w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2';
+        if (submitText) submitText.textContent = '✓ Record Cash Recovery';
       }
     }
 
@@ -7583,6 +8291,8 @@
       const amt = parseFloat(document.getElementById('adminUdhaarFormFieldAmount')?.value) || 0;
       const dt = document.getElementById('adminUdhaarFormFieldDate')?.value || getTodayString();
       const note = (document.getElementById('adminUdhaarFormFieldNote')?.value || '').trim();
+      const branchSel = document.getElementById('adminUdhaarBranchSelect');
+      const branchId = branchSel ? branchSel.value : 'all';
 
       if (!name || amt <= 0) {
         alert('Please provide a valid debtor name and amount.');
@@ -7596,17 +8306,20 @@
       let cust = appState.customerAccounts.find(c => c.name.toLowerCase() === name.toLowerCase());
       if (!cust) {
         cust = {
+          id: 'cust-' + Date.now(),
           name,
           phone: phone || '',
           balance: 0,
           totalGiven: 0,
           totalRecovered: 0,
           lastDate: dt,
-          status: 'Active'
+          status: 'Active',
+          branchId: branchId
         };
         appState.customerAccounts.push(cust);
       } else {
         if (phone && !cust.phone) cust.phone = phone;
+        if (branchId !== 'all') cust.branchId = branchId;
       }
 
       if (adminUdhaarTxnType === 'given') {
@@ -7620,15 +8333,17 @@
       cust.lastModifiedByAdmin = true;
       cust.adminSavedAt = new Date().toISOString();
 
-      // Associate transaction with matching date record if exists
-      if (appState.records[dt]) {
-        appState.records[dt].lastModifiedByAdmin = true;
+      // If branch specified, update that branch's record on date
+      const targetB = branchId !== 'all' ? branchId : (appState.branches[0]?.id || 'branch-khi-01');
+      const compoundKey = `${targetB}__${dt}`;
+      if (appState.records[compoundKey]) {
+        appState.records[compoundKey].lastModifiedByAdmin = true;
         if (adminUdhaarTxnType === 'given') {
-          appState.records[dt].creditGiven = (appState.records[dt].creditGiven || 0) + amt;
+          appState.records[compoundKey].creditGiven = (appState.records[compoundKey].creditGiven || 0) + amt;
         } else {
-          appState.records[dt].creditRecovered = (appState.records[dt].creditRecovered || 0) + amt;
+          appState.records[compoundKey].creditRecovered = (appState.records[compoundKey].creditRecovered || 0) + amt;
         }
-        recalculateLedgerCascade();
+        recalculateBranchLedgerCascade(targetB);
       }
 
       saveRecordsToStorage();
@@ -7662,50 +8377,39 @@
       const searchVal = (document.getElementById('adminUdhaarSearchInput')?.value || '').toLowerCase();
       if (!tbody && !mobileList) return;
 
+      const isConsolidated = appState.activeBranchId === 'all';
       let customers = appState.customerAccounts || [];
+      if (!isConsolidated) {
+        customers = customers.filter(c => c.branchId === 'all' || c.branchId === appState.activeBranchId);
+      }
+
       if (searchVal) {
         customers = customers.filter(c => 
           c.name.toLowerCase().includes(searchVal) || 
-          (c.phone && c.phone.includes(searchVal))
+          (c.phone || '').includes(searchVal)
         );
       }
 
-      let sumBalance = 0;
-      let sumGiven = 0;
-      let sumRecovered = 0;
-      (appState.customerAccounts || []).forEach(c => {
-        sumBalance += (c.balance || 0);
-        sumGiven += (c.totalGiven || 0);
-        sumRecovered += (c.totalRecovered || 0);
-      });
-
-      const sumBalElem = document.getElementById('adminUdhaarSumBalance');
-      if (sumBalElem) sumBalElem.textContent = formatCurrency(sumBalance);
-      const sumGivElem = document.getElementById('adminUdhaarSumGiven');
-      if (sumGivElem) sumGivElem.textContent = formatCurrency(sumGiven);
-      const sumRecElem = document.getElementById('adminUdhaarSumRecovered');
-      if (sumRecElem) sumRecElem.textContent = formatCurrency(sumRecovered);
-
-      const countBadge = document.getElementById('adminUdhaarAccountsCountBadge');
-      if (countBadge) countBadge.textContent = `${customers.length} accounts`;
+      const totalBalance = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
+      const countBadge = document.getElementById('adminUdhaarTotalBalanceBadge');
+      if (countBadge) countBadge.textContent = `PKR ${totalBalance.toLocaleString()} Outstanding`;
 
       if (customers.length === 0) {
         if (tbody) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="6" class="text-center py-8 text-slate-400 font-sans">
-                <i class="fa-solid fa-hand-holding-dollar text-2xl mb-2 block text-slate-300"></i>
-                No debtor accounts recorded. Use the form above to add an account.
+              <td colspan="7" class="text-center py-8 text-slate-400 font-sans">
+                <i class="fa-solid fa-users text-2xl mb-2 block text-slate-300"></i>
+                No active market debtor accounts found.
               </td>
             </tr>
           `;
         }
         if (mobileList) {
           mobileList.innerHTML = `
-            <div class="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 p-6">
-              <i class="fa-solid fa-hand-holding-dollar text-3xl mb-3 text-slate-300 block"></i>
-              <p class="font-bold text-base text-slate-700">No debtor accounts found</p>
-              <p class="text-xs text-slate-400 mt-1">Record credit given or recoveries using the form above.</p>
+            <div class="text-center py-8 bg-white rounded-2xl border border-slate-200 text-slate-500 p-6">
+              <i class="fa-solid fa-users text-3xl mb-2 text-slate-300 block"></i>
+              No debtor accounts found.
             </div>
           `;
         }
@@ -7713,73 +8417,387 @@
       }
 
       if (tbody) {
-        tbody.innerHTML = customers.map(c => `
-          <tr class="hover:bg-slate-50 transition-colors">
-            <td class="py-3 px-4 font-sans font-bold text-slate-900">${escapeHtml(c.name)}</td>
-            <td class="py-3 px-3 font-mono text-slate-500">${c.phone || '-'}</td>
-            <td class="py-3 px-3 text-right font-mono text-slate-700">${formatCurrency(c.totalGiven)}</td>
-            <td class="py-3 px-3 text-right font-mono text-emerald-700 font-bold">${formatCurrency(c.totalRecovered)}</td>
-            <td class="py-3 px-3 text-right font-mono font-black text-amber-800 text-sm whitespace-nowrap bg-amber-50/30">${formatCurrency(c.balance)}</td>
-            <td class="py-3 px-4 text-center whitespace-nowrap font-sans">
-              <div class="flex items-center justify-center gap-1.5">
-                <button type="button" onclick="quickFillUdhaarRecovery('${escapeHtml(c.name)}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors cursor-pointer">
-                  <i class="fa-solid fa-money-bill-transfer mr-1"></i> Recovery
-                </button>
-                <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="px-2 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer">
+        tbody.innerHTML = customers.map(c => {
+          const bObj = (appState.branches || []).find(b => b.id === c.branchId);
+          return `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+                <div class="flex items-center gap-2">
+                  <span>${escapeHtml(c.name)}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 text-purple-900 border border-purple-200">${bObj ? bObj.code : (c.branchId === 'all' ? 'ALL' : c.branchId)}</span>
+                </div>
+              </td>
+              <td class="py-3 px-4 font-mono text-slate-600 text-xs whitespace-nowrap">${escapeHtml(c.phone || '—')}</td>
+              <td class="py-3 px-4 text-right font-black font-mono text-amber-900 bg-amber-50/30 whitespace-nowrap">
+                ${formatCurrency(c.balance)}
+              </td>
+              <td class="py-3 px-3 text-right font-mono text-slate-700 text-xs whitespace-nowrap">${formatCurrency(c.totalGiven || 0)}</td>
+              <td class="py-3 px-3 text-right font-mono text-emerald-800 text-xs whitespace-nowrap">${formatCurrency(c.totalRecovered || 0)}</td>
+              <td class="py-3 px-3 font-mono text-xs text-slate-500 whitespace-nowrap">${c.lastDate ? formatDateDisplay(c.lastDate) : '—'}</td>
+              <td class="py-3 px-4 text-center whitespace-nowrap">
+                <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 transition-colors cursor-pointer" title="Delete Debtor">
                   <i class="fa-solid fa-trash-can"></i>
                 </button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
+              </td>
+            </tr>
+          `;
+        }).join('');
       }
 
       if (mobileList) {
-        mobileList.innerHTML = customers.map(c => `
-          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <h4 class="font-black text-slate-900 text-lg leading-tight">${escapeHtml(c.name)}</h4>
-                <div class="mt-1.5">
-                  ${c.phone ? `
-                    <a href="tel:${c.phone}" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-mono font-bold text-slate-800 bg-slate-100 px-3 py-1.5 rounded-xl min-h-[38px] border border-slate-200">
-                      <i class="fa-solid fa-phone text-emerald-700 text-xs"></i> ${escapeHtml(c.phone)}
-                    </a>
-                  ` : `
-                    <span class="text-xs text-slate-500 italic font-medium">No phone recorded</span>
-                  `}
+        mobileList.innerHTML = customers.map(c => {
+          const bObj = (appState.branches || []).find(b => b.id === c.branchId);
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-2 shadow-sm">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-black text-slate-900 text-sm">${escapeHtml(c.name)}</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-100 text-purple-900">${bObj ? bObj.code : (c.branchId === 'all' ? 'ALL' : c.branchId)}</span>
+                  </div>
+                  ${c.phone ? `<span class="text-xs text-slate-500 font-mono block mt-0.5">${c.phone}</span>` : ''}
+                </div>
+                <span class="font-black font-mono text-amber-900 text-base">${formatCurrency(c.balance)}</span>
+              </div>
+              <div class="flex items-center justify-between text-xs pt-1">
+                <span class="text-slate-500">Last Active: ${c.lastDate ? formatDateDisplay(c.lastDate) : '—'}</span>
+                <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="p-1.5 rounded-lg bg-slate-100 text-rose-600 cursor-pointer">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    /**
+     * =========================================================================
+     * SECTION: OUTLET & BRANCH MANAGEMENT HUB (/admin/branches)
+     * =========================================================================
+     */
+    function renderAdminBranchesTab() {
+      const branches = appState.branches || [];
+      const isUr = appState.language === 'ur';
+      const activeBranches = branches.filter(b => b.is_active !== false);
+
+      // 1. Update Count Badge
+      const countBadge = document.getElementById('adminBranchesCountBadge');
+      if (countBadge) countBadge.textContent = `${activeBranches.length} active of ${branches.length} outlets`;
+
+      // 2. Render Cards Grid
+      const cardsGrid = document.getElementById('adminBranchesCardsGrid');
+      if (cardsGrid) {
+        cardsGrid.innerHTML = branches.map(b => {
+          const isCurrent = appState.activeBranchId === b.id;
+          const todayRec = getBranchRecord(appState.selectedDate || getTodayString(), b.id);
+          const todaySale = todayRec ? (todayRec.dailySale || 0) : 0;
+          const closingCash = todayRec ? (todayRec.closingCash || 0) : getDerivedOpeningBalance(appState.selectedDate || getTodayString(), b.id);
+
+          return `
+            <div class="bg-slate-50 border-2 ${isCurrent ? 'border-purple-600 ring-2 ring-purple-600/20' : 'border-slate-200'} rounded-2xl p-4 sm:p-5 space-y-3 shadow-sm hover:shadow-md transition-all">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-black text-xs px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 border border-purple-300">${b.code}</span>
+                  <span class="font-black text-slate-900 text-base">${b.name}</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${b.is_active !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                  ${b.is_active !== false ? 'Active' : 'Archived'}
+                </span>
+              </div>
+
+              <div class="text-xs text-slate-600 space-y-1">
+                <div><strong>City:</strong> 📍 ${b.city || '—'}</div>
+                ${b.address ? `<div class="truncate"><strong>Address:</strong> ${escapeHtml(b.address)}</div>` : ''}
+                ${b.manager_name ? `<div><strong>Manager:</strong> ${escapeHtml(b.manager_name)}</div>` : ''}
+                ${b.contact_number ? `<div class="font-mono"><strong>Phone:</strong> ${escapeHtml(b.contact_number)}</div>` : ''}
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 pt-1 font-mono text-xs">
+                <div class="p-2 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <span class="text-[10px] text-emerald-800 font-bold block">Today Sale</span>
+                  <span class="font-black text-emerald-900">${formatCurrency(todaySale)}</span>
+                </div>
+                <div class="p-2 rounded-xl bg-sky-50 border border-sky-200">
+                  <span class="text-[10px] text-sky-800 font-bold block">Closing Cash</span>
+                  <span class="font-black text-sky-900">${formatCurrency(closingCash)}</span>
                 </div>
               </div>
-              <div class="text-right">
-                <span class="text-xs text-amber-950 uppercase font-black tracking-wider block">Net Balance</span>
-                <span class="font-mono font-black text-amber-900 text-2xl tabular-nums">${formatCurrency(c.balance)}</span>
-              </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-3 text-xs sm:text-sm">
-              <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <span class="text-slate-700 font-bold block text-xs">Total Given (Udhaar)</span>
-                <span class="font-mono font-black text-slate-900 text-base tabular-nums">${formatCurrency(c.totalGiven)}</span>
-              </div>
-              <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-                <span class="text-emerald-950 font-black block text-xs">Recovered (Wasooli)</span>
-                <span class="font-mono font-black text-emerald-800 text-base tabular-nums">${formatCurrency(c.totalRecovered)}</span>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-200 gap-2">
+                <button type="button" onclick="onGlobalBranchChange('${b.id}')" class="flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${isCurrent ? 'bg-purple-600 text-white' : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'} cursor-pointer">
+                  ${isCurrent ? '✓ Active Context' : 'Select Branch'}
+                </button>
+                <button type="button" onclick="openAdminBranchModal('${b.id}')" class="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 cursor-pointer" title="Edit Details">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button type="button" onclick="toggleAdminBranchActive('${b.id}')" class="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 cursor-pointer" title="${b.is_active !== false ? 'Deactivate' : 'Activate'}">
+                  <i class="fa-solid fa-power-off ${b.is_active !== false ? 'text-emerald-600' : 'text-slate-400'}"></i>
+                </button>
               </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-              <button type="button" onclick="quickFillUdhaarRecovery('${escapeHtml(c.name)}')" class="min-h-[50px] px-4 py-2.5 rounded-2xl text-sm font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-money-bill-transfer"></i>
-                <span>Recovery</span>
-              </button>
-              <button type="button" onclick="deleteUdhaarCustomer('${escapeHtml(c.name)}')" class="min-h-[50px] px-4 py-2.5 rounded-2xl text-sm font-black bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                <i class="fa-solid fa-trash-can"></i>
-                <span>Delete</span>
-              </button>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
+
+      // 3. Render Matrix in Hub
+      renderBranchComparisonMatrix('adminBranchesMatrixTableContainer');
+
+      // 4. Render Transfer History
+      renderAdminTransferHistory();
+    }
+
+    function openAdminBranchModal(branchId = null) {
+      const modal = document.getElementById('adminBranchModal');
+      const title = document.getElementById('adminBranchModalTitle');
+      const form = document.getElementById('adminBranchModalForm');
+      if (!modal) return;
+
+      const idInp = document.getElementById('branchModalFormId');
+      const nameInp = document.getElementById('branchModalFormName');
+      const codeInp = document.getElementById('branchModalFormCode');
+      const cityInp = document.getElementById('branchModalFormCity');
+      const mgrInp = document.getElementById('branchModalFormManager');
+      const phoneInp = document.getElementById('branchModalFormPhone');
+      const colorInp = document.getElementById('branchModalFormColor');
+
+      if (branchId) {
+        const b = (appState.branches || []).find(x => x.id === branchId);
+        if (b) {
+          if (title) title.textContent = 'Edit Business Outlet';
+          if (idInp) idInp.value = b.id;
+          if (nameInp) nameInp.value = b.name || '';
+          if (codeInp) codeInp.value = b.code || '';
+          if (cityInp) cityInp.value = b.city || '';
+          if (mgrInp) mgrInp.value = b.manager_name || '';
+          if (phoneInp) phoneInp.value = b.contact_number || '';
+          if (colorInp) colorInp.value = b.color_accent || 'emerald';
+        }
+      } else {
+        if (title) title.textContent = 'Add New Business Outlet';
+        if (form) form.reset();
+        if (idInp) idInp.value = '';
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeAdminBranchModal() {
+      const modal = document.getElementById('adminBranchModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function handleSaveBranchModal(e) {
+      if (e) e.preventDefault();
+      const id = document.getElementById('branchModalFormId')?.value;
+      const name = (document.getElementById('branchModalFormName')?.value || '').trim();
+      const code = (document.getElementById('branchModalFormCode')?.value || '').trim().toUpperCase();
+      const city = (document.getElementById('branchModalFormCity')?.value || '').trim();
+      const manager_name = (document.getElementById('branchModalFormManager')?.value || '').trim();
+      const contact_number = (document.getElementById('branchModalFormPhone')?.value || '').trim();
+      const color_accent = document.getElementById('branchModalFormColor')?.value || 'emerald';
+
+      if (!name || !code || !city) {
+        alert('Please provide Branch Name, Code, and City.');
+        return;
+      }
+
+      if (!Array.isArray(appState.branches)) {
+        appState.branches = [ ...DEFAULT_BRANCHES ];
+      }
+
+      if (id) {
+        const b = appState.branches.find(x => x.id === id);
+        if (b) {
+          b.name = name;
+          b.code = code;
+          b.city = city;
+          b.manager_name = manager_name;
+          b.contact_number = contact_number;
+          b.color_accent = color_accent;
+        }
+      } else {
+        const newBranch = {
+          id: 'branch-' + code.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          name,
+          code,
+          city,
+          address: '',
+          manager_name,
+          contact_number,
+          color_accent,
+          is_active: true,
+          created_at: new Date().toISOString()
+        };
+        appState.branches.push(newBranch);
+      }
+
+      // Persist to Server via /api/admin
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (appState.adminToken) headers['Authorization'] = 'Bearer ' + appState.adminToken;
+        await fetch('/api/admin', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ action: 'save_branches', branches: appState.branches })
+        });
+      } catch (err) {}
+
+      saveRecordsToStorage();
+      renderBranchSelectors();
+      updateBranchContextBadges();
+      renderAdminBranchesTab();
+      refreshAllViews();
+      closeAdminBranchModal();
+
+      showToastNotification('Branch Saved', `Outlet "${name}" (${code}) successfully configured!`);
+    }
+
+    async function toggleAdminBranchActive(branchId) {
+      const b = (appState.branches || []).find(x => x.id === branchId);
+      if (!b) return;
+
+      b.is_active = (b.is_active === false) ? true : false;
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (appState.adminToken) headers['Authorization'] = 'Bearer ' + appState.adminToken;
+        await fetch('/api/admin', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ action: 'save_branches', branches: appState.branches })
+        });
+      } catch (err) {}
+
+      saveRecordsToStorage();
+      renderBranchSelectors();
+      updateBranchContextBadges();
+      renderAdminBranchesTab();
+      refreshAllViews();
+
+      showToastNotification('Status Updated', `Branch ${b.name} marked as ${b.is_active ? 'Active' : 'Archived'}.`);
+    }
+
+    async function handleAdminRecordTransferSubmit(e) {
+      if (e) e.preventDefault();
+      const fromBranch = document.getElementById('transferFromBranch')?.value;
+      const toBranch = document.getElementById('transferToBranch')?.value;
+      const amount = parseFloat(document.getElementById('transferAmount')?.value) || 0;
+      const transferDate = document.getElementById('transferDate')?.value || getTodayString();
+      const notes = (document.getElementById('transferNotes')?.value || '').trim();
+
+      if (!fromBranch || !toBranch || amount <= 0) {
+        alert('Please fill out all transfer fields with a valid amount.');
+        return;
+      }
+
+      if (fromBranch === toBranch) {
+        alert('Source and destination branch cannot be the same.');
+        return;
+      }
+
+      const transfer = {
+        id: 'tx-' + Date.now(),
+        from_branch_id: fromBranch,
+        to_branch_id: toBranch,
+        amount,
+        transfer_date: transferDate,
+        notes,
+        created_at: new Date().toISOString()
+      };
+
+      if (!Array.isArray(appState.branchTransfers)) {
+        appState.branchTransfers = [];
+      }
+      appState.branchTransfers.unshift(transfer);
+
+      // Record outflow in source branch
+      const srcKey = `${fromBranch}__${transferDate}`;
+      if (!appState.records[srcKey]) {
+        appState.records[srcKey] = {
+          id: srcKey,
+          branchId: fromBranch,
+          date: transferDate,
+          dayName: getDayName(transferDate),
+          openingBalance: getDerivedOpeningBalance(transferDate, fromBranch),
+          manualOpening: 0,
+          isManualOpeningOverride: false,
+          dailySale: 0,
+          creditGiven: 0,
+          creditRecovered: 0,
+          notes: '',
+          outflows: []
+        };
+      }
+      const destName = toBranch === 'head-office' ? 'Head Office / Main Safe' : (appState.branches.find(b => b.id === toBranch)?.name || toBranch);
+      appState.records[srcKey].outflows.push({
+        party: `Transfer: ${destName}`,
+        amount,
+        category: 'Operating',
+        note: notes || 'Inter-branch cash sweep'
+      });
+      recalculateBranchLedgerCascade(fromBranch);
+
+      // Persist to Server via /api/admin
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (appState.adminToken) headers['Authorization'] = 'Bearer ' + appState.adminToken;
+        await fetch('/api/admin', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ action: 'record_transfer', transfer })
+        });
+      } catch (err) {}
+
+      saveRecordsToStorage();
+      pushStateToDatabase();
+      refreshAllViews();
+      renderAdminTransferHistory();
+      renderAdminBranchesTab();
+
+      showToastNotification('Transfer Recorded', `PKR ${amount.toLocaleString()} transferred from ${fromBranch} to ${toBranch}.`);
+      document.getElementById('transferAmount').value = '';
+      document.getElementById('transferNotes').value = '';
+    }
+
+    function renderAdminTransferHistory() {
+      const tbody = document.getElementById('adminTransferHistoryTableBody');
+      if (!tbody) return;
+
+      const transfers = appState.branchTransfers || [];
+      if (transfers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-6 text-center text-slate-400 font-sans">
+              No cash transfers recorded yet.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = transfers.slice(0, 15).map(t => {
+        const fromB = (appState.branches || []).find(b => b.id === t.from_branch_id);
+        const toB = t.to_branch_id === 'head-office' ? { name: 'Head Office / Safe', code: 'HQ' } : (appState.branches || []).find(b => b.id === t.to_branch_id);
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${formatDateDisplay(t.transfer_date)}</td>
+            <td class="py-2.5 px-3">
+              <span class="font-bold text-slate-800">${fromB ? fromB.name : t.from_branch_id}</span>
+              <span class="text-xs text-slate-400 font-mono ml-1">(${fromB ? fromB.code : ''})</span>
+            </td>
+            <td class="py-2.5 px-3">
+              <span class="font-bold text-slate-800">${toB ? toB.name : t.to_branch_id}</span>
+              <span class="text-xs text-slate-400 font-mono ml-1">(${toB ? toB.code : ''})</span>
+            </td>
+            <td class="py-2.5 px-3 text-right font-mono font-black text-sky-800">
+              ${formatCurrency(t.amount)}
+            </td>
+            <td class="py-2.5 px-3 text-xs text-slate-500 font-sans">${escapeHtml(t.notes || '—')}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function quickFillUdhaarRecovery(custName) {
@@ -7797,6 +8815,94 @@
      */
     let adminSalesChartInstance = null;
     let adminDoughnutChartInstance = null;
+
+    
+    function renderBranchComparisonChart() {
+      const canvas = document.getElementById('branchSalesComparisonChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const branches = (appState.branches || []).filter(b => b.is_active !== false);
+      const curPrefix = (appState.selectedDate || getTodayString()).substring(0, 7);
+
+      const labels = branches.map(b => b.name);
+      const salesData = branches.map(b => {
+        const records = Object.values(appState.records).filter(r => r && r.branchId === b.id && r.date.startsWith(curPrefix));
+        return records.reduce((sum, r) => sum + (parseFloat(r.dailySale) || 0), 0);
+      });
+
+      if (window.branchComparisonChartInstance) {
+        window.branchComparisonChartInstance.destroy();
+      }
+
+      window.branchComparisonChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Monthly Sales (PKR)',
+            data: salesData,
+            backgroundColor: ['#059669', '#7c3aed', '#0284c7', '#d97706', '#ec4899', '#f97316'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(val) { return 'PKR ' + val.toLocaleString(); }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderCityBreakdown() {
+      const tbody = document.getElementById('cityBreakdownTableBody');
+      if (!tbody) return;
+
+      const branches = (appState.branches || []).filter(b => b.is_active !== false);
+      const curDate = appState.selectedDate || getTodayString();
+      const cityMap = {};
+
+      branches.forEach(b => {
+        const city = b.city || 'Other';
+        if (!cityMap[city]) {
+          cityMap[city] = { city, count: 0, sales: 0, outflows: 0, closing: 0, udhaar: 0 };
+        }
+        cityMap[city].count++;
+
+        const r = getBranchRecord(curDate, b.id);
+        if (r) {
+          cityMap[city].sales += (parseFloat(r.dailySale) || 0);
+          cityMap[city].outflows += (parseFloat(r.totalOutflows) || 0);
+          cityMap[city].closing += (parseFloat(r.closingCash) || 0);
+          cityMap[city].udhaar += (parseFloat(r.closingMarketCredit) || 0);
+        } else {
+          cityMap[city].closing += getDerivedOpeningBalance(curDate, b.id);
+          cityMap[city].udhaar += getDerivedPriorCredit(curDate, b.id);
+        }
+      });
+
+      tbody.innerHTML = Object.values(cityMap).map(c => `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="py-2.5 px-3 font-bold text-slate-900 whitespace-nowrap">📍 ${c.city}</td>
+          <td class="py-2.5 px-3 font-mono text-center font-bold text-slate-700">${c.count}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-800">${formatCurrency(c.sales)}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-rose-700">${formatCurrency(c.outflows)}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-sky-900">${formatCurrency(c.closing)}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-amber-800">${formatCurrency(c.udhaar)}</td>
+        </tr>
+      `).join('');
+    }
 
     function renderAdminAnalytics() {
       const ctxSales = document.getElementById('adminSalesOutflowsChart')?.getContext('2d');
@@ -7852,6 +8958,9 @@
           plugins: { legend: { position: 'bottom' } }
         }
       });
+
+      renderBranchComparisonChart();
+      renderCityBreakdown();
     }
 
     /**
@@ -7936,8 +9045,9 @@
      */
     function renderDailyRoznamchaOverview(dateIso) {
       const dt = dateIso || appState.selectedDate || getTodayString();
-      const r = appState.records[dt];
+      const r = getActiveRecord(dt);
       const isUr = appState.language === 'ur';
+      const isConsolidated = appState.activeBranchId === 'all';
 
       // Update date picker & badge
       const dateInp = document.getElementById('entryDate');
@@ -7949,9 +9059,11 @@
       const statusBadge = document.getElementById('publicDayStatusBadge');
       const statusText = document.getElementById('publicDayStatusText');
       if (statusBadge && statusText) {
-        if (r) {
+        if (r && r.hasAnyRecord) {
           statusBadge.className = 'text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200';
-          statusText.textContent = isUr ? 'محفوظ شدہ و متوازن دن' : 'Balanced & Closed Register';
+          statusText.textContent = isConsolidated
+            ? (isUr ? 'مشترکہ روزنامچہ (تمام فعال برانچز)' : 'Consolidated Overview (All Outlets)')
+            : (isUr ? 'محفوظ شدہ و متوازن دن' : 'Balanced & Closed Register');
         } else {
           statusBadge.className = 'text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-300';
           statusText.textContent = isUr ? 'غیر ریکارڈ شدہ تاریخ' : 'No Transactions Recorded';
@@ -8007,6 +9119,9 @@
               catLabel = isUr ? 'وینڈر ادائیگی' : 'Vendor';
             }
             const partyName = o.party || (isUr ? 'عام ادائیگی' : 'General Payment');
+            const branchTag = (isConsolidated && (o.branchCode || o.branchName))
+              ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold font-mono bg-purple-100 text-purple-900 border border-purple-200">${o.branchCode || o.branchName}</span>`
+              : '';
 
             return `
               <div class="p-3 rounded-2xl bg-slate-50 hover:bg-rose-50/40 border border-slate-200 transition-colors flex items-center justify-between">
@@ -8015,7 +9130,10 @@
                     ${(partyName).substring(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <span class="text-xs font-bold text-slate-900 block">${escapeHtml(partyName)}</span>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-slate-900">${escapeHtml(partyName)}</span>
+                      ${branchTag}
+                    </div>
                     <div class="flex items-center gap-1.5 mt-0.5">
                       <span class="text-[10px] px-2 py-0.2 rounded-full font-bold border ${catPill}">${catLabel}</span>
                       ${o.note ? `<span class="text-[10px] text-slate-400 italic truncate max-w-[150px]">${escapeHtml(o.note)}</span>` : ''}

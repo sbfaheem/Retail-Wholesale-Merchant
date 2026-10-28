@@ -16,10 +16,52 @@ function ensureDataDir() {
   }
 }
 
+// Default Multi-Branch configuration
+const DEFAULT_BRANCHES = [
+  {
+    id: 'branch-khi-01',
+    name: 'Gulshan Outlet',
+    code: 'KHI-01',
+    city: 'Karachi',
+    address: 'Block 13-C, Main University Road, Gulshan-e-Iqbal',
+    contact_number: '0300-1112233',
+    manager_name: 'Aslam Khan',
+    is_active: true,
+    color_accent: 'emerald',
+    created_at: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'branch-khi-02',
+    name: 'Saddar Wholesale Counter',
+    code: 'KHI-02',
+    city: 'Karachi',
+    address: 'Shop # 42, Cloth Market, Saddar',
+    contact_number: '0300-4445566',
+    manager_name: 'Tariq Mehmood',
+    is_active: true,
+    color_accent: 'sky',
+    created_at: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'branch-lhr-01',
+    name: 'Lahore Main Market',
+    code: 'LHR-01',
+    city: 'Lahore',
+    address: 'Plot 18, Commercial Zone, Main Market, Gulberg',
+    contact_number: '0300-7778899',
+    manager_name: 'Bilal Faheem',
+    is_active: true,
+    color_accent: 'amber',
+    created_at: '2026-01-01T00:00:00.000Z'
+  }
+];
+
 // In-memory cache for fast response and fallback
 let memoryCache = {
+  branches: DEFAULT_BRANCHES,
   records: {},
-  customerAccounts: {},
+  customerAccounts: [],
+  branchTransfers: [],
   kpiOverrides: {},
   systemSettings: {},
   authCredentials: {},
@@ -47,30 +89,65 @@ const DEMO_CUSTOMER_NAMES = [
   'Star Wholesale Fabrics'
 ];
 
-// Purge any dummy demo records while strictly preserving genuine admin records
+// Purge any dummy demo records while strictly preserving genuine admin records & enforcing multi-branch scoping
 function sanitizeState(state) {
   if (!state || typeof state !== 'object') return state;
 
+  // 1. Ensure Branches Master entity exists
+  if (!Array.isArray(state.branches) || state.branches.length === 0) {
+    state.branches = DEFAULT_BRANCHES;
+  } else {
+    // Ensure all default branches are present or user-defined branches valid
+    const existingIds = new Set(state.branches.map(b => b.id));
+    DEFAULT_BRANCHES.forEach(defB => {
+      if (!existingIds.has(defB.id)) {
+        state.branches.push(defB);
+      }
+    });
+  }
+
+  // 2. Multi-Branch Record Sanitization & Scoping
   if (state.records && typeof state.records === 'object') {
     const cleanedRecords = {};
-    for (const [dt, rec] of Object.entries(state.records)) {
+    const defaultBranchId = (state.branches && state.branches[0]) ? state.branches[0].id : 'branch-khi-01';
+
+    for (const [key, rec] of Object.entries(state.records)) {
       if (!rec) continue;
       const isExplicitDemo = rec.isDemo === true || rec.isSample === true;
       const hasDemoNote = DEMO_SIGNATURE_NOTES.some(sig => (rec.notes || '').includes(sig));
       if (!isExplicitDemo && !hasDemoNote) {
-        cleanedRecords[dt] = rec;
+        // Tag with branch_id if missing (assign unassigned to primary default branch)
+        const branchId = rec.branchId || rec.branch_id || defaultBranchId;
+        const date = rec.date || (key.includes('__') ? key.split('__')[1] : key);
+        const compoundKey = `${branchId}__${date}`;
+
+        rec.id = rec.id || compoundKey;
+        rec.branchId = branchId;
+        rec.date = date;
+
+        cleanedRecords[compoundKey] = rec;
       }
     }
     state.records = cleanedRecords;
   }
 
+  // 3. Customer Accounts & Udhaar Scoping
   if (Array.isArray(state.customerAccounts)) {
     state.customerAccounts = state.customerAccounts.filter(c => {
       if (!c) return false;
       const isDemoId = DEMO_CUSTOMER_IDS.includes(c.id);
       const isDemoName = DEMO_CUSTOMER_NAMES.some(n => (c.name || '').trim().toLowerCase() === n.toLowerCase());
       return !isDemoId && !isDemoName;
+    }).map(c => {
+      // Default customer account to centralized or branch-khi-01 if unspecified
+      if (!c.branchId) c.branchId = 'all';
+      return c;
     });
+  }
+
+  // 4. Inter-branch transfers array
+  if (!Array.isArray(state.branchTransfers)) {
+    state.branchTransfers = [];
   }
 
   return state;
@@ -98,12 +175,51 @@ async function initPostgresTables() {
     const client = await pgPool.connect();
     try {
       await client.query(`
+        -- 1. Branches Master Table
+        CREATE TABLE IF NOT EXISTS branches (
+          id VARCHAR(50) PRIMARY KEY,
+          name VARCHAR(150) NOT NULL,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          city VARCHAR(100) NOT NULL,
+          address TEXT,
+          contact_number VARCHAR(50),
+          manager_name VARCHAR(100),
+          color_accent VARCHAR(30) DEFAULT 'emerald',
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- 2. Daily Ledgers with Compound Unique Constraint (branch_id, date)
+        CREATE TABLE IF NOT EXISTS daily_ledgers (
+          id SERIAL PRIMARY KEY,
+          branch_id VARCHAR(50) REFERENCES branches(id) ON DELETE CASCADE,
+          date VARCHAR(20) NOT NULL,
+          data JSONB NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT uq_branch_date UNIQUE (branch_id, date)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_daily_ledgers_branch_date ON daily_ledgers (branch_id, date);
+
+        -- 3. Inter-Branch Cash Transfers
+        CREATE TABLE IF NOT EXISTS branch_transfers (
+          id VARCHAR(50) PRIMARY KEY,
+          from_branch_id VARCHAR(50) REFERENCES branches(id),
+          to_branch_id VARCHAR(50) REFERENCES branches(id),
+          amount NUMERIC(15, 2) NOT NULL,
+          transfer_date VARCHAR(20) NOT NULL,
+          notes TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- 4. Global State Snapshot & Document Store
         CREATE TABLE IF NOT EXISTS roznamcha_state (
           id VARCHAR(50) PRIMARY KEY,
           data JSONB NOT NULL,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
 
+        -- 5. Backups Table
         CREATE TABLE IF NOT EXISTS roznamcha_backups (
           id SERIAL PRIMARY KEY,
           backup_key VARCHAR(100) NOT NULL,
@@ -113,6 +229,18 @@ async function initPostgresTables() {
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `);
+
+      // Seed default branches if empty
+      const brCheck = await client.query('SELECT COUNT(*) FROM branches');
+      if (parseInt(brCheck.rows[0].count, 10) === 0) {
+        for (const b of DEFAULT_BRANCHES) {
+          await client.query(`
+            INSERT INTO branches (id, name, code, city, address, contact_number, manager_name, color_accent, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (id) DO NOTHING
+          `, [b.id, b.name, b.code, b.city, b.address, b.contact_number, b.manager_name, b.color_accent, b.is_active]);
+        }
+      }
     } finally {
       client.release();
     }
@@ -155,6 +283,8 @@ async function getRoznamchaState() {
 async function saveRoznamchaState(data) {
   const currentState = await getRoznamchaState().catch(() => ({}));
   const payload = sanitizeState({
+    branches: data.branches !== undefined ? data.branches : (currentState.branches || DEFAULT_BRANCHES),
+    branchTransfers: data.branchTransfers !== undefined ? data.branchTransfers : (currentState.branchTransfers || []),
     records: data.records !== undefined ? data.records : (currentState.records || {}),
     kpiOverrides: data.kpiOverrides !== undefined ? data.kpiOverrides : (currentState.kpiOverrides || {}),
     customerAccounts: data.customerAccounts !== undefined ? data.customerAccounts : (currentState.customerAccounts || {}),
@@ -172,6 +302,20 @@ async function saveRoznamchaState(data) {
         VALUES ('main_store', $1, CURRENT_TIMESTAMP)
         ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = CURRENT_TIMESTAMP
       `, [payload]);
+
+      // Sync individual daily_ledgers table for relational querying
+      if (payload.records && typeof payload.records === 'object') {
+        for (const rec of Object.values(payload.records)) {
+          if (rec && rec.branchId && rec.date) {
+            await pgPool.query(`
+              INSERT INTO daily_ledgers (branch_id, date, data, created_at)
+              VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+              ON CONFLICT (branch_id, date) DO UPDATE SET data = $3, created_at = CURRENT_TIMESTAMP
+            `, [rec.branchId, rec.date, rec]).catch(() => {});
+          }
+        }
+      }
+
       return payload;
     } catch (err) {
       console.warn('Postgres save failed, falling back to file/memory:', err.message);
